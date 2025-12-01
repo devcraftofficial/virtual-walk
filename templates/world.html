@@ -499,6 +499,28 @@
         bottom: calc(26px + env(safe-area-inset-bottom, 0px)) !important;
       }
     }
+
+    @media (max-width: 900px) {
+  .viewer-panel {
+    /* was 16px + safe area */
+    padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+  }
+
+ 
+}
+
+@media (max-width: 900px) {
+  .action-btn {
+    bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
+    /* other mobile overrides */
+  }
+
+  #joystickBase {
+    bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+
   </style>
 </head>
 
