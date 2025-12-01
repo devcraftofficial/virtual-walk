@@ -12,120 +12,369 @@
   <style>
     :root {
       --bg-page: #020617;
-      --bg-panel: #0b1120;
+      --bg-panel: #020617cc;
+      --bg-card: #0b1120;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56,189,248,0.15);
       --text-main: #e5e7eb;
       --text-muted: #9ca3af;
       --radius-lg: 18px;
       --radius-md: 12px;
+      --shadow-soft: 0 22px 45px rgba(0,0,0,0.65);
+    }
+
+    * {
+      box-sizing: border-box;
     }
 
     body {
       margin: 0;
-      background: radial-gradient(circle at top, #020617, #000);
-      font-family: system-ui, sans-serif;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, #0f172a, transparent 55%),
+        radial-gradient(circle at bottom right, #022c3a, #000 70%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--text-main);
       display: flex;
       justify-content: center;
-      padding: 20px;
+      padding: 22px;
     }
 
+    .shell {
+      width: 100%;
+      max-width: 1360px;
+      background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(15,23,42,0.92));
+      border-radius: 28px;
+      padding: 18px 22px 22px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(148,163,184,0.35);
+      backdrop-filter: blur(14px);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Top header row */
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0.02em;
+    }
+
+    .title-block p {
+      margin: 3px 0 0;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .cta-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: rgba(15,23,42,0.8);
+      border: 1px solid rgba(148,163,184,0.5);
+      color: var(--text-muted);
+    }
+
+    .btn-primary {
+      border: none;
+      border-radius: 999px;
+      padding: 9px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      background: radial-gradient(circle at 20% 0%, #38bdf8, #0369a1);
+      color: white;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 16px 35px rgba(8,47,73,0.9);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary span.icon {
+      font-size: 15px;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.04);
+      box-shadow: 0 22px 45px rgba(8,47,73,1);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 12px 26px rgba(8,47,73,0.7);
+    }
+
+    /* Main two-column layout */
     .container {
       width: 100%;
-      max-width: 1300px;
       display: flex;
-      gap: 20px;
+      gap: 18px;
+      align-items: stretch;
     }
 
     /* Left map panel */
     .map-panel {
-      width: 32%;
+      width: 33%;
       background: var(--bg-panel);
       border-radius: var(--radius-lg);
       padding: 14px;
+      border: 1px solid rgba(148,163,184,0.4);
+      box-shadow: 0 18px 38px rgba(0,0,0,0.75);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .map-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+
+    .map-header span {
+      opacity: 0.9;
+    }
+
+    .chip {
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(148,163,184,0.4);
+      color: var(--text-muted);
     }
 
     #map {
       width: 100%;
-      height: 500px;
+      height: 420px;
       border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid rgba(30,64,175,0.55);
+    }
+
+    .map-footer {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .map-footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .map-footer a:hover {
+      text-decoration: underline;
     }
 
     /* Right viewer */
     .viewer-panel {
       flex: 1;
-      background: linear-gradient(145deg, #0f172a, #08314a);
+      background: radial-gradient(circle at top left, #0f172a, #020617);
       border-radius: var(--radius-lg);
-      padding: 16px;
+      padding: 16px 18px 18px;
+      border: 1px solid rgba(30,64,175,0.65);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.9);
+      display: flex;
+      flex-direction: column;
     }
 
-    .viewer-box {
-      margin-top: 10px;
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      background: #000;
-      aspect-ratio: 16/9;
-      border: 1px solid rgba(56,189,248,0.2);
+    .viewer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
     }
 
-    video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+    .viewer-header-main h2 {
+      margin: 0;
+      font-size: 18px;
     }
 
-    .status {
-      margin-top: 10px;
-      padding: 8px 12px;
-      background: rgba(15,23,42,0.8);
-      border-radius: 999px;
-      display: inline-block;
+    .viewer-header-main p {
+      margin: 4px 0 0;
       font-size: 12px;
       color: var(--text-muted);
     }
 
-    a {
-      color: #38bdf8;
+    .viewer-meta {
+      text-align: right;
+      font-size: 11px;
+      color: var(--text-muted);
     }
 
+    .viewer-box {
+      margin-top: 14px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: #000;
+      aspect-ratio: 16/9;
+      border: 1px solid var(--accent-soft);
+      position: relative;
+    }
+
+    .viewer-box video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #000;
+    }
+
+    .status-row {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .status-pill {
+      padding: 7px 12px;
+      background: rgba(15,23,42,0.92);
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      border: 1px solid rgba(148,163,184,0.5);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34,197,94,0.25);
+    }
+
+    .hint-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      opacity: 0.9;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      body {
+        padding: 12px;
+      }
+      .shell {
+        padding: 14px;
+      }
+      .container {
+        flex-direction: column;
+      }
+      .map-panel {
+        width: 100%;
+      }
+      .viewer-panel {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="shell">
 
-  <!-- LEFT MAP -->
-  <aside class="map-panel">
-    <h3>🗺️ Street Map</h3>
-    <div id="map"></div>
-    <p style="font-size:12px;color:#9ca3af;margin-top:8px;">
-      Add new streets → <a href="{{ url_for('upload') }}">Upload Page</a>
-    </p>
-  </aside>
-
-  <!-- RIGHT VIEWER -->
-  <main class="viewer-panel">
-
-    <h2 id="streetName">Select a Street</h2>
-    <p id="streetLocation" style="font-size:12px;color:#9ca3af;">Waiting…</p>
-
-    <div class="viewer-box">
-      <video id="streetVideo" controls>
-        <source src="" type="video/mp4">
-      </video>
+  <!-- Top header -->
+  <div class="header-row">
+    <div class="title-block">
+      <h1>Virtual Street Walk</h1>
+      <p>Browse captured streets, then jump into the live 3D walking experience.</p>
     </div>
 
-    <div class="status" id="statusPill">📍 No street selected</div>
+    <div class="cta-row">
+      <div class="pill">Today • {{ streets|length }} streets available</div>
 
-  </main>
+      <!-- EXPLORE THE WORLD BUTTON -->
+      <a href="{{ url_for('world') }}" class="btn-primary">
+        <span class="icon">🌍</span>
+        <span>Explore the world</span>
+      </a>
+    </div>
+  </div>
 
+  <!-- Main 2-column dashboard content -->
+  <div class="container">
+
+    <!-- LEFT MAP -->
+    <aside class="map-panel">
+      <div class="map-header">
+        <span>🗺️ Street Map</span>
+        <span class="chip">Click a pin to preview</span>
+      </div>
+
+      <div id="map"></div>
+
+      <div class="map-footer">
+        <span>Manage your library of street captures.</span>
+        <span>
+          Add new streets → <a href="{{ url_for('upload') }}">Upload page</a>
+        </span>
+      </div>
+    </aside>
+
+    <!-- RIGHT VIEWER -->
+    <main class="viewer-panel">
+
+      <div class="viewer-header">
+        <div class="viewer-header-main">
+          <h2 id="streetName">Select a street</h2>
+          <p id="streetLocation">Waiting for selection…</p>
+        </div>
+        <div class="viewer-meta">
+          <div style="font-size:11px;">Preview mode</div>
+          <div style="font-size:11px;opacity:0.8;">Click a pin on the map to load a video.</div>
+        </div>
+      </div>
+
+      <div class="viewer-box">
+        <video id="streetVideo" controls>
+          <source id="streetSource" src="" type="video/mp4">
+        </video>
+      </div>
+
+      <div class="status-row">
+        <div class="status-pill" id="statusPill">
+          <span class="status-dot"></span>
+          <span id="statusText">No street selected</span>
+        </div>
+        <span class="hint-text">Tip: Use “Explore the world” to enter full avatar walk mode.</span>
+      </div>
+
+    </main>
+  </div>
 </div>
 
-
-<!-- ============================
-     MAIN JS (simple — NO modules)
-=============================== -->
 <script>
+  // Flask injects STREETS
   const STREETS = {{ streets | tojson }};
 
   /* MAP */
@@ -133,12 +382,14 @@
     container: "map",
     style: "https://demotiles.maplibre.org/style.json",
     center: [55.2708, 25.2048],
-    zoom: 12
+    zoom: 2.8
   });
 
   map.addControl(new maplibregl.NavigationControl());
 
   STREETS.forEach(st => {
+    if (st.lng == null || st.lat == null) return;
+
     const marker = new maplibregl.Marker()
       .setLngLat([st.lng, st.lat])
       .addTo(map);
@@ -148,19 +399,24 @@
 
   /* UI elements */
   const videoEl = document.getElementById("streetVideo");
-  const sourceEl = videoEl.querySelector("source");
+  const sourceEl = document.getElementById("streetSource");
   const streetName = document.getElementById("streetName");
   const streetLocation = document.getElementById("streetLocation");
   const statusPill = document.getElementById("statusPill");
+  const statusText = document.getElementById("statusText");
 
   function loadStreet(st) {
-    streetName.textContent = st.name;
-    streetLocation.textContent = `${st.city}, ${st.country}`;
-    statusPill.textContent = `📍 Viewing ${st.name}`;
+    streetName.textContent = st.name || "Untitled street";
+    streetLocation.textContent = `${st.city || ""}${st.city && st.country ? ", " : ""}${st.country || ""}`;
 
-    sourceEl.src = st.videoUrl;
-    videoEl.load();
-    videoEl.play();
+    statusText.textContent = `Viewing ${st.name || "street"}`;
+    statusPill.style.borderColor = "rgba(56,189,248,0.6)";
+
+    if (st.videoUrl) {
+      sourceEl.src = st.videoUrl;      // adjust if you use a different field name
+      videoEl.load();
+      videoEl.play().catch(() => {});
+    }
   }
 </script>
 
