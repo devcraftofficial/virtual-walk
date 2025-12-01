@@ -445,14 +445,12 @@
         gap: 10px !important;
       }
       .action-btn {
-        bottom: 26px !important;
         left: 18px !important;
         width: 64px !important;
         height: 64px !important;
         font-size: 25px !important;
       }
       #joystickBase {
-        bottom: 26px !important;
         right: 18px !important;
         width: 88px !important;
         height: 88px !important;
@@ -488,6 +486,17 @@
       .pill-btn {
         font-size: 10px !important;
         padding: 5px 9px !important;
+      }
+
+      /* mobile safe area: only here to avoid clipping */
+      .viewer-panel {
+        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      }
+      .action-btn {
+        bottom: calc(26px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      #joystickBase {
+        bottom: calc(26px + env(safe-area-inset-bottom, 0px)) !important;
       }
     }
   </style>
@@ -643,7 +652,6 @@
   // Streets data injected from backend (Flask)
   const STREETS = JSON.parse(`{{ streets | tojson | safe }}`);
 
-  // Map instances and markers
   let miniMap, miniMarker;
   let fullMap, fullMapReady = false;
 
@@ -757,8 +765,8 @@
   let walkSpeed = 1;
   let firstPerson = false;
   let soundEnabled = true;
-  let yawCurrent = 0;
-  let yawTarget = 0;
+  let yawCurrent = 180;
+  let yawTarget = 180;
   let headBob = 0;
   let bobDirection = 1;
   let keyDir = 0;
@@ -769,9 +777,9 @@
   let reversePlaying = false;
   let joyActive = false;
 
-  // NEW: strafe state
-  let strafe = 0;        // -1 left, 1 right
-  let strafeOffset = 0;  // px offset for avatar
+  // strafe state
+  let strafe = 0;
+  let strafeOffset = 0;
 
   function safePlay() {
     if (!video || !video.paused) return;
@@ -1045,7 +1053,7 @@
     setTimeout(() => fadeIn(), 150);
   }
 
-  // Keyboard controls for direction, yaw, and NEW strafe (Q/E)
+  // Keyboard controls
   window.addEventListener("keydown", e => {
     const k = e.key.toLowerCase();
     if (k === "arrowleft" || k === "a") yawTarget -= 10;
@@ -1183,10 +1191,9 @@
     const tilt = currentDir === 1 ? -4 : currentDir === -1 ? 4 : 0;
     const fpScale = firstPerson ? 1.05 : 1;
 
-    // NEW: update strafeOffset for sideways movement
     if (strafe !== 0 && currentStreetType === "video" && !firstPerson) {
-      strafeOffset += strafe * 2.0 * walkSpeed; // tune speed
-      strafeOffset = Math.max(-120, Math.min(120, strafeOffset)); // clamp
+      strafeOffset += strafe * 2.0 * walkSpeed;
+      strafeOffset = Math.max(-120, Math.min(120, strafeOffset));
     } else {
       strafeOffset *= 0.9;
     }
