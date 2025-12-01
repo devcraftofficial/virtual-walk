@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Street – Virtual Street Walk</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- MapLibre -->
+  <link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+
+  <style>
+    :root {
+      --glass-bg: rgba(15, 23, 42, 0.92);
+      --glass-border: rgba(148,163,184,0.45);
+      --accent: #38bdf8;
+      --text-main: #e5e7eb;
+      --text-muted: #94a3b8;
+      --radius: 16px;
+      --shadow: 0 24px 60px rgba(0,0,0,0.65);
+    }
+
+    body {
+      margin: 0;
+      padding: 24px 12px;
+      background: radial-gradient(circle at top, #020617, #000 80%);
+      font-family: system-ui, sans-serif;
+      display: flex;
+      justify-content: center;
+      color: var(--text-main);
+    }
+
+    .card {
+      width: 100%;
+      max-width: 560px;
+      background: var(--glass-bg);
+      padding: 26px;
+      border-radius: var(--radius);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      margin-bottom: 18px;
+      color: var(--text-muted);
+    }
+
+    .field {
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 13px;
+      color: var(--text-main);
+    }
+
+    input, select {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(15,23,42,0.7);
+      border: 1px solid rgba(148,163,184,0.5);
+      color: var(--text-main);
+      font-size: 14px;
+    }
+
+    input::placeholder {
+      color: #64748b;
+    }
+
+    #mapPicker {
+      height: 240px;
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,0.25);
+      overflow: hidden;
+    }
+
+    .note {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: -4px;
+    }
+
+    button {
+      padding: 10px 22px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+      border: none;
+      cursor: pointer;
+      color: #0f172a;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 12px 30px rgba(56,189,248,0.35);
+    }
+
+    a.back-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    .flash {
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .flash.error {
+      background: rgba(239,68,68,0.2);
+      border: 1px solid rgba(239,68,68,0.5);
+      color: #fecaca;
+    }
+
+    .flash.success {
+      background: rgba(34,197,94,0.2);
+      border: 1px solid rgba(34,197,94,0.5);
+      color: #bbf7d0;
+    }
+
+    #videoFields,
+    #modelFields {
+      display: none;
+    }
+
+    @media (max-width: 480px) {
+      .card { padding: 18px; }
+      button { width: 100%; }
+      .actions { flex-direction: column; gap: 12px; }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+
+  <h1>Add Street</h1>
+  <p class="subtitle">Upload a real street video OR a virtual 3D GLB world.</p>
+
+  <!-- FLASH Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- FORM -->
+  <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+
+    <div class="field">
+      <label>Street Type *</label>
+      <select name="street_type" id="streetType" required>
+        <option value="">Choose Type</option>
+        <option value="video">Video Street</option>
+        <option value="3d">3D GLB Street</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Street Name *</label>
+      <input type="text" name="name" placeholder="Eg: Marina Walk Lane" required>
+    </div>
+
+    <div class="field">
+      <label>City *</label>
+      <input type="text" name="city" placeholder="Eg: Dubai" required>
+    </div>
+
+    <div class="field">
+      <label>Country *</label>
+      <input type="text" name="country" placeholder="Eg: UAE" required>
+    </div>
+
+    <!-- MAP PICKER -->
+    <div class="field">
+      <label>Select Location *</label>
+      <div id="mapPicker"></div>
+
+      <div style="display:flex; gap:10px; margin-top:8px;">
+        <input type="number" id="lat" name="lat" step="0.000001" placeholder="Latitude" required>
+        <input type="number" id="lng" name="lng" step="0.000001" placeholder="Longitude" required>
+      </div>
+      <div class="note">Tap anywhere on the map to auto-fill coordinates.</div>
+    </div>
+
+    <!-- VIDEO STREET -->
+    <div id="videoFields">
+      <div class="field">
+        <label>Upload Video (MP4 / WEBM)</label>
+        <input type="file" name="video" accept="video/mp4,video/webm,video/quicktime">
+        <div class="note">Uploaded securely to Cloudinary.</div>
+      </div>
+
+      <div class="field">
+        <label>OR Video URL</label>
+        <input type="text" name="video_link" placeholder="https://example.com/video.mp4">
+      </div>
+    </div>
+
+    <!-- 3D GLB STREET -->
+    <div id="modelFields">
+      <div class="field">
+        <label>Upload GLB Model *</label>
+        <input type="file" name="model" accept=".glb">
+        <div class="note">GLB stored as RAW file in Cloudinary.</div>
+      </div>
+
+      <div class="field">
+        <label>OR GLB URL</label>
+        <input type="text" name="model_link" placeholder="https://example.com/model.glb">
+      </div>
+    </div>
+
+    <div class="actions">
+      <a class="back-link" href="{{ url_for('index') }}">← Back to List</a>
+      <button type="submit">Save Street</button>
+    </div>
+
+  </form>
+
+</div>
+
+<script>
+  /* ===============================
+     MAP PICKER INITIALIZATION
+  =============================== */
+  const map = new maplibregl.Map({
+    container: "mapPicker",
+    style: "https://demotiles.maplibre.org/style.json",
+    center: [55.2708, 25.2048], // Dubai default
+    zoom: 11,
+  });
+
+  let marker = null;
+
+  map.on("click", function (e) {
+    const lng = e.lngLat.lng.toFixed(6);
+    const lat = e.lngLat.lat.toFixed(6);
+
+    document.getElementById("lat").value = lat;
+    document.getElementById("lng").value = lng;
+
+    if (marker) marker.remove();
+    marker = new maplibregl.Marker({ color:"#38bdf8" })
+      .setLngLat([lng, lat])
+      .addTo(map);
+  });
+
+  /* ===============================
+     FIELD TOGGLE BASED ON TYPE
+  =============================== */
+  const streetType = document.getElementById("streetType");
+  const videoFields = document.getElementById("videoFields");
+  const modelFields = document.getElementById("modelFields");
+
+  streetType.addEventListener("change", () => {
+    videoFields.style.display = streetType.value === "video" ? "block" : "none";
+    modelFields.style.display = streetType.value === "3d" ? "block" : "none";
+  });
+</script>
+
+</body>
+</html>

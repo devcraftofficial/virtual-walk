@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Virtual Street Walk – Avatar Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- MODEL-VIEWER for 3D Models-->
+  <script type="module" src="https://unpkg.com/@google/model-viewer@^3.3.0/dist/model-viewer.min.js"></script>
+
+  <!-- MAPLIBRE for maps -->
+  <link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+
+  <style>
+    /* Color & design variables */
+    :root {
+      --bg-page: #020617;
+      --glass-bg: rgba(15, 23, 42, 0.82);
+      --glass-border: rgba(148, 163, 184, 0.55);
+      --glass-shadow: 0 18px 40px rgba(0, 0, 0, 0.75);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --accent: #38bdf8;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+    }
+    /* Reset & basics */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #020617, #000 80%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text-main);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    /* VIEWER PANEL: main container */
+    .viewer-panel {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0;
+      margin: 0;
+    }
+    .viewer-canvas {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: black;
+      overflow: hidden;
+    }
+    /* MINI MAP: circular */
+    .mini-map {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      width: 100px;
+      height: 100px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: var(--bg-page);
+      border: 2px solid rgba(148, 163, 184, 0.6);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.75);
+      z-index: 50;
+      cursor: pointer;
+    }
+    .mini-map canvas {
+      border-radius: 999px;
+    }
+    /* FULL MAP OVERLAY */
+    #fullMapOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #fullMapContainer {
+      width: 90%;
+      height: 80%;
+      background: #0b1120;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9);
+    }
+    #closeMapBtn {
+      position: absolute;
+      top: 30px;
+      right: 40px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(0, 0, 0, 0.65);
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    }
+    /* GENDER BUTTONS */
+    .gender-row {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 60;
+    }
+    .gender-buttons {
+      display: flex;
+      gap: 6px;
+    }
+    .gender-buttons button {
+      padding: 6px 10px;
+      font-size: 11px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--text-main);
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+    .gender-buttons button.active {
+      background: #1d4ed8;
+      border-color: #3b82f6;
+    }
+    /* STREET INFO */
+    .street-info {
+      position: absolute;
+      top: 60px;
+      right: 16px;
+      padding: 8px 14px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      border-radius: 14px;
+      backdrop-filter: blur(10px);
+      z-index: 50;
+      max-width: 220px;
+      user-select: none;
+    }
+    .street-info h2 {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+    .street-info p {
+      margin: 3px 0 0;
+      font-size: 12px;
+      color: #cbd5e1;
+      line-height: 1.2;
+    }
+    /* Background video with GPU acceleration */
+    #streetVideo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      z-index: 1;
+      transition: transform 0.15s ease-out;
+      user-select: none;
+      -webkit-user-select: none;
+      will-change: transform;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+    }
+    /* Background 3D scene */
+    #citySceneMV {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      display: none;
+      user-select: none;
+    }
+    /* Avatar shadow and avatar */
+    #avatarShadow {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 45px;
+      background: radial-gradient(ellipse, rgba(0, 0, 0, 0.4), transparent);
+      filter: blur(12px);
+      opacity: 0.85;
+      z-index: 7;
+      pointer-events: none;
+      user-select: none;
+    }
+    #avatarMV {
+      position: absolute;
+      bottom: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 240px;
+      height: 440px;
+      z-index: 10;
+      pointer-events: none;
+      user-select: none;
+    }
+    /* 3D OBJECT OVERLAY */
+    #objectOverlay {
+      position: absolute;
+      left: 50%;
+      bottom: 180px;
+      width: 220px;
+      height: 220px;
+      transform: translateX(-50%);
+      pointer-events: none;
+      z-index: 12;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      user-select: none;
+    }
+    /* BIG ACTION BUTTON */
+    .action-btn {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      border: none;
+      background: radial-gradient(circle at 25% 25%, #4ade80, #16a34a);
+      color: white;
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 70;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.7);
+      user-select: none;
+      transition: transform 0.12s ease;
+    }
+    .action-btn:active {
+      transform: scale(0.94);
+    }
+    /* JOYSTICK CONTROLS */
+    #joystickBase {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 96px;
+      height: 96px;
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: 50%;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(8px);
+      touch-action: none;
+      z-index: 70;
+      user-select: none;
+    }
+    #joystickKnob {
+      width: 48px;
+      height: 48px;
+      background: #2563eb;
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.4);
+      touch-action: none;
+      user-select: none;
+    }
+    /* NEXT STREET OVERLAY */
+    .next-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+      z-index: 100;
+      user-select: none;
+    }
+    .next-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .next-card {
+      padding: 22px 24px;
+      background: #0f172a;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+      text-align: center;
+      max-width: 280px;
+    }
+    .next-label {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .next-hint {
+      color: var(--accent);
+      font-weight: 600;
+      margin-top: 8px;
+    }
+    /* FADE LAYER */
+    #fadeLayer {
+      position: absolute;
+      inset: 0;
+      background: black;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.7s;
+      z-index: 110;
+      user-select: none;
+    }
+    /* SETTINGS BUTTON */
+    .settings-btn {
+      position: absolute;
+      top: 112px;
+      left: 18px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      background: rgba(0, 0, 0, 0.55);
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+      z-index: 80;
+      transition: background-color 0.2s ease;
+    }
+    .settings-btn:hover {
+      background: rgba(0, 0, 0, 0.7);
+    }
+    /* SETTINGS POPUP */
+    .settings-popup {
+      position: absolute;
+      left: 50%;
+      bottom: 100px;
+      transform: translateX(-50%) scale(0.85);
+      width: 90%;
+      max-width: 420px;
+      padding: 16px;
+      background: rgba(15, 23, 42, 0.88);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(16px);
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.25s ease;
+      z-index: 200;
+      user-select: none;
+    }
+    .settings-popup.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) scale(1);
+    }
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .settings-header h3 {
+      margin: 0;
+      font-size: 17px;
+      color: white;
+    }
+    .close-settings {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.2s ease;
+    }
+    .close-settings:hover {
+      background: rgba(0, 0, 0, 0.7);
+    }
+    .settings-body {
+      font-size: 14px;
+      color: var(--text-main);
+    }
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 12px 0;
+      font-size: 14px;
+    }
+    .setting-row label {
+      margin-right: 8px;
+    }
+    .toggle-btn {
+      padding: 6px 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      background: rgba(0, 0, 0, 0.4);
+      color: white;
+      cursor: pointer;
+      min-width: 60px;
+      text-align: center;
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+    .toggle-btn.active {
+      background: #2563eb;
+      border-color: #3b82f6;
+    }
+    /* SPEED SLIDER */
+    #settingsSpeed {
+      width: 130px;
+      accent-color: var(--accent);
+    }
+    /* Responsive adjustments */
+    @media (max-width: 900px) {
+      .control-bar {
+        bottom: 140px !important;
+        width: 92% !important;
+        padding: 10px 14px !important;
+        min-height: 54px !important;
+        border-radius: 22px !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+      }
+      .action-btn {
+        bottom: 26px !important;
+        left: 18px !important;
+        width: 64px !important;
+        height: 64px !important;
+        font-size: 25px !important;
+      }
+      #joystickBase {
+        bottom: 26px !important;
+        right: 18px !important;
+        width: 88px !important;
+        height: 88px !important;
+      }
+      #joystickKnob {
+        width: 42px !important;
+        height: 42px !important;
+      }
+      .mini-map {
+        width: 80px !important;
+        height: 80px !important;
+        top: 14px !important;
+        left: 14px !important;
+      }
+      .gender-buttons button {
+        padding: 5px 9px !important;
+        font-size: 10px !important;
+      }
+      .street-info {
+        top: 54px !important;
+        right: 14px !important;
+        padding: 6px 10px !important;
+      }
+      .street-info h2 {
+        font-size: 13px !important;
+      }
+      .street-info p {
+        font-size: 11px !important;
+      }
+      #settingsSpeed {
+        width: 90px !important;
+      }
+      .pill-btn {
+        font-size: 10px !important;
+        padding: 5px 9px !important;
+      }
+    }
+  </style>
+</head>
+
+
+<body>
+
+<!-- FULLSCREEN MAP OVERLAY -->
+<div id="fullMapOverlay" role="dialog" aria-modal="true" aria-label="Full map view">
+  <div id="fullMapContainer" tabindex="0" aria-live="polite"></div>
+  <button id="closeMapBtn" aria-label="Close full map">✕</button>
+</div>
+
+<!-- MAIN VIEWER PANEL -->
+<div class="viewer-panel" role="main" aria-live="polite">
+  <div class="viewer-canvas" id="viewerCanvas">
+
+    <!-- MINI MAP -->
+    <div id="miniMap" class="mini-map" aria-label="Mini map preview" role="button" tabindex="0"></div>
+
+    <!-- SETTINGS BUTTON -->
+    <button id="settingsBtn" class="settings-btn" aria-haspopup="true" aria-expanded="false" aria-controls="settingsPopup" title="Open settings">⚙</button>
+
+    <!-- GENDER SELECT -->
+    <div class="gender-row" role="radiogroup" aria-label="Select avatar gender">
+      <div class="gender-buttons">
+        <button class="active" data-gender="male" role="radio" aria-checked="true" tabindex="0">Male</button>
+        <button data-gender="female" role="radio" aria-checked="false" tabindex="-1">Female</button>
+      </div>
+    </div>
+
+    <!-- STREET INFO DISPLAY -->
+    <div class="street-info" aria-live="polite" aria-atomic="true">
+      <h2 id="streetName">Select a Street</h2>
+      <p id="streetLocation">Waiting…</p>
+    </div>
+
+    <!-- BACKGROUND VIDEO -->
+    <video 
+      id="streetVideo" 
+      preload="auto"  <!-- Added preload attribute for buffering -->
+      muted 
+      playsinline 
+      disablepictureinpicture 
+      controlslist="nodownload nofullscreen noplaybackrate" 
+      aria-label="Street view video"
+    >
+      <source id="videoSource" src="">
+    </video>
+
+    <!-- BACKGROUND 3D SCENE -->
+    <model-viewer
+      id="citySceneMV"
+      camera-controls
+      environment-image="neutral"
+      exposure="1.1"
+      disable-zoom="false"
+      interaction-prompt="none"
+      role="img" aria-label="3D city scene">
+    </model-viewer>
+
+    <!-- AVATAR SHADOW -->
+    <div id="avatarShadow" aria-hidden="true"></div>
+
+    <!-- AVATAR 3D MODEL -->
+    <model-viewer
+      id="avatarMV"
+      src="/static/avatars/male/idle.glb"
+      autoplay
+      shadow-intensity="1"
+      shadow-softness="1"
+      environment-image="neutral"
+      exposure="1.2"
+      disable-zoom
+      disable-pan
+      interaction-prompt="none"
+      aria-hidden="true"
+    ></model-viewer>
+
+    <!-- 3D OBJECT OVERLAY -->
+    <model-viewer id="objectOverlay"
+      src=""
+      autoplay
+      style="position:absolute; left:50%; bottom:180px; width:220px; height:220px; transform:translateX(-50%); pointer-events:none; z-index:12; opacity:0; transition:opacity .5s ease;"
+      disable-zoom
+      disable-pan
+      interaction-prompt="none"
+      environment-image="neutral"
+      exposure="1.1"
+      aria-hidden="true"
+    ></model-viewer>
+
+    <!-- ACTION BUTTON -->
+    <button id="actionBtn" class="action-btn" aria-label="Interact">🤝</button>
+
+    <!-- JOYSTICK CONTROLS -->
+    <div id="joystickBase" aria-label="Movement joystick" role="application" tabindex="0">
+      <div id="joystickKnob"></div>
+    </div>
+
+    <!-- OPTIONAL ARROW CONTROLS, currently hidden -->
+    <div class="arrow-controls" id="arrowControls" style="display:none;" aria-hidden="true">
+      <div></div>
+      <div class="arrow-btn" data-dir="up">⬆</div>
+      <div></div>
+
+      <div class="arrow-btn" data-dir="left">⬅</div>
+      <div class="arrow-btn" data-dir="down">⬇</div>
+      <div class="arrow-btn" data-dir="right">➡</div>
+    </div>
+
+    <!-- SETTINGS POPUP -->
+    <div id="settingsPopup" class="settings-popup" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" aria-hidden="true">
+      <div class="settings-header">
+        <h3 id="settingsTitle">Settings</h3>
+        <button id="closeSettingsBtn" class="close-settings" aria-label="Close settings">✕</button>
+      </div>
+
+      <div class="settings-body">
+        <div class="setting-row">
+          <label for="settingsSpeed">Walk speed</label>
+          <input type="range" id="settingsSpeed" min="0.5" max="2" step="0.1" value="1" aria-valuemin="0.5" aria-valuemax="2" aria-valuenow="1" aria-label="Walk speed control">
+        </div>
+        <div class="setting-row">
+          <label for="settingsFP">First person</label>
+          <button id="settingsFP" class="toggle-btn" aria-pressed="false" aria-controls="settingsPopup">Off</button>
+        </div>
+        <div class="setting-row">
+          <label for="settingsAutoWalk">Auto walk</label>
+          <button id="settingsAutoWalk" class="toggle-btn" aria-pressed="false" aria-controls="settingsPopup">Off</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEXT STREET OVERLAY -->
+    <div class="next-overlay" id="nextOverlay" aria-live="assertive" aria-atomic="true">
+      <div class="next-card">
+        <div class="next-label">NEXT STREET</div>
+        <h3 id="nextStreetName">—</h3>
+        <p id="nextStreetLocation">—</p>
+        <p class="next-hint">Walking there…</p>
+      </div>
+    </div>
+
+    <!-- FADE LAYER -->
+    <div id="fadeLayer" aria-hidden="true"></div>
+  </div>
+</div>
+
+<!-- FOOTSTEP AUDIO -->
+<audio id="footstepAudio" src="/static/audio/footsteps_loop.wav" loop preload="auto" aria-hidden="true"></audio>
+
+<script type="module">
+  // Streets data injected from backend (Flask)
+  const STREETS = JSON.parse(`{{ streets | tojson | safe }}`);
+
+  // Map instances and markers
+  let miniMap, miniMarker;
+  let fullMap, fullMapReady = false;
+
+  // Initialize mini map (non-interactive)
+  function initMiniMap() {
+    miniMap = new maplibregl.Map({
+      container: "miniMap",
+      style: "https://demotiles.maplibre.org/style.json",
+      center: [0, 20],
+      zoom: 1.5,
+      interactive: false,
+      attributionControl: false,
+    });
+  }
+
+  // Prepare full map with street markers
+  function ensureFullMap() {
+    if (fullMapReady) return;
+
+    fullMap = new maplibregl.Map({
+      container: "fullMapContainer",
+      style: "https://demotiles.maplibre.org/style.json",
+      center: [0, 20],
+      zoom: 2.5,
+    });
+    fullMap.addControl(new maplibregl.NavigationControl());
+
+    STREETS.forEach((st, index) => {
+      const lat = parseFloat(st.lat);
+      const lng = parseFloat(st.lng);
+      if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+
+      const marker = new maplibregl.Marker().setLngLat([lng, lat]).addTo(fullMap);
+      marker.getElement().addEventListener("click", () => {
+        loadStreetByIndex(index);
+        hideFullMap();
+      });
+    });
+
+    fullMapReady = true;
+  }
+
+  // Update mini map position and marker
+  function updateMiniMapForStreet(street) {
+    if (!miniMap) return;
+    const lat = parseFloat(street.lat);
+    const lng = parseFloat(street.lng);
+    if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+
+    miniMap.jumpTo({ center: [lng, lat], zoom: 14 });
+
+    if (!miniMarker) {
+      miniMarker = new maplibregl.Marker({ color: "#ef4444", scale: 0.9 })
+        .setLngLat([lng, lat])
+        .addTo(miniMap);
+    } else {
+      miniMarker.setLngLat([lng, lat]);
+    }
+  }
+
+  // Full map overlay display handlers
+  const miniMapEl = document.getElementById("miniMap");
+  const fullMapOverlay = document.getElementById("fullMapOverlay");
+  const closeMapBtn = document.getElementById("closeMapBtn");
+
+  function showFullMap() {
+    fullMapOverlay.style.display = "flex";
+    ensureFullMap();
+    if (currentStreetIndex >= 0) {
+      const st = STREETS[currentStreetIndex];
+      const lat = parseFloat(st.lat);
+      const lng = parseFloat(st.lng);
+      if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+        fullMap.jumpTo({ center: [lng, lat], zoom: 15 });
+      }
+    }
+  }
+
+  function hideFullMap() {
+    fullMapOverlay.style.display = "none";
+  }
+
+  miniMapEl.addEventListener("click", showFullMap);
+  miniMapEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") showFullMap();
+  });
+  closeMapBtn.addEventListener("click", hideFullMap);
+
+  initMiniMap();
+
+  // DOM elements for avatar and video
+  const video = document.getElementById("streetVideo");
+  const vsrc = document.getElementById("videoSource");
+  const citySceneMV = document.getElementById("citySceneMV");
+  const avatar = document.getElementById("avatarMV");
+  const shadowEl = document.getElementById("avatarShadow");
+  const footsteps = document.getElementById("footstepAudio");
+  const actionBtn = document.getElementById("actionBtn");
+  const joystickBase = document.getElementById("joystickBase");
+  const joystickKnob = document.getElementById("joystickKnob");
+  const nextOverlay = document.getElementById("nextOverlay");
+  const nextStreetName = document.getElementById("nextStreetName");
+  const nextStreetLocation = document.getElementById("nextStreetLocation");
+  const fadeLayer = document.getElementById("fadeLayer");
+  const settingsBtn = document.getElementById("settingsBtn");
+  const settingsPopup = document.getElementById("settingsPopup");
+  const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+  const settingsSpeed = document.getElementById("settingsSpeed");
+  const settingsFP = document.getElementById("settingsFP");
+  const settingsAutoWalk = document.getElementById("settingsAutoWalk");
+  const objectOverlay = document.getElementById("objectOverlay");
+
+  // Avatar & navigation state
+  let currentStreetIndex = -1;
+  let currentStreetType = "video"; // video or 3d
+  let currentGender = "male";
+  let walkSpeed = 1;
+  let firstPerson = false;
+  let soundEnabled = true;
+  let yawCurrent = 0;
+  let yawTarget = 0;
+  let headBob = 0;
+  let bobDirection = 1;
+  let keyDir = 0;
+  let joyDir = 0;
+  let autoDir = 0;
+  let currentDir = 0;
+  let reverseInterval = null;
+  let reversePlaying = false;
+  let joyActive = false;
+
+  // Safe play/pause video helpers
+  function safePlay() {
+    if (!video || !video.paused) return;
+    video.play().catch(() => {});
+  }
+  function safePause() {
+    if (!video || video.paused) return;
+    video.pause();
+  }
+
+  // Build avatar model path string
+  function modelPath(gender, state) {
+    return `/static/avatars/${gender}/${state}.glb`;
+  }
+
+  // Apply orientation rotation to avatar
+  function applyOrientation() {
+    if (!avatar) return;
+    avatar.orientation = `0deg 0deg ${yawCurrent}deg`;
+  }
+
+  // Set avatar source based on movement
+  function setAvatarState() {
+    if (!avatar) return;
+    const state = currentDir === 0 ? "idle" : "walk";
+    avatar.src = modelPath(currentGender, state);
+    avatar.addEventListener("load", applyOrientation, { once: true });
+  }
+
+  // Show/hide 3D object overlay
+  function show3DObject(glbPath, options = {}) {
+    if (!objectOverlay) return;
+    objectOverlay.src = glbPath;
+    objectOverlay.style.opacity = 1;
+    const x = options.x || 50;
+    const y = options.y || 180;
+    const scale = options.scale || 1;
+    objectOverlay.style.left = `${x}%`;
+    objectOverlay.style.bottom = `${y}px`;
+    objectOverlay.style.transform = `translateX(-50%) scale(${scale})`;
+  }
+  function hide3DObject() {
+    if (!objectOverlay) return;
+    objectOverlay.style.opacity = 0;
+  }
+
+  // Load street - setup video or 3D and UI
+  function loadStreet(street) {
+    hide3DObject();
+
+    document.getElementById("streetName").textContent = street.name || "Untitled Street";
+    document.getElementById("streetLocation").textContent =
+      `${street.city || ""}${street.city && street.country ? ", " : ""}${street.country || ""}`;
+
+    currentStreetType = (street.type || "video").toLowerCase();
+
+    if (currentStreetType === "3d") {
+      video.style.display = "none";
+      avatar.style.display = "none";
+      shadowEl.style.display = "none";
+      citySceneMV.style.display = "block";
+      citySceneMV.src = street.glbUrl || street.modelUrl || "";
+      safePause();
+      stopReverse();
+      currentDir = 0;
+      keyDir = joyDir = autoDir = 0;
+      updateFootsteps();
+    } else {
+      citySceneMV.style.display = "none";
+      video.style.display = "block";
+      avatar.style.display = "block";
+      shadowEl.style.display = "block";
+      if (vsrc) vsrc.src = street.videoUrl || "";
+      video.load();
+      video.currentTime = 0;
+      safePause();
+    }
+
+    updateMiniMapForStreet(street);
+  }
+  function loadStreetByIndex(index) {
+    if (index < 0 || index >= STREETS.length) return;
+    currentStreetIndex = index;
+    loadStreet(STREETS[index]);
+  }
+
+  // Gender switch buttons behavior with accessibility update
+  document.querySelectorAll(".gender-buttons button").forEach((btn, index, arr) => {
+    btn.addEventListener("click", () => {
+      arr.forEach(b => {
+        b.classList.remove("active");
+        b.setAttribute("aria-checked", "false");
+        b.tabIndex = -1;
+      });
+      btn.classList.add("active");
+      btn.setAttribute("aria-checked", "true");
+      btn.tabIndex = 0;
+      currentGender = btn.dataset.gender;
+      setAvatarState();
+      btn.focus();
+    });
+  });
+
+  // Video forward/reverse playback utilities
+  function stopReverse() {
+    if (reverseInterval) {
+      clearInterval(reverseInterval);
+      reverseInterval = null;
+    }
+    reversePlaying = false;
+  }
+  function playForward() {
+    stopReverse();
+    if (!video) return;
+    video.playbackRate = walkSpeed;
+    safePlay();
+  }
+  // Replaced reverse playback using requestAnimationFrame for smoothness:
+  function playReverse() {
+    if (reversePlaying || !video) return;
+    reversePlaying = true;
+    safePause();
+    stopReverse();
+
+    function stepReverse() {
+      if (!reversePlaying) return;
+
+      if (video.currentTime <= 0.02) {
+        video.currentTime = video.duration; // loop cleanly
+      } else {
+        video.currentTime = Math.max(
+          0,
+          video.currentTime - (0.016 * walkSpeed) // smoother decrement
+        );
+      }
+
+      requestAnimationFrame(stepReverse);
+    }
+
+    requestAnimationFrame(stepReverse);
+  }
+
+  // Footstep sound update according to state
+  function updateFootsteps() {
+    if (!footsteps) return;
+    if (!soundEnabled || currentDir === 0 || currentStreetType === "3d") {
+      if (!footsteps.paused) {
+        footsteps.pause();
+        footsteps.currentTime = 0;
+      }
+      return;
+    }
+    footsteps.playbackRate = 0.9 + walkSpeed * 0.3;
+    footsteps.volume = firstPerson ? 0.75 : 0.55;
+    footsteps.play().catch(() => {});
+  }
+
+  // Combine movement from keyboard, joystick, or auto
+  function recomputeDirection() {
+    const newDir = keyDir || joyDir || autoDir;
+    if (newDir === currentDir) return;
+    currentDir = newDir;
+
+    if (currentStreetType === "3d") {
+      safePause();
+      stopReverse();
+      updateFootsteps();
+      setAvatarState();
+      return;
+    }
+
+    if (currentDir === 1) playForward();
+    else if (currentDir === -1) playReverse();
+    else {
+      safePause();
+      stopReverse();
+    }
+
+    setAvatarState();
+    updateFootsteps();
+  }
+
+  // Toggle first person mode
+  function setFirstPerson(val) {
+    firstPerson = val;
+    document.body.classList.toggle("fp-mode", firstPerson);
+    if (settingsFP) {
+      settingsFP.classList.toggle("active", firstPerson);
+      settingsFP.textContent = firstPerson ? "On" : "Off";
+      settingsFP.setAttribute("aria-pressed", firstPerson.toString());
+    }
+  }
+
+  // Toggle auto walk on/off
+  function toggleAutoWalk() {
+    autoDir = autoDir ? 0 : 1;
+    if (settingsAutoWalk) {
+      settingsAutoWalk.classList.toggle("active", !!autoDir);
+      settingsAutoWalk.textContent = autoDir ? "On" : "Off";
+      settingsAutoWalk.setAttribute("aria-pressed", (!!autoDir).toString());
+    }
+    recomputeDirection();
+  }
+
+  // Interact button to advance near streets in 3D mode
+  if (actionBtn) {
+    actionBtn.addEventListener("click", () => {
+      actionBtn.style.transform = "scale(0.94)";
+      setTimeout(() => (actionBtn.style.transform = ""), 120);
+      if (currentStreetType === "3d") {
+        if (STREETS.length < 2 || currentStreetIndex < 0) return;
+        const nextIndex = findNearestStreetIndex(currentStreetIndex);
+        if (nextIndex !== -1) {
+          showNextStreetOverlay(nextIndex);
+        }
+      }
+    });
+  }
+
+  // Geo helpers and find nearest street for auto-chain
+  function deg2rad(deg) {
+    return deg * Math.PI / 180;
+  }
+  function haversineDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = deg2rad(lat2 - lat1);
+    const dLng = deg2rad(lng2 - lng1);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLng / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+  function findNearestStreetIndex(baseIndex) {
+    if (baseIndex < 0 || baseIndex >= STREETS.length) return -1;
+    if (STREETS.length < 2) return -1;
+    const base = STREETS[baseIndex];
+    const baseLat = parseFloat(base.lat);
+    const baseLng = parseFloat(base.lng);
+    if (Number.isNaN(baseLat) || Number.isNaN(baseLng)) return -1;
+    let bestIndex = -1;
+    let bestDist = Infinity;
+    STREETS.forEach((st, i) => {
+      if (i === baseIndex) return;
+      const lat = parseFloat(st.lat);
+      const lng = parseFloat(st.lng);
+      if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+      const d = haversineDistance(baseLat, baseLng, lat, lng);
+      if (d < bestDist) {
+        bestDist = d;
+        bestIndex = i;
+      }
+    });
+    return bestIndex;
+  }
+  // Fade effect helpers
+  function fadeOut() {
+    return new Promise(resolve => {
+      fadeLayer.style.opacity = 1;
+      setTimeout(resolve, 700);
+    });
+  }
+  function fadeIn() {
+    fadeLayer.style.opacity = 0;
+  }
+
+  // Auto-chaining when video ends if walking
+  video.addEventListener("ended", () => {
+    if (currentStreetType !== "video") return;
+    // Show stop sign overlay
+    show3DObject("/static/objects/stop_sign.glb", { x: 50, y: 200, scale: 1.4 });
+    const isWalking = (autoDir === 1 || keyDir === 1 || joyDir === 1);
+    if (!isWalking || STREETS.length < 2 || currentStreetIndex < 0) return;
+    const nextIndex = findNearestStreetIndex(currentStreetIndex);
+    if (nextIndex === -1) return;
+    showNextStreetOverlay(nextIndex);
+  });
+
+  // Show next street overlay and switch
+  async function showNextStreetOverlay(nextIndex) {
+    const st = STREETS[nextIndex];
+    nextStreetName.textContent = st.name || "Next Street";
+    nextStreetLocation.textContent = `${st.city || ""}${st.city && st.country ? ", " : ""}${st.country || ""}`;
+    nextOverlay.classList.add("visible");
+    await new Promise(r => setTimeout(r, 1100));
+    await fadeOut();
+    nextOverlay.classList.remove("visible");
+    loadStreetByIndex(nextIndex);
+    if (currentStreetType === "video" && autoDir === 1) playForward();
+    setTimeout(() => fadeIn(), 150);
+  }
+
+  // Keyboard controls for direction and yaw
+  window.addEventListener("keydown", e => {
+    const k = e.key.toLowerCase();
+    if (k === "arrowleft" || k === "a") yawTarget -= 10;
+    else if (k === "arrowright" || k === "d") yawTarget += 10;
+    else if (k === "arrowup" || k === "w") { keyDir = 1; recomputeDirection(); }
+    else if (k === "arrowdown" || k === "s") { keyDir = -1; recomputeDirection(); }
+    else if (k === "f") setFirstPerson(!firstPerson);
+  });
+  window.addEventListener("keyup", e => {
+    const k = e.key.toLowerCase();
+    if (["arrowup", "w", "arrowdown", "s"].includes(k)) {
+      keyDir = 0;
+      recomputeDirection();
+    }
+  });
+
+  // Mobile arrow touch controls (optional, hidden)
+  document.querySelectorAll(".arrow-btn").forEach(btn => {
+    btn.addEventListener("touchstart", () => {
+      const dir = btn.dataset.dir;
+      if (dir === "up") keyDir = 1;
+      else if (dir === "down") keyDir = -1;
+      else if (dir === "left") yawTarget -= 10;
+      else if (dir === "right") yawTarget += 10;
+      recomputeDirection();
+    }, { passive: true });
+    btn.addEventListener("touchend", () => {
+      keyDir = 0;
+      recomputeDirection();
+    });
+  });
+
+  // Joystick controls for pointer events
+  function setJoystickFromEvent(ev) {
+    const rect = joystickBase.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = ev.clientX - cx;
+    const dy = ev.clientY - cy;
+    const r = rect.width / 2;
+    const nx = Math.max(-1, Math.min(1, dx / r));
+    const ny = Math.max(-1, Math.min(1, dy / r));
+    joystickKnob.style.transform = `translate(${nx * (r * 0.45)}px, ${ny * (r * 0.45)}px)`;
+    const move = -ny;
+    if (Math.abs(move) > 0.15) {
+      joyDir = move > 0 ? 1 : -1;
+    } else {
+      joyDir = 0;
+    }
+    if (Math.abs(nx) > 0.12) {
+      yawTarget += nx * 4;
+    }
+    recomputeDirection();
+  }
+  function resetJoystick() {
+    joyDir = 0;
+    joystickKnob.style.transform = "translate(0,0)";
+    recomputeDirection();
+  }
+  joystickBase.addEventListener("pointerdown", e => {
+    joystickBase.setPointerCapture(e.pointerId);
+    joyActive = true;
+    setJoystickFromEvent(e);
+  });
+  joystickBase.addEventListener("pointermove", e => {
+    if (!joyActive) return;
+    setJoystickFromEvent(e);
+  });
+  joystickBase.addEventListener("pointerup", e => {
+    joyActive = false;
+    resetJoystick();
+  });
+  joystickBase.addEventListener("pointercancel", e => {
+    joyActive = false;
+    resetJoystick();
+  });
+
+  // SETTINGS popup logic and bindings
+  settingsBtn.addEventListener("click", () => {
+    settingsPopup.classList.add("show");
+    settingsPopup.setAttribute("aria-hidden", "false");
+    settingsBtn.setAttribute("aria-expanded", "true");
+    settingsSpeed.value = walkSpeed.toString();
+    settingsFP.classList.toggle("active", firstPerson);
+    settingsFP.textContent = firstPerson ? "On" : "Off";
+    settingsFP.setAttribute("aria-pressed", firstPerson.toString());
+    settingsAutoWalk.classList.toggle("active", !!autoDir);
+    settingsAutoWalk.textContent = autoDir ? "On" : "Off";
+    settingsAutoWalk.setAttribute("aria-pressed", (!!autoDir).toString());
+  });
+  closeSettingsBtn.addEventListener("click", () => {
+    settingsPopup.classList.remove("show");
+    settingsPopup.setAttribute("aria-hidden", "true");
+    settingsBtn.setAttribute("aria-expanded", "false");
+    settingsBtn.focus();
+  });
+
+  // Walk speed slider
+  settingsSpeed.addEventListener("input", () => {
+    walkSpeed = parseFloat(settingsSpeed.value) || 1;
+    if (currentDir === 1 && currentStreetType === "video") {
+      video.playbackRate = walkSpeed;
+    }
+    updateFootsteps();
+  });
+
+  // First-person toggle
+  settingsFP.addEventListener("click", () => {
+    setFirstPerson(!firstPerson);
+  });
+
+  // Auto-walk toggle
+  settingsAutoWalk.addEventListener("click", () => {
+    toggleAutoWalk();
+  });
+
+  // Main animation loop: smooth yaw and head bob
+  function tick() {
+    // Smooth yaw rotation
+    yawCurrent += (yawTarget - yawCurrent) * 0.18;
+    applyOrientation();
+
+    // Head bobbing effect when walking video streets
+    if (currentDir !== 0 && currentStreetType === "video") {
+      headBob += bobDirection * 0.25 * walkSpeed;
+      if (headBob > 2 || headBob < -2) bobDirection *= -1;
+    } else {
+      headBob *= 0.85;
+    }
+    const bobY = headBob;
+    const avatarOffset = Math.sin(headBob) * 1.6 * walkSpeed;
+    const tilt = currentDir === 1 ? -4 : currentDir === -1 ? 4 : 0;
+    const fpScale = firstPerson ? 1.05 : 1;
+
+    // Use GPU accelerated transform for video
+    if (currentStreetType === "video") {
+      video.style.transform = `translate3d(0, ${bobY * (firstPerson ? 2 : 1)}px, 0) scale(${fpScale})`;
+    }
+    // Third-person avatar transform
+    if (!firstPerson && avatar && currentStreetType === "video") {
+      avatar.style.transform = `translateX(-50%) translateY(${avatarOffset - 15}px) rotateX(${tilt}deg)`;
+    }
+    // Shadow pulse effect
+    const baseShadowW = 200;
+    const sw = baseShadowW * (1 - Math.abs(headBob) / 24);
+    shadowEl.style.width = `${sw}px`;
+    shadowEl.style.opacity = currentDir === 0 ? 0.8 : 0.95;
+
+    requestAnimationFrame(tick);
+  }
+
+  // Start initial state
+  applyOrientation();
+  setAvatarState();
+  requestAnimationFrame(tick);
+
+  // Auto-load first street if any
+  if (Array.isArray(STREETS) && STREETS.length > 0) {
+    loadStreetByIndex(0);
+  }
+</script>
+
+</body>
+</html>
