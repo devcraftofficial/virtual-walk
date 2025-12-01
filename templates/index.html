@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Virtual Street Walk – Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- MapLibre -->
+  <link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet">
+  <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+
+  <style>
+    :root {
+      --bg-page: #020617;
+      --bg-panel: #0b1120;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #020617, #000);
+      font-family: system-ui, sans-serif;
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1300px;
+      display: flex;
+      gap: 20px;
+    }
+
+    /* Left map panel */
+    .map-panel {
+      width: 32%;
+      background: var(--bg-panel);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+    }
+
+    #map {
+      width: 100%;
+      height: 500px;
+      border-radius: var(--radius-md);
+    }
+
+    /* Right viewer */
+    .viewer-panel {
+      flex: 1;
+      background: linear-gradient(145deg, #0f172a, #08314a);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+    }
+
+    .viewer-box {
+      margin-top: 10px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: #000;
+      aspect-ratio: 16/9;
+      border: 1px solid rgba(56,189,248,0.2);
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .status {
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: rgba(15,23,42,0.8);
+      border-radius: 999px;
+      display: inline-block;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    a {
+      color: #38bdf8;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- LEFT MAP -->
+  <aside class="map-panel">
+    <h3>🗺️ Street Map</h3>
+    <div id="map"></div>
+    <p style="font-size:12px;color:#9ca3af;margin-top:8px;">
+      Add new streets → <a href="{{ url_for('upload') }}">Upload Page</a>
+    </p>
+  </aside>
+
+  <!-- RIGHT VIEWER -->
+  <main class="viewer-panel">
+
+    <h2 id="streetName">Select a Street</h2>
+    <p id="streetLocation" style="font-size:12px;color:#9ca3af;">Waiting…</p>
+
+    <div class="viewer-box">
+      <video id="streetVideo" controls>
+        <source src="" type="video/mp4">
+      </video>
+    </div>
+
+    <div class="status" id="statusPill">📍 No street selected</div>
+
+  </main>
+
+</div>
+
+
+<!-- ============================
+     MAIN JS (simple — NO modules)
+=============================== -->
+<script>
+  const STREETS = {{ streets | tojson }};
+
+  /* MAP */
+  const map = new maplibregl.Map({
+    container: "map",
+    style: "https://demotiles.maplibre.org/style.json",
+    center: [55.2708, 25.2048],
+    zoom: 12
+  });
+
+  map.addControl(new maplibregl.NavigationControl());
+
+  STREETS.forEach(st => {
+    const marker = new maplibregl.Marker()
+      .setLngLat([st.lng, st.lat])
+      .addTo(map);
+
+    marker.getElement().addEventListener("click", () => loadStreet(st));
+  });
+
+  /* UI elements */
+  const videoEl = document.getElementById("streetVideo");
+  const sourceEl = videoEl.querySelector("source");
+  const streetName = document.getElementById("streetName");
+  const streetLocation = document.getElementById("streetLocation");
+  const statusPill = document.getElementById("statusPill");
+
+  function loadStreet(st) {
+    streetName.textContent = st.name;
+    streetLocation.textContent = `${st.city}, ${st.country}`;
+    statusPill.textContent = `📍 Viewing ${st.name}`;
+
+    sourceEl.src = st.videoUrl;
+    videoEl.load();
+    videoEl.play();
+  }
+</script>
+
+</body>
+</html>
