@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Virtual Street Walk – Home</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- MapLibre -->
-  <link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet">
+  <link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
 
   <style>
@@ -15,17 +15,16 @@
       --bg-panel: #020617cc;
       --bg-card: #0b1120;
       --accent: #38bdf8;
-      --accent-soft: rgba(56,189,248,0.15);
+      --accent-soft: rgba(56, 189, 248, 0.15);
       --text-main: #e5e7eb;
       --text-muted: #9ca3af;
       --radius-lg: 18px;
       --radius-md: 12px;
-      --shadow-soft: 0 22px 45px rgba(0,0,0,0.65);
+      --shadow-soft: 0 22px 45px rgba(0, 0, 0, 0.65);
+      --focus-ring-color: rgba(56, 189, 248, 0.85);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -35,206 +34,339 @@
         radial-gradient(circle at bottom right, #022c3a, #000 70%);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--text-main);
-      display: flex;
-      justify-content: center;
       padding: 22px;
+      scroll-behavior: smooth;
     }
 
     .shell {
       width: 100%;
       max-width: 1360px;
-      background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(15,23,42,0.92));
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.92));
       border-radius: 28px;
       padding: 18px 22px 22px;
       box-shadow: var(--shadow-soft);
-      border: 1px solid rgba(148,163,184,0.35);
+      border: 1px solid rgba(148, 163, 184, 0.35);
       backdrop-filter: blur(14px);
       display: flex;
       flex-direction: column;
       gap: 14px;
     }
 
-    /* Top header row */
+    .top-nav {
+      width: 100%;
+      height: 58px;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(12px);
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+      margin-bottom: 22px;
+      user-select: none;
+      z-index: 20;
+      position: sticky;
+      top: 0;
+    }
+    .top-nav .nav-left,
+    .top-nav .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .top-nav a {
+      color: #e5e7eb;
+      text-decoration: none;
+      font-size: 15px;
+      opacity: 0.88;
+      transition: opacity 0.25s ease;
+      user-select: text;
+    }
+    .top-nav a:hover,
+    .top-nav a:focus-visible {
+      opacity: 1;
+      outline: none !important;
+      text-decoration: none !important;
+      box-shadow: none !important;
+    }
+    .logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: #38bdf8;
+      user-select: text;
+    }
+
     .header-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 12px;
+      flex-wrap: wrap;
     }
 
     .title-block h1 {
       margin: 0;
-      font-size: 22px;
+      font-size: 24px;
       letter-spacing: 0.02em;
+      line-height: 1.2;
     }
 
     .title-block p {
-      margin: 3px 0 0;
-      font-size: 12px;
+      margin: 4px 0 0;
+      font-size: 13px;
       color: var(--text-muted);
     }
 
     .cta-row {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
     .pill {
-      padding: 6px 10px;
+      padding: 6px 12px;
       border-radius: 999px;
-      font-size: 11px;
-      background: rgba(15,23,42,0.8);
-      border: 1px solid rgba(148,163,184,0.5);
+      font-size: 12px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.5);
       color: var(--text-muted);
+      user-select: none;
     }
 
     .btn-primary {
       border: none;
       border-radius: 999px;
-      padding: 9px 18px;
-      font-size: 13px;
-      font-weight: 500;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
       letter-spacing: 0.02em;
       background: radial-gradient(circle at 20% 0%, #38bdf8, #0369a1);
       color: white;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      box-shadow: 0 16px 35px rgba(8,47,73,0.9);
-      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+      gap: 8px;
+      box-shadow: 0 16px 35px rgba(8, 47, 73, 0.9);
+      transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
       text-decoration: none;
+      user-select: none;
     }
-
-    .btn-primary span.icon {
-      font-size: 15px;
+    .btn-primary:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px #020617, 0 0 0 4px var(--focus-ring-color);
     }
-
     .btn-primary:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.04);
-      box-shadow: 0 22px 45px rgba(8,47,73,1);
+      transform: translateY(-2px);
+      filter: brightness(1.07);
+      box-shadow: 0 22px 45px rgba(8, 47, 73, 1);
     }
-
     .btn-primary:active {
       transform: translateY(0);
-      box-shadow: 0 12px 26px rgba(8,47,73,0.7);
+      box-shadow: 0 12px 26px rgba(8, 47, 73, 0.7);
+    }
+    .btn-primary .icon {
+      font-size: 18px;
+      line-height: 1;
     }
 
-    /* Main two-column layout */
     .container {
       width: 100%;
       display: flex;
       gap: 18px;
       align-items: stretch;
+      flex-wrap: wrap;
     }
 
-    /* Left map panel */
     .map-panel {
-      width: 33%;
+      flex-basis: 350px;
+      flex-shrink: 0;
       background: var(--bg-panel);
       border-radius: var(--radius-lg);
-      padding: 14px;
-      border: 1px solid rgba(148,163,184,0.4);
-      box-shadow: 0 18px 38px rgba(0,0,0,0.75);
+      padding: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      box-shadow: 0 18px 38px rgba(0, 0, 0, 0.75);
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
+      order: 1;
     }
 
     .map-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 6px;
-      font-size: 13px;
+      font-size: 14px;
+      font-weight: 500;
     }
-
-    .map-header span {
-      opacity: 0.9;
-    }
+    .map-header span { opacity: 0.9; }
 
     .chip {
-      font-size: 11px;
-      padding: 3px 9px;
+      font-size: 12px;
+      padding: 4px 12px;
       border-radius: 999px;
-      background: rgba(15,23,42,0.9);
-      border: 1px solid rgba(148,163,184,0.4);
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.4);
       color: var(--text-muted);
+      user-select: none;
     }
 
     #map {
       width: 100%;
-      height: 420px;
+      height: 440px;
       border-radius: var(--radius-md);
       overflow: hidden;
-      border: 1px solid rgba(30,64,175,0.55);
+      border: 1px solid rgba(30, 64, 175, 0.55);
+      box-shadow: inset 0 0 6px rgba(56, 189, 248, 0.25);
+    }
+
+    .maplibregl-marker:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 4px;
     }
 
     .map-footer {
-      margin-top: 6px;
-      font-size: 11px;
+      margin-top: 8px;
+      font-size: 12px;
       color: var(--text-muted);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
 
     .map-footer a {
       color: var(--accent);
       text-decoration: none;
+      font-weight: 600;
     }
 
-    .map-footer a:hover {
+    .map-footer a:hover,
+    .map-footer a:focus-visible {
       text-decoration: underline;
+      outline: none;
+      box-shadow: 0 0 0 2px #020617, 0 0 0 3px var(--focus-ring-color);
     }
 
-    /* Right viewer */
-    .viewer-panel {
-      flex: 1;
-      background: radial-gradient(circle at top left, #0f172a, #020617);
-      border-radius: var(--radius-lg);
-      padding: 16px 18px 18px;
-      border: 1px solid rgba(30,64,175,0.65);
-      box-shadow: 0 18px 40px rgba(0,0,0,0.9);
+    #topRatedBox {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(148,163,184,0.4);
+      font-size: 12px;
+    }
+    #topRatedTitle {
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    #topRatedList {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
       display: flex;
       flex-direction: column;
+      gap: 4px;
+    }
+    .top-rated-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 8px;
+      transition: background 0.12s ease;
+    }
+    .top-rated-item:hover,
+    .top-rated-item:focus-visible {
+      background: rgba(15, 23, 42, 0.7);
+      outline: none;
+    }
+
+    #recentBox {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(148,163,184,0.35);
+      font-size: 12px;
+    }
+    #recentTitle {
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    #recentList {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .recent-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 8px;
+      transition: background 0.12s ease;
+    }
+    .recent-item:hover,
+    .recent-item:focus-visible {
+      background: rgba(15, 23, 42, 0.7);
+      outline: none;
+    }
+
+    .viewer-panel {
+      flex: 1 1 0;
+      background: radial-gradient(circle at top left, #0f172a, #020617);
+      border-radius: var(--radius-lg);
+      padding: 18px 22px 22px;
+      border: 1px solid rgba(30, 64, 175, 0.65);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      min-width: 280px;
+      order: 2;
     }
 
     .viewer-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      gap: 12px;
+      gap: 14px;
+      flex-wrap: wrap;
     }
 
     .viewer-header-main h2 {
       margin: 0;
-      font-size: 18px;
+      font-size: 20px;
     }
 
     .viewer-header-main p {
       margin: 4px 0 0;
-      font-size: 12px;
+      font-size: 13px;
       color: var(--text-muted);
     }
 
     .viewer-meta {
       text-align: right;
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-muted);
+      min-width: 120px;
+      user-select: none;
     }
 
     .viewer-box {
-      margin-top: 14px;
+      margin-top: 18px;
       border-radius: var(--radius-md);
       overflow: hidden;
       background: #000;
-      aspect-ratio: 16/9;
+      aspect-ratio: 16 / 9;
       border: 1px solid var(--accent-soft);
       position: relative;
+      box-shadow: inset 0 0 15px rgba(56,189,248,0.3);
     }
 
     .viewer-box video {
@@ -242,10 +374,55 @@
       height: 100%;
       object-fit: cover;
       background: #000;
+      transition: opacity 0.3s ease;
+      display: block;
+    }
+
+    .video-loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 40px;
+      height: 40px;
+      margin: -20px 0 0 -20px;
+      border: 4px solid rgba(56,189,248,0.3);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      pointer-events: none;
+      z-index: 10;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .video-mute-btn {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      color: var(--accent);
+      font-size: 18px;
+      transition: background 0.25s ease;
+      user-select: none;
+    }
+    .video-mute-btn:hover,
+    .video-mute-btn:focus-visible {
+      background: var(--accent);
+      color: #020617;
+      outline: none;
+      box-shadow: 0 0 0 2px #020617, 0 0 0 3px var(--focus-ring-color);
     }
 
     .status-row {
-      margin-top: 10px;
+      margin-top: 14px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -253,171 +430,457 @@
     }
 
     .status-pill {
-      padding: 7px 12px;
-      background: rgba(15,23,42,0.92);
+      padding: 8px 14px;
+      background: rgba(15, 23, 42, 0.92);
       border-radius: 999px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      font-size: 12px;
+      gap: 8px;
+      font-size: 13px;
       color: var(--text-muted);
-      border: 1px solid rgba(148,163,184,0.5);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      user-select: none;
+      min-width: 180px;
     }
 
     .status-dot {
-      width: 8px;
-      height: 8px;
+      width: 10px;
+      height: 10px;
       border-radius: 999px;
       background: #22c55e;
-      box-shadow: 0 0 0 4px rgba(34,197,94,0.25);
+      box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.25);
+      flex-shrink: 0;
     }
 
-    .hint-text {
+    .grid {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+      order: 3;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+      user-select: none;
+      outline-offset: 3px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .card:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px #020617, 0 0 0 3px var(--focus-ring-color);
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 18px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    .thumb video,
+    .thumb img {
+      width: 100%;
+      height: 110px;
+      object-fit: cover;
+      display: block;
+      border-bottom: 1px solid rgba(148,163,184,0.2);
+      border-radius: 14px 14px 0 0;
+      user-select: none;
+    }
+
+    .card-info {
+      padding: 12px 14px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .card-info h4 {
+      margin: 0 0 4px;
+      font-size: 15px;
+      font-weight: 600;
+      user-select: text;
+    }
+
+    .card-info p {
+      margin: 0;
+      font-size: 12px;
+      color: #9ca3af;
+      user-select: text;
+    }
+
+    .card-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .mode-pill {
       font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.4);
       color: var(--text-muted);
-      opacity: 0.9;
+    }
+    .mode-walk { border-color: #22c55e; color: #bbf7d0; }
+    .mode-drive { border-color: #38bdf8; color: #e0f2fe; }
+    .mode-fly { border-color: #a855f7; color: #f3e8ff; }
+    .mode-sit { border-color: #f97316; color: #ffedd5; }
+
+    .like-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 999px;
+      transition: background 0.12s ease, color 0.12s ease;
+    }
+    .like-btn:hover,
+    .like-btn:focus-visible {
+      background: rgba(248, 250, 252, 0.06);
+      color: #f97316;
+      outline: none;
+    }
+    .like-btn.liked {
+      color: #f97316;
     }
 
-    /* Responsive */
     @media (max-width: 900px) {
-      body {
-        padding: 12px;
-      }
-      .shell {
-        padding: 14px;
-      }
-      .container {
-        flex-direction: column;
-      }
-      .map-panel {
-        width: 100%;
-      }
-      .viewer-panel {
-        width: 100%;
-      }
+      body { padding: 14px; }
+      .shell { padding: 14px 14px 18px; border-radius: 22px; }
+      .container { flex-direction: column; }
+      .map-panel { order: 1; }
+      .viewer-panel { order: 2; }
+      .grid { order: 3; }
+      .top-nav { position: static; margin-bottom: 14px; padding: 0 14px; }
+      .top-nav .nav-right { display: none; }
     }
   </style>
 </head>
 
 <body>
-
 <div class="shell">
 
-  <!-- Top header -->
+  <div class="top-nav">
+    <div class="nav-left">
+      <div class="logo">Virtual Street Walk</div>
+      <a href="{{ url_for('upload') }}">Add street</a>
+    </div>
+    <div class="nav-right">
+      <a href="{{ url_for('walk') }}">Walk</a>
+      <a href="{{ url_for('drive') }}">Drive</a>
+      <a href="{{ url_for('fly') }}">Fly</a>
+      <a href="{{ url_for('sit') }}">Sit</a>
+    </div>
+  </div>
+
   <div class="header-row">
     <div class="title-block">
-      <h1>Virtual Street Walk</h1>
-      <p>Browse captured streets, then jump into the live 3D walking experience.</p>
+      <h1>Explore streets like a game</h1>
+      <p>Pick any street, then walk, drive, fly or just sit and watch.</p>
     </div>
 
     <div class="cta-row">
-      <div class="pill">Today • {{ streets|length }} streets available</div>
+      <div class="pill" aria-live="polite" aria-atomic="true">
+        Today • {{ streets|length }} streets available
+      </div>
 
-      <!-- EXPLORE THE WORLD BUTTON -->
-      <a href="{{ url_for('world') }}" class="btn-primary">
-        <span class="icon">🌍</span>
-        <span>Explore the world</span>
+      
+      <a href="{{ url_for('walk') }}" class="btn-primary" role="button" tabindex="0">
+        <span class="icon" aria-hidden="true">🚶</span>
+        <span>Walk</span>
+      </a>
+      <a href="{{ url_for('drive') }}" class="btn-primary" role="button" tabindex="0">
+        <span class="icon" aria-hidden="true">🚗</span>
+        <span>Drive</span>
+      </a>
+      <a href="{{ url_for('fly') }}" class="btn-primary" role="button" tabindex="0">
+        <span class="icon" aria-hidden="true">✈️</span>
+        <span>Fly</span>
+      </a>
+      <a href="{{ url_for('sit') }}" class="btn-primary" role="button" tabindex="0">
+        <span class="icon" aria-hidden="true">🪑</span>
+        <span>Sit</span>
       </a>
     </div>
   </div>
 
-  <!-- Main 2-column dashboard content -->
   <div class="container">
-
-    <!-- LEFT MAP -->
-    <aside class="map-panel">
+    <!-- LEFT: map / top-rated / recent -->
+    <div class="map-panel">
       <div class="map-header">
-        <span>🗺️ Street Map</span>
+        <span>World map</span>
         <span class="chip">Click a pin to preview</span>
       </div>
-
       <div id="map"></div>
 
       <div class="map-footer">
-        <span>Manage your library of street captures.</span>
-        <span>
-          Add new streets → <a href="{{ url_for('upload') }}">Upload page</a>
-        </span>
+        <span>Use scroll to zoom, drag to pan.</span>
+        <a href="{{ url_for('upload') }}">+ Add new street</a>
       </div>
-    </aside>
 
-    <!-- RIGHT VIEWER -->
-    <main class="viewer-panel">
+      <div id="topRatedBox">
+        <div id="topRatedTitle">Top liked</div>
+        <ul id="topRatedList"></ul>
+      </div>
 
+      <div id="recentBox">
+        <div id="recentTitle">Recently added</div>
+        <ul id="recentList"></ul>
+      </div>
+    </div>
+
+    <!-- RIGHT: viewer and street cards -->
+    <div class="viewer-panel">
       <div class="viewer-header">
         <div class="viewer-header-main">
-          <h2 id="streetName">Select a street</h2>
-          <p id="streetLocation">Waiting for selection…</p>
+          <h2 id="viewerTitle">Preview street</h2>
+          <p id="viewerSubtitle">Click any card or map pin to load a sample clip.</p>
         </div>
-        <div class="viewer-meta">
-          <div style="font-size:11px;">Preview mode</div>
-          <div style="font-size:11px;opacity:0.8;">Click a pin on the map to load a video.</div>
+        <div class="viewer-meta" id="viewerMeta">
+          —
         </div>
       </div>
 
       <div class="viewer-box">
-        <video id="streetVideo" controls>
-          <source id="streetSource" src="" type="video/mp4">
-        </video>
+        <video id="previewVideo" muted playsinline></video>
+        <div class="video-loading" id="videoSpinner"></div>
+        <button type="button" id="muteBtn" class="video-mute-btn" aria-label="Toggle sound">🔇</button>
       </div>
 
       <div class="status-row">
-        <div class="status-pill" id="statusPill">
-          <span class="status-dot"></span>
-          <span id="statusText">No street selected</span>
+        <div class="status-pill">
+          <div class="status-dot"></div>
+          <span id="statusText">Idle – choose any street to preview.</span>
         </div>
-        <span class="hint-text">Tip: Use “Explore the world” to enter full avatar walk mode.</span>
       </div>
 
-    </main>
+      <div class="grid" id="streetsGrid">
+        {% for st in streets %}
+          <div class="card"
+               tabindex="0"
+               data-id="{{ st._id }}"
+               data-lat="{{ st.lat }}"
+               data-lng="{{ st.lng }}"
+               data-name="{{ st.name }}"
+               data-city="{{ st.city }}"
+               data-country="{{ st.country }}"
+               data-mode="{{ st.mode if st.type == 'video' else '3d' }}"
+               data-href="{% if st.type == '3d' %}{{ url_for('world', street_id=st._id) }}{% elif st.mode == 'walk' %}{{ url_for('world_walk', street_id=st._id) }}{% elif st.mode == 'drive' %}{{ url_for('world_drive', street_id=st._id) }}{% elif st.mode == 'fly' %}{{ url_for('world_fly', street_id=st._id) }}{% elif st.mode == 'sit' %}{{ url_for('world_sit', street_id=st._id) }}{% else %}{{ url_for('world', street_id=st._id) }}{% endif %}">
+            <div class="thumb">
+              {% if st.type == 'video' and st.videos and st.videos[0].url %}
+                <video src="{{ st.videos[0].url }}#t=0.1" muted playsinline></video>
+              {% else %}
+                <img src="https://dummyimage.com/320x180/020617/64748b&text=3D+World" alt="">
+              {% endif %}
+            </div>
+            <div class="card-info">
+              <div>
+                <h4>{{ st.name }}</h4>
+                <p>{{ st.city }}, {{ st.country }}</p>
+              </div>
+              <div class="card-meta-row">
+                {% if st.type == '3d' %}
+                  <span class="mode-pill">3D</span>
+                {% else %}
+                  <span class="mode-pill
+                    {% if st.mode == 'walk' %}mode-walk{% elif st.mode == 'drive' %}mode-drive{% elif st.mode == 'fly' %}mode-fly{% elif st.mode == 'sit' %}mode-sit{% endif %}">
+                    {{ st.mode|capitalize }}
+                  </span>
+                {% endif %}
+                <button
+                  type="button"
+                  class="like-btn"
+                  data-like-id="{{ st._id }}"
+                >
+                  ♥ <span class="like-count">{{ st.likes or 0 }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
   </div>
+
 </div>
 
 <script>
-  // Flask injects STREETS
-  const STREETS = {{ streets | tojson }};
+  const STREETS = {{ streets | tojson | safe }};
 
-  /* MAP */
+  // Map init
   const map = new maplibregl.Map({
     container: "map",
     style: "https://demotiles.maplibre.org/style.json",
     center: [55.2708, 25.2048],
-    zoom: 2.8
+    zoom: 2.5,
   });
 
-  map.addControl(new maplibregl.NavigationControl());
+  let markers = [];
+  function addMarkers() {
+    STREETS.forEach((st, index) => {
+      if (st.lat == null || st.lng == null) return;
+      const marker = new maplibregl.Marker()
+        .setLngLat([st.lng, st.lat])
+        .addTo(map);
 
-  STREETS.forEach(st => {
-    if (st.lng == null || st.lat == null) return;
+      marker.getElement().addEventListener("click", () => {
+        focusCardByIndex(index);
+      });
+      markers.push(marker);
+    });
+  }
+  addMarkers();
 
-    const marker = new maplibregl.Marker()
-      .setLngLat([st.lng, st.lat])
-      .addTo(map);
+  // Top liked + recent
+  const topRatedList = document.getElementById("topRatedList");
+  const recentList = document.getElementById("recentList");
 
-    marker.getElement().addEventListener("click", () => loadStreet(st));
+  const sortedByLikes = [...STREETS].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 5);
+  sortedByLikes.forEach(st => {
+    const li = document.createElement("li");
+    li.className = "top-rated-item";
+    li.textContent = `${st.name} · ♥ ${st.likes || 0}`;
+    li.addEventListener("click", () => focusCardById(st._id));
+    topRatedList.appendChild(li);
   });
 
-  /* UI elements */
-  const videoEl = document.getElementById("streetVideo");
-  const sourceEl = document.getElementById("streetSource");
-  const streetName = document.getElementById("streetName");
-  const streetLocation = document.getElementById("streetLocation");
-  const statusPill = document.getElementById("statusPill");
+  const sortedByTime = [...STREETS].sort((a, b) => {
+    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+  }).slice(0, 5);
+  sortedByTime.forEach(st => {
+    const li = document.createElement("li");
+    li.className = "recent-item";
+    li.textContent = `${st.name} · ${st.city || ""}`;
+    li.addEventListener("click", () => focusCardById(st._id));
+    recentList.appendChild(li);
+  });
+
+  // Viewer preview
+  const previewVideo = document.getElementById("previewVideo");
+  const videoSpinner = document.getElementById("videoSpinner");
+  const muteBtn = document.getElementById("muteBtn");
+  const viewerTitle = document.getElementById("viewerTitle");
+  const viewerSubtitle = document.getElementById("viewerSubtitle");
+  const viewerMeta = document.getElementById("viewerMeta");
   const statusText = document.getElementById("statusText");
 
-  function loadStreet(st) {
-    streetName.textContent = st.name || "Untitled street";
-    streetLocation.textContent = `${st.city || ""}${st.city && st.country ? ", " : ""}${st.country || ""}`;
+  let isMuted = true;
+  muteBtn.addEventListener("click", () => {
+    isMuted = !isMuted;
+    previewVideo.muted = isMuted;
+    muteBtn.textContent = isMuted ? "🔇" : "🔊";
+  });
 
-    statusText.textContent = `Viewing ${st.name || "street"}`;
-    statusPill.style.borderColor = "rgba(56,189,248,0.6)";
+  function loadPreviewForStreet(st) {
+    viewerTitle.textContent = st.name;
+    viewerSubtitle.textContent =
+      `${st.city || ""}${st.city && st.country ? ", " : ""}${st.country || ""}`;
+    viewerMeta.textContent = st.mode
+      ? (st.mode.toUpperCase() + " • ♥ " + (st.likes || 0))
+      : "3D • ♥ " + (st.likes || 0);
+    statusText.textContent = "Preview loaded. Click card to enter full experience.";
 
-    if (st.videoUrl) {
-      sourceEl.src = st.videoUrl;      // adjust if you use a different field name
-      videoEl.load();
-      videoEl.play().catch(() => {});
+    const videoUrl =
+      (st.type === "video" && st.videos && st.videos.length > 0)
+        ? st.videos[0].url
+        : null;
+    if (!videoUrl) {
+      previewVideo.removeAttribute("src");
+      previewVideo.load();
+      return;
+    }
+    videoSpinner.style.display = "block";
+    previewVideo.src = videoUrl;
+    previewVideo.load();
+    previewVideo.oncanplay = () => {
+      videoSpinner.style.display = "none";
+      previewVideo.play().catch(() => {});
+    };
+  }
+
+  function focusCardById(id) {
+    const card = document.querySelector(`.card[data-id="${id}"]`);
+    if (card) {
+      card.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      card.focus();
+      const st = STREETS.find(s => s._id === id);
+      if (st) {
+        loadPreviewForStreet(st);
+        if (st.lat != null && st.lng != null) {
+          map.flyTo({ center: [st.lng, st.lat], zoom: 13 });
+        }
+      }
     }
   }
+
+  function focusCardByIndex(index) {
+    const st = STREETS[index];
+    if (!st) return;
+    focusCardById(st._id);
+  }
+
+  // Card interactions
+  document.querySelectorAll(".card").forEach(card => {
+    card.addEventListener("click", () => {
+      const id = card.dataset.id;
+      const href = card.dataset.href;
+      const st = STREETS.find(s => s._id === id);
+      if (st) loadPreviewForStreet(st);
+      if (href) {
+        setTimeout(() => {
+          window.location.href = href;
+        }, 120);
+      }
+    });
+
+    card.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        card.click();
+      }
+    });
+  });
+
+  // Like buttons
+  document.querySelectorAll(".like-btn").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const streetId = btn.dataset.likeId;
+      if (!streetId) return;
+
+      try {
+        const res = await fetch(`/like/${streetId}`, {
+          method: "POST",
+          headers: { "X-Requested-With": "XMLHttpRequest" }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const countSpan = btn.querySelector(".like-count");
+        if (countSpan && typeof data.likes === "number") {
+          countSpan.textContent = data.likes;
+        }
+        btn.classList.add("liked");
+      } catch (err) {
+        console.error("Like failed", err);
+      }
+    });
+  });
 </script>
 
 </body>
