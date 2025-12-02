@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sit Mode – Virtual Street Sit</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- MAPLIBRE for maps -->
+  <link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+
+  <style>
+    :root {
+      --bg-page: #020617;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --accent: #f97316;
+      --radius-lg: 18px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #020617, #000 80%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text-main);
+      overflow: hidden;
+    }
+    .viewer-panel {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .viewer-canvas {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: black;
+      overflow: hidden;
+    }
+    .mini-map {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      width: 100px;
+      height: 100px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: var(--bg-page);
+      border: 2px solid rgba(148, 163, 184, 0.6);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.75);
+      z-index: 50;
+      cursor: pointer;
+    }
+    .mini-map canvas { border-radius: 999px; }
+    #fullMapOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #fullMapContainer {
+      width: 90%;
+      height: 80%;
+      background: #0b1120;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9);
+    }
+    #closeMapBtn {
+      position: absolute;
+      top: 30px;
+      right: 40px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(0, 0, 0, 0.65);
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    }
+    .street-info {
+      position: absolute;
+      top: 20px;
+      right: 16px;
+      padding: 8px 14px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      border-radius: 14px;
+      backdrop-filter: blur(10px);
+      z-index: 50;
+      max-width: 220px;
+      user-select: none;
+    }
+    .street-info h2 {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+    .street-info p {
+      margin: 3px 0 0;
+      font-size: 12px;
+      color: #cbd5e1;
+      line-height: 1.2;
+    }
+    #streetVideo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      z-index: 1;
+      transition: transform 0.15s ease-out;
+      user-select: none;
+      -webkit-user-select: none;
+      will-change: transform;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+    }
+    #fadeLayer {
+      position: absolute;
+      inset: 0;
+      background: black;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.7s;
+      z-index: 110;
+      user-select: none;
+    }
+    @media (max-width: 900px) {
+      .mini-map {
+        width: 80px !important;
+        height: 80px !important;
+        top: 14px !important;
+        left: 14px !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="fullMapOverlay" role="dialog" aria-modal="true" aria-label="Full map view">
+  <div id="fullMapContainer" tabindex="0" aria-live="polite"></div>
+  <button id="closeMapBtn" aria-label="Close full map">✕</button>
+</div>
+
+<div class="viewer-panel" role="main" aria-live="polite">
+  <div class="viewer-canvas" id="viewerCanvas">
+
+    <div id="miniMap" class="mini-map" aria-label="Mini map preview" role="button" tabindex="0"></div>
+
+    <div class="street-info" aria-live="polite" aria-atomic="true">
+      <h2 id="streetName">Select a Sit Spot</h2>
+      <p id="streetLocation">Waiting…</p>
+    </div>
+
+    <video
+      id="streetVideo"
+      preload="auto"
+      muted
+      playsinline
+      disablepictureinpicture
+      controlslist="nodownload nofullscreen noplaybackrate"
+      aria-label="Sit view video">
+      <source id="videoSource" src="">
+    </video>
+
+    <div id="fadeLayer" aria-hidden="true"></div>
+  </div>
+</div>
+
+<script id="streets-data" type="application/json">
+  {{ streets | tojson | safe }}
+</script>
+<script id="selected-street-data" type="application/json">
+  {{ selected_street | tojson | safe if selected_street else 'null' }}
+</script>
+
+<script type="module">
+  const STREETS = JSON.parse(
+    document.getElementById('streets-data').textContent
+  );
+  const SELECTED_STREET = JSON.parse(
+    document.getElementById('selected-street-data').textContent
+  );
+
+  let miniMap, miniMarker;
+  let fullMap, fullMapReady = false;
+
+  function initMiniMap() {
+    miniMap = new maplibregl.Map({
+      container: "miniMap",
+      style: "https://demotiles.maplibre.org/style.json",
+      center: [0, 20],
+      zoom: 1.5,
+      interactive: false,
+      attributionControl: false,
+    });
+  }
+
+  function ensureFullMap() {
+    if (fullMapReady) return;
+
+    fullMap = new maplibregl.Map({
+      container: "fullMapContainer",
+      style: "https://demotiles.maplibre.org/style.json",
+      center: [0, 20],
+      zoom: 2.5,
+    });
+    fullMap.addControl(new maplibregl.NavigationControl());
+
+    STREETS.forEach((st, index) => {
+      const lat = parseFloat(st.lat);
+      const lng = parseFloat(st.lng);
+      if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+
+      const marker = new maplibregl.Marker().setLngLat([lng, lat]).addTo(fullMap);
+      marker.getElement().addEventListener("click", () => {
+        loadStreetByIndex(index);
+        hideFullMap();
+      });
+    });
+
+    fullMapReady = true;
+  }
+
+  function updateMiniMapForStreet(street) {
+    if (!miniMap) return;
+    const lat = parseFloat(street.lat);
+    const lng = parseFloat(street.lng);
+    if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+
+    miniMap.jumpTo({ center: [lng, lat], zoom: 14 });
+
+    if (!miniMarker) {
+      miniMarker = new maplibregl.Marker({ color: "#ef4444", scale: 0.9 })
+        .setLngLat([lng, lat])
+        .addTo(miniMap);
+    } else {
+      miniMarker.setLngLat([lng, lat]);
+    }
+  }
+
+  const miniMapEl = document.getElementById("miniMap");
+  const fullMapOverlay = document.getElementById("fullMapOverlay");
+  const closeMapBtn = document.getElementById("closeMapBtn");
+
+  function showFullMap() {
+    fullMapOverlay.style.display = "flex";
+    ensureFullMap();
+  }
+
+  function hideFullMap() {
+    fullMapOverlay.style.display = "none";
+  }
+
+  miniMapEl.addEventListener("click", showFullMap);
+  miniMapEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") showFullMap();
+  });
+  closeMapBtn.addEventListener("click", hideFullMap);
+
+  initMiniMap();
+
+  const video = document.getElementById("streetVideo");
+  const vsrc = document.getElementById("videoSource");
+  const fadeLayer = document.getElementById("fadeLayer");
+
+  let currentStreetIndex = -1;
+  let currentVideos = [];
+  let currentVideoIndex = 0;
+
+  function safePlay() {
+    if (!video || !video.paused) return;
+    video.play().catch(() => {});
+  }
+  function safePause() {
+    if (!video || video.paused) return;
+    video.pause();
+  }
+
+  function loadStreet(street) {
+    document.getElementById("streetName").textContent = street.name || "Sit Spot";
+    document.getElementById("streetLocation").textContent =
+      `${street.city || ""}${street.city && street.country ? ", " : ""}${street.country || ""}`;
+
+    currentVideos = [];
+    currentVideoIndex = 0;
+    if (street.videos && Array.isArray(street.videos) && street.videos.length > 0) {
+      currentVideos = street.videos.map(v => v.url).filter(Boolean);
+    }
+
+    const videoUrl = currentVideos[0] || "";
+    if (vsrc) vsrc.src = videoUrl;
+    video.load();
+    video.currentTime = 0;
+    safePlay(); // auto-play once when sitting
+
+    updateMiniMapForStreet(street);
+  }
+
+  function loadStreetByIndex(index) {
+    if (index < 0 || index >= STREETS.length) return;
+    currentStreetIndex = index;
+    loadStreet(STREETS[index]);
+  }
+
+  video.addEventListener("ended", () => {
+    if (currentVideos.length > 1 && currentVideoIndex < currentVideos.length - 1) {
+      currentVideoIndex += 1;
+      const nextUrl = currentVideos[currentVideoIndex];
+      if (vsrc) vsrc.src = nextUrl;
+      video.load();
+      video.currentTime = 0;
+      safePlay();
+      return;
+    }
+    safePause();
+  });
+
+  if (SELECTED_STREET) {
+    const idx = STREETS.findIndex(s => s._id === SELECTED_STREET._id);
+    if (idx !== -1) {
+      loadStreetByIndex(idx);
+    } else if (Array.isArray(STREETS) && STREETS.length > 0) {
+      loadStreetByIndex(0);
+    }
+  } else if (Array.isArray(STREETS) && STREETS.length > 0) {
+    loadStreetByIndex(0);
+  }
+</script>
+
+</body>
+</html>

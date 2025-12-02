@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fly Routes – Virtual Street Walk</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    :root {
+      --bg: radial-gradient(circle at top, #020617, #000 80%);
+      --card-bg: rgba(15, 23, 42, 0.9);
+      --border: rgba(148, 163, 184, 0.45);
+      --accent: #a855f7;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --radius: 18px;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: system-ui, sans-serif;
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      padding: 24px 12px;
+    }
+    .shell {
+      width: 100%;
+      max-width: 960px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 600;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    a.back-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 14px 14px 12px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+    }
+    .name {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 4px;
+    }
+    .meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.55);
+      color: var(--text-muted);
+    }
+    .badge.fly {
+      border-color: rgba(168,85,247,0.8);
+      color: #f3e8ff;
+    }
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      margin-top: 6px;
+    }
+    .likes {
+      color: var(--text-muted);
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, #a855f7, #7c3aed);
+      color: #1e1234;
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 10px 26px rgba(168,85,247,0.4);
+    }
+    .empty {
+      margin-top: 30px;
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div>
+      <h1>Fly Routes</h1>
+      <p class="subtitle">Pick an aerial route to fly over the city.</p>
+    </div>
+    <a class="back-link" href="{{ url_for('index') }}">← Back home</a>
+  </header>
+
+  {% if streets and streets|length > 0 %}
+    <div class="grid">
+      {% for st in streets %}
+        <div class="card">
+          <p class="name">{{ st.name }}</p>
+          <p class="meta">
+            {{ st.city }}, {{ st.country }} ·
+            {{ st.lat }}, {{ st.lng }}
+          </p>
+          <div class="badges">
+            <span class="badge fly">Fly</span>
+            {% if st.videos %}
+              <span class="badge">{{ st.videos|length }} part(s)</span>
+            {% endif %}
+          </div>
+          <div class="footer">
+            <span class="likes">♥ {{ st.likes or 0 }}</span>
+            <a
+              class="btn"
+              href="{{ url_for('world_fly', street_id=st._id) }}"
+            >
+              <span>Start flight</span>
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty">No fly routes yet. Add one from the Upload page.</p>
+  {% endif %}
+</div>
+</body>
+</html>

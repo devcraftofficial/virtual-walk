@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fly Mode – Virtual Flight</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- MAPLIBRE for maps -->
+  <link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+
+  <style>
+    :root {
+      --bg-page: #020617;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --accent: #a855f7;
+      --radius-lg: 18px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #020617, #000 80%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text-main);
+      overflow: hidden;
+    }
+    .viewer-panel {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .viewer-canvas {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: black;
+      overflow: hidden;
+    }
+    .mini-map {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      width: 100px;
+      height: 100px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: var(--bg-page);
+      border: 2px solid rgba(148, 163, 184, 0.6);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.75);
+      z-index: 50;
+      cursor: pointer;
+    }
+    .mini-map canvas { border-radius: 999px; }
+    #fullMapOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #fullMapContainer {
+      width: 90%;
+      height: 80%;
+      background: #0b1120;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9);
+    }
+    #closeMapBtn {
+      position: absolute;
+      top: 30px;
+      right: 40px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(0, 0, 0, 0.65);
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    }
+    .street-info {
+      position: absolute;
+      top: 20px;
+      right: 16px;
+      padding: 8px 14px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      border-radius: 14px;
+      backdrop-filter: blur(10px);
+      z-index: 50;
+      max-width: 220px;
+      user-select: none;
+    }
+    .street-info h2 {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+    .street-info p {
+      margin: 3px 0 0;
+      font-size: 12px;
+      color: #cbd5e1;
+      line-height: 1.2;
+    }
+    #streetVideo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      z-index: 1;
+      transition: transform 0.15s ease-out;
+      user-select: none;
+      -webkit-user-select: none;
+      will-change: transform;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+    }
+    #joystickBase {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 96px;
+      height: 96px;
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: 50%;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(8px);
+      touch-action: none;
+      z-index: 70;
+      user-select: none;
+    }
+    #joystickKnob {
+      width: 48px;
+      height: 48px;
+      background: #a855f7;
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.4);
+      touch-action: none;
+      user-select: none;
+    }
+    #fadeLayer {
+      position: absolute;
+      inset: 0;
+      background: black;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.7s;
+      z-index: 110;
+      user-select: none;
+    }
+    @media (max-width: 900px) {
+      #joystickBase {
+        bottom: calc(26px + env(safe-area-inset-bottom, 0px)) !important;
+        right: 18px !important;
+        width: 88px !important;
+        height: 88px !important;
+      }
+      #joystickKnob {
+        width: 42px !important;
+        height: 42px !important;
+      }
+      .mini-map {
+        width: 80px !important;
+        height: 80px !important;
+        top: 14px !important;
+        left: 14px !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="fullMapOverlay" role="dialog" aria-modal="true" aria-label="Full map view">
+  <div id="fullMapContainer" tabindex="0" aria-live="polite"></div>
+  <button id="closeMapBtn" aria-label="Close full map">✕</button>
+</div>
+
+<div class="viewer-panel" role="main" aria-live="polite">
+  <div class="viewer-canvas" id="viewerCanvas">
+
+    <div id="miniMap" class="mini-map" aria-label="Mini map preview" role="button" tabindex="0"></div>
+
+    <div class="street-info" aria-live="polite" aria-atomic="true">
+      <h2 id="streetName">Select a Flight</h2>
+      <p id="streetLocation">Waiting…</p>
+    </div>
+
+    <video
+      id="streetVideo"
+      preload="auto"
+      muted
+      playsinline
+      disablepictureinpicture
+      controlslist="nodownload nofullscreen noplaybackrate"
+      aria-label="Flight view video">
+      <source id="videoSource" src="">
+    </video>
+
+    <div id="joystickBase" aria-label="Movement joystick" role="application" tabindex="0">
+      <div id="joystickKnob"></div>
+    </div>
+
+    <div id="fadeLayer" aria-hidden="true"></div>
+  </div>
+</div>
+
+<script id="streets-data" type="application/json">
+  {{ streets | tojson | safe }}
+</script>
+<script id="selected-street-data" type="application/json">
+  {{ selected_street | tojson | safe if selected_street else 'null' }}
+</script>
+
+<script type="module">
+  const STREETS = JSON.parse(
+    document.getElementById('streets-data').textContent
+  );
+  const SELECTED_STREET = JSON.parse(
+    document.getElementById('selected-street-data').textContent
+  );
+
+  let miniMap, miniMarker;
+  let fullMap, fullMapReady = false;
+
+  function initMiniMap() {
+    miniMap = new maplibregl.Map({
+      container: "miniMap",
+      style: "https://demotiles.maplibre.org/style.json",
+      center: [0, 20],
+      zoom: 1.5,
+      interactive: false,
+      attributionControl: false,
+    });
+  }
+
+  function ensureFullMap() {
+    if (fullMapReady) return;
+
+    fullMap = new maplibregl.Map({
+      container: "fullMapContainer",
+      style: "https://demotiles.maplibre.org/style.json",
+      center: [0, 20],
+      zoom: 2.5,
+    });
+    fullMap.addControl(new maplibregl.NavigationControl());
+
+    STREETS.forEach((st, index) => {
+      const lat = parseFloat(st.lat);
+      const lng = parseFloat(st.lng);
+      if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+
+      const marker = new maplibregl.Marker().setLngLat([lng, lat]).addTo(fullMap);
+      marker.getElement().addEventListener("click", () => {
+        loadStreetByIndex(index);
+        hideFullMap();
+      });
+    });
+
+    fullMapReady = true;
+  }
+
+  function updateMiniMapForStreet(street) {
+    if (!miniMap) return;
+    const lat = parseFloat(street.lat);
+    const lng = parseFloat(street.lng);
+    if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+
+    miniMap.jumpTo({ center: [lng, lat], zoom: 14 });
+
+    if (!miniMarker) {
+      miniMarker = new maplibregl.Marker({ color: "#ef4444", scale: 0.9 })
+        .setLngLat([lng, lat])
+        .addTo(miniMap);
+    } else {
+      miniMarker.setLngLat([lng, lat]);
+    }
+  }
+
+  const miniMapEl = document.getElementById("miniMap");
+  const fullMapOverlay = document.getElementById("fullMapOverlay");
+  const closeMapBtn = document.getElementById("closeMapBtn");
+
+  function showFullMap() {
+    fullMapOverlay.style.display = "flex";
+    ensureFullMap();
+  }
+
+  function hideFullMap() {
+    fullMapOverlay.style.display = "none";
+  }
+
+  miniMapEl.addEventListener("click", showFullMap);
+  miniMapEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") showFullMap();
+  });
+  closeMapBtn.addEventListener("click", hideFullMap);
+
+  initMiniMap();
+
+  const video = document.getElementById("streetVideo");
+  const vsrc = document.getElementById("videoSource");
+  const fadeLayer = document.getElementById("fadeLayer");
+  const joystickBase = document.getElementById("joystickBase");
+  const joystickKnob = document.getElementById("joystickKnob");
+
+  let currentStreetIndex = -1;
+  let walkSpeed = 1;
+  let yawCurrent = 0;
+  let yawTarget = 0;
+  let headBob = 0;
+  let bobDirection = 1;
+  let keyDir = 0;
+  let joyDir = 0;
+  let autoDir = 0;
+  let currentDir = 0;
+  let reversePlaying = false;
+  let joyActive = false;
+
+  let currentVideos = [];
+  let currentVideoIndex = 0;
+
+  function safePlay() {
+    if (!video || !video.paused) return;
+    video.play().catch(() => {});
+  }
+  function safePause() {
+    if (!video || video.paused) return;
+    video.pause();
+  }
+
+  function loadStreet(street) {
+    document.getElementById("streetName").textContent = street.name || "Flight";
+    document.getElementById("streetLocation").textContent =
+      `${street.city || ""}${street.city && street.country ? ", " : ""}${street.country || ""}`;
+
+    currentVideos = [];
+    currentVideoIndex = 0;
+    if (street.videos && Array.isArray(street.videos) && street.videos.length > 0) {
+      currentVideos = street.videos.map(v => v.url).filter(Boolean);
+    }
+
+    const videoUrl = currentVideos[0] || "";
+    if (vsrc) vsrc.src = videoUrl;
+    video.load();
+    video.currentTime = 0;
+    safePause();
+
+    updateMiniMapForStreet(street);
+  }
+
+  function loadStreetByIndex(index) {
+    if (index < 0 || index >= STREETS.length) return;
+    currentStreetIndex = index;
+    loadStreet(STREETS[index]);
+  }
+
+  function playForward() {
+    reversePlaying = false;
+    if (!video) return;
+    video.playbackRate = walkSpeed;
+    safePlay();
+  }
+
+  function playReverse() {
+    if (!video) return;
+    reversePlaying = true;
+    safePause();
+
+    function stepReverse() {
+      if (!reversePlaying) return;
+
+      if (video.currentTime <= 0.02) {
+        video.currentTime = video.duration;
+      } else {
+        video.currentTime = Math.max(
+          0,
+          video.currentTime - (0.016 * walkSpeed)
+        );
+      }
+      requestAnimationFrame(stepReverse);
+    }
+
+    requestAnimationFrame(stepReverse);
+  }
+
+  function recomputeDirection() {
+    const newDir = keyDir || joyDir || autoDir;
+    if (newDir === currentDir) return;
+    currentDir = newDir;
+
+    if (currentDir === 1) playForward();
+    else if (currentDir === -1) playReverse();
+    else {
+      safePause();
+      reversePlaying = false;
+    }
+  }
+
+  video.addEventListener("ended", () => {
+    if (currentVideos.length > 1 && currentVideoIndex < currentVideos.length - 1) {
+      currentVideoIndex += 1;
+      const nextUrl = currentVideos[currentVideoIndex];
+      if (vsrc) vsrc.src = nextUrl;
+      video.load();
+      video.currentTime = 0;
+
+      const isMoving = (autoDir === 1 || keyDir === 1 || joyDir === 1);
+      if (isMoving) {
+        playForward();
+      }
+      return;
+    }
+    safePause();
+  });
+
+  window.addEventListener("keydown", e => {
+    const k = e.key.toLowerCase();
+    if (k === "arrowleft" || k === "a") yawTarget -= 10;
+    else if (k === "arrowright" || k === "d") yawTarget += 10;
+    else if (k === "arrowup" || k === "w") { keyDir = 1; recomputeDirection(); }
+    else if (k === "arrowdown" || k === "s") { keyDir = -1; recomputeDirection(); }
+  });
+  window.addEventListener("keyup", e => {
+    const k = e.key.toLowerCase();
+    if (["arrowup", "w", "arrowdown", "s"].includes(k)) {
+      keyDir = 0;
+      recomputeDirection();
+    }
+  });
+
+  function setJoystickFromEvent(ev) {
+    const rect = joystickBase.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = ev.clientX - cx;
+    const dy = ev.clientY - cy;
+    const r = rect.width / 2;
+    const nx = Math.max(-1, Math.min(1, dx / r));
+    const ny = Math.max(-1, Math.min(1, dy / r));
+    joystickKnob.style.transform = `translate(${nx * (r * 0.45)}px, ${ny * (r * 0.45)}px)`;
+
+    const move = -ny;
+    if (Math.abs(move) > 0.15) {
+      joyDir = move > 0 ? 1 : -1;
+    } else {
+      joyDir = 0;
+    }
+
+    recomputeDirection();
+  }
+  function resetJoystick() {
+    joyDir = 0;
+    joystickKnob.style.transform = "translate(0,0)";
+    recomputeDirection();
+  }
+  joystickBase.addEventListener("pointerdown", e => {
+    joystickBase.setPointerCapture(e.pointerId);
+    joyActive = true;
+    setJoystickFromEvent(e);
+  });
+  joystickBase.addEventListener("pointermove", e => {
+    if (!joyActive) return;
+    setJoystickFromEvent(e);
+  });
+  joystickBase.addEventListener("pointerup", () => {
+    joyActive = false;
+    resetJoystick();
+  });
+  joystickBase.addEventListener("pointercancel", () => {
+    joyActive = false;
+    resetJoystick();
+  });
+
+  function tick() {
+    yawCurrent += (yawTarget - yawCurrent) * 0.18;
+
+    if (currentDir !== 0) {
+      headBob += bobDirection * 0.25 * walkSpeed;
+      if (headBob > 2 || headBob < -2) bobDirection *= -1;
+    } else {
+      headBob *= 0.85;
+    }
+    const bobY = headBob;
+
+    video.style.transform = `translate3d(0, ${bobY}px, 0)`;
+
+    requestAnimationFrame(tick);
+  }
+
+  requestAnimationFrame(tick);
+
+  if (SELECTED_STREET) {
+    const idx = STREETS.findIndex(s => s._id === SELECTED_STREET._id);
+    if (idx !== -1) {
+      loadStreetByIndex(idx);
+    } else if (Array.isArray(STREETS) && STREETS.length > 0) {
+      loadStreetByIndex(0);
+    }
+  } else if (Array.isArray(STREETS) && STREETS.length > 0) {
+    loadStreetByIndex(0);
+  }
+</script>
+
+</body>
+</html>
