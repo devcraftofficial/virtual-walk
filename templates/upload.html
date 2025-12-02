@@ -65,7 +65,7 @@
       color: var(--text-main);
     }
 
-    input, select {
+    input, select, textarea {
       padding: 10px 12px;
       border-radius: 12px;
       background: rgba(15,23,42,0.7);
@@ -74,7 +74,8 @@
       font-size: 14px;
     }
 
-    input::placeholder {
+    input::placeholder,
+    textarea::placeholder {
       color: #64748b;
     }
 
@@ -149,7 +150,6 @@
 </head>
 
 <body>
-
 <div class="card">
 
   <h1>Add Street</h1>
@@ -205,15 +205,27 @@
 
     <!-- VIDEO STREET -->
     <div id="videoFields">
+      <!-- NEW: mode selector -->
       <div class="field">
-        <label>Upload Video (MP4 / WEBM)</label>
-        <input type="file" name="video" accept="video/mp4,video/webm,video/quicktime">
-        <div class="note">Uploaded securely to Cloudinary.</div>
+        <label>Video Mode *</label>
+        <select name="mode" id="videoMode">
+          <option value="walk">Walk</option>
+          <option value="drive">Drive</option>
+          <option value="fly">Fly</option>
+          <option value="sit">Sit</option>
+        </select>
+        <div class="note">Choose how this video should be used (walk / drive / fly / sit).</div>
       </div>
 
       <div class="field">
-        <label>OR Video URL</label>
-        <input type="text" name="video_link" placeholder="https://example.com/video.mp4">
+        <label>Upload Videos (MP4 / WEBM)</label>
+        <input type="file" name="video" accept="video/mp4,video/webm,video/quicktime" multiple>
+        <div class="note">Upload one or more videos securely to Cloudinary.</div>
+      </div>
+
+      <div class="field">
+        <label>OR Video URLs (comma or newline separated)</label>
+        <textarea name="video_links" placeholder="https://example.com/video1.mp4, https://example.com/video2.mp4" rows="3" style="border-radius:12px; background:rgba(15,23,42,0.7); color: var(--text-main); padding:10px;"></textarea>
       </div>
     </div>
 
@@ -222,7 +234,7 @@
       <div class="field">
         <label>Upload GLB Model *</label>
         <input type="file" name="model" accept=".glb">
-        <div class="note">GLB stored as RAW file in Cloudinary.</div>
+        <div class="note">GLB stored as RAW file in Supabase.</div>
       </div>
 
       <div class="field">
@@ -242,8 +254,8 @@
 
 <script>
   /* ===============================
-     MAP PICKER INITIALIZATION
-  =============================== */
+        MAP PICKER INITIALIZATION
+   =============================== */
   const map = new maplibregl.Map({
     container: "mapPicker",
     style: "https://demotiles.maplibre.org/style.json",
@@ -267,8 +279,8 @@
   });
 
   /* ===============================
-     FIELD TOGGLE BASED ON TYPE
-  =============================== */
+        FIELD TOGGLE BASED ON TYPE
+   =============================== */
   const streetType = document.getElementById("streetType");
   const videoFields = document.getElementById("videoFields");
   const modelFields = document.getElementById("modelFields");
