@@ -13,7 +13,6 @@
   <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
 
   <style>
-    /* Color & design variables */
     :root {
       --bg-page: #020617;
       --glass-bg: rgba(15, 23, 42, 0.82);
@@ -25,10 +24,7 @@
       --radius-lg: 18px;
       --radius-md: 12px;
     }
-    /* Reset & basics */
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { box-sizing: border-box; }
     body {
       margin: 0;
       background: radial-gradient(circle at top, #020617, #000 80%);
@@ -38,7 +34,6 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
-    /* VIEWER PANEL: main container */
     .viewer-panel {
       position: relative;
       width: 100%;
@@ -56,7 +51,6 @@
       background: black;
       overflow: hidden;
     }
-    /* MINI MAP: circular */
     .mini-map {
       position: absolute;
       top: 16px;
@@ -71,10 +65,7 @@
       z-index: 50;
       cursor: pointer;
     }
-    .mini-map canvas {
-      border-radius: 999px;
-    }
-    /* FULL MAP OVERLAY */
+    .mini-map canvas { border-radius: 999px; }
     #fullMapOverlay {
       position: fixed;
       inset: 0;
@@ -110,17 +101,13 @@
       backdrop-filter: blur(4px);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
     }
-    /* GENDER BUTTONS */
     .gender-row {
       position: absolute;
       top: 16px;
       right: 16px;
       z-index: 60;
     }
-    .gender-buttons {
-      display: flex;
-      gap: 6px;
-    }
+    .gender-buttons { display: flex; gap: 6px; }
     .gender-buttons button {
       padding: 6px 10px;
       font-size: 11px;
@@ -136,7 +123,6 @@
       background: #1d4ed8;
       border-color: #3b82f6;
     }
-    /* STREET INFO */
     .street-info {
       position: absolute;
       top: 60px;
@@ -161,7 +147,6 @@
       color: #cbd5e1;
       line-height: 1.2;
     }
-    /* Background video with GPU acceleration */
     #streetVideo {
       position: absolute;
       inset: 0;
@@ -177,7 +162,6 @@
       transform: translateZ(0);
       backface-visibility: hidden;
     }
-    /* Background 3D scene */
     #citySceneMV {
       position: absolute;
       inset: 0;
@@ -187,7 +171,6 @@
       display: none;
       user-select: none;
     }
-    /* Avatar shadow and avatar */
     #avatarShadow {
       position: absolute;
       bottom: 20px;
@@ -213,7 +196,6 @@
       pointer-events: none;
       user-select: none;
     }
-    /* 3D OBJECT OVERLAY */
     #objectOverlay {
       position: absolute;
       left: 50%;
@@ -227,7 +209,6 @@
       transition: opacity 0.5s ease;
       user-select: none;
     }
-    /* BIG ACTION BUTTON */
     .action-btn {
       position: absolute;
       bottom: 20px;
@@ -248,10 +229,7 @@
       user-select: none;
       transition: transform 0.12s ease;
     }
-    .action-btn:active {
-      transform: scale(0.94);
-    }
-    /* JOYSTICK CONTROLS */
+    .action-btn:active { transform: scale(0.94); }
     #joystickBase {
       position: absolute;
       bottom: 20px;
@@ -278,7 +256,6 @@
       touch-action: none;
       user-select: none;
     }
-    /* NEXT STREET OVERLAY */
     .next-overlay {
       position: absolute;
       inset: 0;
@@ -317,7 +294,6 @@
       font-weight: 600;
       margin-top: 8px;
     }
-    /* FADE LAYER */
     #fadeLayer {
       position: absolute;
       inset: 0;
@@ -328,7 +304,6 @@
       z-index: 110;
       user-select: none;
     }
-    /* SETTINGS BUTTON */
     .settings-btn {
       position: absolute;
       top: 112px;
@@ -346,10 +321,7 @@
       z-index: 80;
       transition: background-color 0.2s ease;
     }
-    .settings-btn:hover {
-      background: rgba(0, 0, 0, 0.7);
-    }
-    /* SETTINGS POPUP */
+    .settings-btn:hover { background: rgba(0, 0, 0, 0.7); }
     .settings-popup {
       position: absolute;
       left: 50%;
@@ -396,13 +368,8 @@
       font-size: 16px;
       transition: background-color 0.2s ease;
     }
-    .close-settings:hover {
-      background: rgba(0, 0, 0, 0.7);
-    }
-    .settings-body {
-      font-size: 14px;
-      color: var(--text-main);
-    }
+    .close-settings:hover { background: rgba(0, 0, 0, 0.7); }
+    .settings-body { font-size: 14px; color: var(--text-main); }
     .setting-row {
       display: flex;
       justify-content: space-between;
@@ -410,9 +377,7 @@
       margin: 12px 0;
       font-size: 14px;
     }
-    .setting-row label {
-      margin-right: 8px;
-    }
+    .setting-row label { margin-right: 8px; }
     .toggle-btn {
       padding: 6px 14px;
       border-radius: 18px;
@@ -428,32 +393,26 @@
       background: #2563eb;
       border-color: #3b82f6;
     }
-    /* SPEED SLIDER */
     #settingsSpeed {
       width: 130px;
       accent-color: var(--accent);
     }
-    /* Responsive adjustments */
     @media (max-width: 900px) {
-      .control-bar {
-        bottom: 140px !important;
-        width: 92% !important;
-        padding: 10px 14px !important;
-        min-height: 54px !important;
-        border-radius: 22px !important;
-        flex-wrap: wrap !important;
-        gap: 10px !important;
+      .viewer-panel {
+        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
       }
       .action-btn {
         left: 18px !important;
         width: 64px !important;
         height: 64px !important;
         font-size: 25px !important;
+        bottom: calc(26px + env(safe-area-inset-bottom, 0px)) !important;
       }
       #joystickBase {
         right: 18px !important;
         width: 88px !important;
         height: 88px !important;
+        bottom: calc(26px + env(safe-area-inset-bottom, 0px)) !important;
       }
       #joystickKnob {
         width: 42px !important;
@@ -474,75 +433,25 @@
         right: 14px !important;
         padding: 6px 10px !important;
       }
-      .street-info h2 {
-        font-size: 13px !important;
-      }
-      .street-info p {
-        font-size: 11px !important;
-      }
-      #settingsSpeed {
-        width: 90px !important;
-      }
-      .pill-btn {
-        font-size: 10px !important;
-        padding: 5px 9px !important;
-      }
-
-      /* mobile safe area: only here to avoid clipping */
-      .viewer-panel {
-        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-      }
-      .action-btn {
-        bottom: calc(26px + env(safe-area-inset-bottom, 0px)) !important;
-      }
-      #joystickBase {
-        bottom: calc(26px + env(safe-area-inset-bottom, 0px)) !important;
-      }
+      .street-info h2 { font-size: 13px !important; }
+      .street-info p { font-size: 11px !important; }
+      #settingsSpeed { width: 90px !important; }
     }
-
-    @media (max-width: 900px) {
-  .viewer-panel {
-    /* was 16px + safe area */
-    padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
-  }
-
- 
-}
-
-@media (max-width: 900px) {
-  .action-btn {
-    bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
-    /* other mobile overrides */
-  }
-
-  #joystickBase {
-    bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
-  }
-}
-
-
   </style>
 </head>
 
 <body>
-
-<!-- FULLSCREEN MAP OVERLAY -->
 <div id="fullMapOverlay" role="dialog" aria-modal="true" aria-label="Full map view">
   <div id="fullMapContainer" tabindex="0" aria-live="polite"></div>
   <button id="closeMapBtn" aria-label="Close full map">✕</button>
 </div>
 
-<!-- MAIN VIEWER PANEL -->
 <div class="viewer-panel" role="main" aria-live="polite">
   <div class="viewer-canvas" id="viewerCanvas">
-
-    <!-- MINI MAP -->
     <div id="miniMap" class="mini-map" aria-label="Mini map preview" role="button" tabindex="0"></div>
 
-    <!-- SETTINGS BUTTON -->
     <button id="settingsBtn" class="settings-btn" aria-haspopup="true" aria-expanded="false" aria-controls="settingsPopup" title="Open settings">⚙</button>
 
-    <!-- GENDER SELECT -->
     <div class="gender-row" role="radiogroup" aria-label="Select avatar gender">
       <div class="gender-buttons">
         <button class="active" data-gender="male" role="radio" aria-checked="true" tabindex="0">Male</button>
@@ -550,13 +459,11 @@
       </div>
     </div>
 
-    <!-- STREET INFO DISPLAY -->
     <div class="street-info" aria-live="polite" aria-atomic="true">
       <h2 id="streetName">Select a Street</h2>
       <p id="streetLocation">Waiting…</p>
     </div>
 
-    <!-- BACKGROUND VIDEO -->
     <video
       id="streetVideo"
       preload="auto"
@@ -568,7 +475,6 @@
       <source id="videoSource" src="">
     </video>
 
-    <!-- BACKGROUND 3D SCENE -->
     <model-viewer
       id="citySceneMV"
       camera-controls
@@ -579,10 +485,8 @@
       role="img" aria-label="3D city scene">
     </model-viewer>
 
-    <!-- AVATAR SHADOW -->
     <div id="avatarShadow" aria-hidden="true"></div>
 
-    <!-- AVATAR 3D MODEL -->
     <model-viewer
       id="avatarMV"
       src="/static/avatars/male/idle.glb"
@@ -597,7 +501,6 @@
       aria-hidden="true">
     </model-viewer>
 
-    <!-- 3D OBJECT OVERLAY -->
     <model-viewer id="objectOverlay"
       src=""
       autoplay
@@ -610,36 +513,31 @@
       aria-hidden="true">
     </model-viewer>
 
-    <!-- ACTION BUTTON -->
     <button id="actionBtn" class="action-btn" aria-label="Interact">🤝</button>
 
-    <!-- JOYSTICK CONTROLS -->
     <div id="joystickBase" aria-label="Movement joystick" role="application" tabindex="0">
       <div id="joystickKnob"></div>
     </div>
 
-    <!-- OPTIONAL ARROW CONTROLS, currently hidden -->
     <div class="arrow-controls" id="arrowControls" style="display:none;" aria-hidden="true">
       <div></div>
       <div class="arrow-btn" data-dir="up">⬆</div>
       <div></div>
-
       <div class="arrow-btn" data-dir="left">⬅</div>
       <div class="arrow-btn" data-dir="down">⬇</div>
       <div class="arrow-btn" data-dir="right">➡</div>
     </div>
 
-    <!-- SETTINGS POPUP -->
     <div id="settingsPopup" class="settings-popup" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" aria-hidden="true">
       <div class="settings-header">
         <h3 id="settingsTitle">Settings</h3>
         <button id="closeSettingsBtn" class="close-settings" aria-label="Close settings">✕</button>
       </div>
-
       <div class="settings-body">
         <div class="setting-row">
           <label for="settingsSpeed">Walk speed</label>
-          <input type="range" id="settingsSpeed" min="0.5" max="2" step="0.1" value="1" aria-valuemin="0.5" aria-valuemax="2" aria-valuenow="1" aria-label="Walk speed control">
+          <input type="range" id="settingsSpeed" min="0.5" max="2" step="0.1" value="1"
+                 aria-valuemin="0.5" aria-valuemax="2" aria-valuenow="1" aria-label="Walk speed control">
         </div>
         <div class="setting-row">
           <label for="settingsFP">First person</label>
@@ -652,7 +550,6 @@
       </div>
     </div>
 
-    <!-- NEXT STREET OVERLAY -->
     <div class="next-overlay" id="nextOverlay" aria-live="assertive" aria-atomic="true">
       <div class="next-card">
         <div class="next-label">NEXT STREET</div>
@@ -662,17 +559,29 @@
       </div>
     </div>
 
-    <!-- FADE LAYER -->
     <div id="fadeLayer" aria-hidden="true"></div>
   </div>
 </div>
 
-<!-- FOOTSTEP AUDIO -->
 <audio id="footstepAudio" src="/static/audio/footsteps_loop.wav" loop preload="auto" aria-hidden="true"></audio>
 
+<script id="streets-data" type="application/json">
+  {{ streets | tojson | safe }}
+</script>
+
+<!-- selected street from Flask (may be null) -->
+<script id="selected-street-data" type="application/json">
+  {{ selected_street | tojson | safe if selected_street else 'null' }}
+</script>
+
 <script type="module">
-  // Streets data injected from backend (Flask)
-  const STREETS = JSON.parse(`{{ streets | tojson | safe }}`);
+  const STREETS = JSON.parse(
+    document.getElementById('streets-data').textContent
+  );
+
+  const SELECTED_STREET = JSON.parse(
+    document.getElementById('selected-street-data').textContent
+  );
 
   let miniMap, miniMarker;
   let fullMap, fullMapReady = false;
@@ -799,9 +708,11 @@
   let reversePlaying = false;
   let joyActive = false;
 
-  // strafe state
   let strafe = 0;
   let strafeOffset = 0;
+
+  let currentVideos = [];
+  let currentVideoIndex = 0;
 
   function safePlay() {
     if (!video || !video.paused) return;
@@ -869,7 +780,17 @@
       video.style.display = "block";
       avatar.style.display = "block";
       shadowEl.style.display = "block";
-      if (vsrc) vsrc.src = street.videoUrl || "";
+
+      currentVideos = [];
+      currentVideoIndex = 0;
+      if (street.videos && Array.isArray(street.videos) && street.videos.length > 0) {
+        currentVideos = street.videos.map(v => v.url).filter(Boolean);
+      } else if (street.videoUrl) {
+        currentVideos = [street.videoUrl];
+      }
+
+      const videoUrl = currentVideos[0] || "";
+      if (vsrc) vsrc.src = videoUrl;
       video.load();
       video.currentTime = 0;
       safePause();
@@ -877,6 +798,7 @@
 
     updateMiniMapForStreet(street);
   }
+
   function loadStreetByIndex(index) {
     if (index < 0 || index >= STREETS.length) return;
     currentStreetIndex = index;
@@ -1007,9 +929,7 @@
     });
   }
 
-  function deg2rad(deg) {
-    return deg * Math.PI / 180;
-  }
+  function deg2rad(deg) { return deg * Math.PI / 180; }
   function haversineDistance(lat1, lng1, lat2, lng2) {
     const R = 6371;
     const dLat = deg2rad(lat2 - lat1);
@@ -1054,6 +974,21 @@
 
   video.addEventListener("ended", () => {
     if (currentStreetType !== "video") return;
+
+    if (currentVideos.length > 1 && currentVideoIndex < currentVideos.length - 1) {
+      currentVideoIndex += 1;
+      const nextUrl = currentVideos[currentVideoIndex];
+      if (vsrc) vsrc.src = nextUrl;
+      video.load();
+      video.currentTime = 0;
+
+      const isWalking = (autoDir === 1 || keyDir === 1 || joyDir === 1);
+      if (isWalking) {
+        playForward();
+      }
+      return;
+    }
+
     show3DObject("/static/objects/stop_sign.glb", { x: 50, y: 200, scale: 1.4 });
     const isWalking = (autoDir === 1 || keyDir === 1 || joyDir === 1);
     if (!isWalking || STREETS.length < 2 || currentStreetIndex < 0) return;
@@ -1075,7 +1010,6 @@
     setTimeout(() => fadeIn(), 150);
   }
 
-  // Keyboard controls
   window.addEventListener("keydown", e => {
     const k = e.key.toLowerCase();
     if (k === "arrowleft" || k === "a") yawTarget -= 10;
@@ -1112,7 +1046,6 @@
     });
   });
 
-  // Joystick: Y = forward/back, X = strafe
   function setJoystickFromEvent(ev) {
     const rect = joystickBase.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
@@ -1132,7 +1065,7 @@
     }
 
     if (Math.abs(nx) > 0.12) {
-      strafe = nx; // -1..1
+      strafe = nx;
     } else {
       strafe = 0;
     }
@@ -1242,7 +1175,15 @@
   setAvatarState();
   requestAnimationFrame(tick);
 
-  if (Array.isArray(STREETS) && STREETS.length > 0) {
+  // INITIAL LOAD: prefer selected street from query param
+  if (SELECTED_STREET) {
+    const idx = STREETS.findIndex(s => s._id === SELECTED_STREET._id);
+    if (idx !== -1) {
+      loadStreetByIndex(idx);
+    } else if (Array.isArray(STREETS) && STREETS.length > 0) {
+      loadStreetByIndex(0);
+    }
+  } else if (Array.isArray(STREETS) && STREETS.length > 0) {
     loadStreetByIndex(0);
   }
 </script>
