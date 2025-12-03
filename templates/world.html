@@ -188,6 +188,13 @@
       touch-action: none;
     }
 
+    /* Move joystick up on mobile */
+    @media (max-width: 768px) {
+      #joystickBase {
+        bottom: 90px;
+      }
+    }
+
     #fadeLayer {
       position: absolute;
       inset: 0;
@@ -198,7 +205,7 @@
       z-index: 200;
     }
 
-    /* Settings button: moved under mini map */
+    /* Settings button: under mini map */
     #settingsBtn {
       position: absolute;
       top: 126px;         /* 16px + 100px mini-map height + 10px gap */
@@ -387,6 +394,7 @@ const avatar = document.getElementById("avatarMV");
 const shadowEl = document.getElementById("avatarShadow");
 const fadeLayer = document.getElementById("fadeLayer");
 const nightOverlay = document.getElementById("nightOverlay");
+const footstepAudio = document.getElementById("footstepAudio");
 
 let currentIndex = -1;
 let currentVideos = [];
@@ -461,11 +469,23 @@ function setAvatarState() {
   avatar.src = `/static/avatars/${currentGender}/${state}.glb`;
 }
 
+/* Footsteps */
+function updateFootsteps() {
+  if (currentDir !== 0) {
+    if (footstepAudio.paused) {
+      footstepAudio.play().catch(() => {});
+    }
+  } else {
+    footstepAudio.pause();
+    footstepAudio.currentTime = 0;
+  }
+}
+
 /* ================== NEAREST TELEPORT ================== */
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const dLon = (lat2 - lon1) * Math.PI / 180;
   const a =
     Math.sin(dLat/2)**2 +
     Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
@@ -512,6 +532,7 @@ video.addEventListener("ended", () => {
   currentDir = 0;
   video.pause();
   setAvatarState();
+  updateFootsteps();
   teleportNearest();
 });
 
@@ -524,10 +545,12 @@ window.addEventListener("keydown", e => {
     currentDir = 1;
     playForward();
     setAvatarState();
+    updateFootsteps();
   } else if (k === "arrowdown" || k === "s") {
     currentDir = -1;
     playReverse();
     setAvatarState();
+    updateFootsteps();
   } else if (k === "q") {
     strafe = -1;
   } else if (k === "e") {
@@ -542,6 +565,7 @@ window.addEventListener("keyup", e => {
     reversePlaying = false;
     video.pause();
     setAvatarState();
+    updateFootsteps();
   }
   if (k === "q" || k === "e") {
     strafe = 0;
@@ -589,6 +613,7 @@ function joyMove(ev) {
     video.pause();
   }
   setAvatarState();
+  updateFootsteps();
 }
 
 joystickBase.addEventListener("pointerdown", e => {
@@ -605,6 +630,7 @@ joystickBase.addEventListener("pointerup", () => {
   reversePlaying = false;
   video.pause();
   setAvatarState();
+  updateFootsteps();
 });
 joystickBase.addEventListener("pointercancel", () => {
   joyActive = false;
@@ -614,6 +640,7 @@ joystickBase.addEventListener("pointercancel", () => {
   reversePlaying = false;
   video.pause();
   setAvatarState();
+  updateFootsteps();
 });
 
 /* ================== SETTINGS PANEL ================== */
