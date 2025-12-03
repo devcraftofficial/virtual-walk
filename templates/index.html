@@ -32,7 +32,7 @@
       background:
         radial-gradient(circle at top left, #0f172a, transparent 55%),
         radial-gradient(circle at bottom right, #022c3a, #000 70%);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: system-ui, sans-serif;
       color: var(--text-main);
       padding: 12px 0;
       scroll-behavior: smooth;
@@ -40,9 +40,9 @@
 
     .shell {
       width: 100%;
-      max-width: none;
+      max-width: 1440px;
+      margin: 0 auto;
       background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.92));
-      border-radius: 0;
       padding: 18px 24px 22px;
       box-shadow: var(--shadow-soft);
       border: 1px solid rgba(148, 163, 184, 0.35);
@@ -65,9 +65,9 @@
       padding: 0 24px;
       margin-bottom: 22px;
       user-select: none;
-      z-index: 20;
       position: sticky;
       top: 0;
+      z-index: 20;
     }
     .top-nav .nav-left,
     .top-nav .nav-right {
@@ -81,37 +81,27 @@
       font-size: 15px;
       opacity: 0.88;
       transition: opacity 0.25s ease;
-      user-select: text;
     }
-    .top-nav a:hover,
-    .top-nav a:focus-visible {
-      opacity: 1;
-      outline: none !important;
-      text-decoration: none !important;
-      box-shadow: none !important;
-    }
+    .top-nav a:hover { opacity: 1; }
+
     .logo {
       font-size: 18px;
       font-weight: 700;
       color: #38bdf8;
-      user-select: text;
     }
 
     .header-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
       flex-wrap: wrap;
+      gap: 12px;
     }
 
     .title-block h1 {
       margin: 0;
       font-size: 24px;
-      letter-spacing: 0.02em;
-      line-height: 1.2;
     }
-
     .title-block p {
       margin: 4px 0 0;
       font-size: 13px;
@@ -120,9 +110,10 @@
 
     .cta-row {
       display: flex;
-      align-items: center;
       gap: 12px;
       flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
     }
 
     .pill {
@@ -132,119 +123,56 @@
       background: rgba(15, 23, 42, 0.8);
       border: 1px solid rgba(148, 163, 184, 0.5);
       color: var(--text-muted);
-      user-select: none;
+      white-space: nowrap;
     }
 
-    .btn-primary {
-      border: none;
-      border-radius: 999px;
-      padding: 10px 18px;
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      background: radial-gradient(circle at 20% 0%, #38bdf8, #0369a1);
-      color: white;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 16px 35px rgba(8, 47, 73, 0.9);
-      transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
-      text-decoration: none;
-      user-select: none;
-    }
-    .btn-primary:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 2px #020617, 0 0 0 4px var(--focus-ring-color);
-    }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      filter: brightness(1.07);
-      box-shadow: 0 22px 45px rgba(8, 47, 73, 1);
-    }
-    .btn-primary:active {
-      transform: translateY(0);
-      box-shadow: 0 12px 26px rgba(8, 47, 73, 0.7);
-    }
-    .btn-primary .icon {
-      font-size: 18px;
-      line-height: 1;
-    }
-
-    /* Segmented mode switch */
     .mode-switch {
       display: inline-flex;
       padding: 4px;
       border-radius: 999px;
-      background: radial-gradient(circle at top, rgba(15,23,42,0.95), rgba(15,23,42,0.8));
+      background: rgba(15,23,42,0.9);
       border: 1px solid rgba(148,163,184,0.35);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.65);
       gap: 4px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.65);
     }
     .mode-btn {
       border: none;
       border-radius: 999px;
       padding: 6px 14px;
       font-size: 13px;
-      font-weight: 500;
-      letter-spacing: 0.01em;
-      background: transparent;
       color: var(--text-muted);
+      background: transparent;
       cursor: pointer;
-      display: inline-flex;
+      display: flex;
       align-items: center;
       gap: 6px;
-      transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, transform 0.08s ease;
       text-decoration: none;
       white-space: nowrap;
     }
-    .mode-btn .icon {
-      font-size: 15px;
-    }
-    .mode-btn:hover {
-      background: rgba(15,23,42,0.95);
-      color: var(--text-main);
-    }
-    .mode-btn:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 2px #020617, 0 0 0 4px var(--focus-ring-color);
-    }
-    .mode-btn.is-active {
-      color: #0b1120;
-      box-shadow: 0 10px 24px rgba(34,197,94,0.5);
-    }
-    .mode-btn.is-active.walk {
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-    }
-    .mode-btn.is-active.drive {
-      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-    }
-    .mode-btn.is-active.fly {
-      background: linear-gradient(135deg, #a855f7, #7c3aed);
-    }
-    .mode-btn.is-active.sit {
-      background: linear-gradient(135deg, #f97316, #ea580c);
-    }
+    .mode-btn.is-active.walk { background: linear-gradient(135deg,#22c55e,#16a34a); color:#0b1120; }
+    .mode-btn.is-active.drive { background: linear-gradient(135deg,#38bdf8,#0ea5e9); color:#0b1120; }
+    .mode-btn.is-active.fly { background: linear-gradient(135deg,#a855f7,#7c3aed); color:#fff; }
+    .mode-btn.is-active.sit { background: linear-gradient(135deg,#f97316,#ea580c); color:#fff; }
 
+    /* LAYOUT: map + cards */
     .container {
-      width: 100%;
       display: flex;
       gap: 18px;
-      align-items: stretch;
-      flex-wrap: nowrap;
+      align-items: flex-start;
+      margin-top: 6px;
     }
 
     .map-panel {
       flex: 0 0 320px;
       background: var(--bg-panel);
       border-radius: var(--radius-lg);
-      padding: 16px;
+      padding: 14px;
       border: 1px solid rgba(148, 163, 184, 0.4);
       box-shadow: 0 18px 38px rgba(0, 0, 0, 0.75);
       display: flex;
       flex-direction: column;
       gap: 10px;
-      order: 1;
+      min-width: 260px;
     }
 
     .map-header {
@@ -254,35 +182,26 @@
       font-size: 14px;
       font-weight: 500;
     }
-    .map-header span { opacity: 0.9; }
-
     .chip {
-      font-size: 12px;
-      padding: 4px 12px;
+      font-size: 11px;
+      padding: 4px 10px;
       border-radius: 999px;
       background: rgba(15, 23, 42, 0.9);
       border: 1px solid rgba(148, 163, 184, 0.4);
       color: var(--text-muted);
-      user-select: none;
     }
 
     #map {
       width: 100%;
-      height: 440px;
+      height: 320px;
       border-radius: var(--radius-md);
       overflow: hidden;
-      border: 1px solid rgba(30, 64, 175, 0.55);
-      box-shadow: inset 0 0 6px rgba(56, 189, 248, 0.25);
-    }
-
-    .maplibregl-marker:focus-visible {
-      outline: 3px solid var(--accent);
-      outline-offset: 2px;
-      border-radius: 4px;
+      border: 1px solid rgba(30, 64, 175, 0.6);
+      box-shadow: inset 0 0 6px rgba(56, 189, 248, 0.3);
     }
 
     .map-footer {
-      margin-top: 8px;
+      margin-top: 4px;
       font-size: 12px;
       color: var(--text-muted);
       display: flex;
@@ -290,72 +209,37 @@
       align-items: center;
       gap: 8px;
     }
-
     .map-footer a {
       color: var(--accent);
+      font-size: 12px;
       text-decoration: none;
       font-weight: 600;
     }
 
-    .map-footer a:hover,
-    .map-footer a:focus-visible {
-      text-decoration: underline;
-      outline: none;
-      box-shadow: 0 0 0 2px #020617, 0 0 0 3px var(--focus-ring-color);
-    }
-
-    #topRatedBox {
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid rgba(148,163,184,0.4);
-      font-size: 12px;
-    }
-    #topRatedTitle {
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-    #topRatedList {
-      list-style: none;
-      padding-left: 0;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .top-rated-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      padding: 4px 6px;
-      border-radius: 8px;
-      transition: background 0.12s ease;
-    }
-    .top-rated-item:hover,
-    .top-rated-item:focus-visible {
-      background: rgba(15, 23, 42, 0.7);
-      outline: none;
-    }
-
+    #topRatedBox,
     #recentBox {
-      margin-top: 12px;
-      padding-top: 10px;
-      border-top: 1px dashed rgba(148,163,184,0.35);
+      margin-top: 8px;
+      padding-top: 8px;
       font-size: 12px;
     }
+    #topRatedBox { border-top: 1px solid rgba(148,163,184,0.4); }
+    #recentBox { border-top: 1px dashed rgba(148,163,184,0.35); }
+
+    #topRatedTitle,
     #recentTitle {
       font-weight: 600;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
+    #topRatedList,
     #recentList {
       list-style: none;
-      padding-left: 0;
+      padding: 0;
       margin: 0;
       display: flex;
       flex-direction: column;
       gap: 4px;
     }
+    .top-rated-item,
     .recent-item {
       display: flex;
       justify-content: space-between;
@@ -365,231 +249,119 @@
       padding: 4px 6px;
       border-radius: 8px;
       transition: background 0.12s ease;
+      color: var(--text-main);
     }
-    .recent-item:hover,
-    .recent-item:focus-visible {
+    .top-rated-item:hover,
+    .recent-item:hover {
       background: rgba(15, 23, 42, 0.7);
-      outline: none;
     }
 
     .viewer-panel {
       flex: 1 1 auto;
       background: radial-gradient(circle at top left, #0f172a, #020617);
       border-radius: var(--radius-lg);
-      padding: 18px 22px 22px;
+      padding: 16px 18px 18px;
       border: 1px solid rgba(30, 64, 175, 0.65);
       box-shadow: 0 18px 40px rgba(0, 0, 0, 0.9);
       display: flex;
       flex-direction: column;
-      min-width: 280px;
-      order: 2;
+      min-width: 0;
     }
 
     .viewer-header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      gap: 14px;
+      align-items: center;
+      gap: 10px;
       flex-wrap: wrap;
+      margin-bottom: 10px;
     }
-
     .viewer-header-main h2 {
       margin: 0;
       font-size: 20px;
     }
-
     .viewer-header-main p {
       margin: 4px 0 0;
       font-size: 13px;
       color: var(--text-muted);
     }
-
     .viewer-meta {
-      text-align: right;
       font-size: 12px;
       color: var(--text-muted);
-      min-width: 120px;
-      user-select: none;
+      white-space: nowrap;
     }
 
-    .viewer-box {
-      margin-top: 18px;
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      background: #000;
-      aspect-ratio: 16 / 9;
-      border: 1px solid var(--accent-soft);
-      position: relative;
-      box-shadow: inset 0 0 15px rgba(56,189,248,0.3);
-    }
-
-    .viewer-box video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      background: #000;
-      transition: opacity 0.3s ease;
-      display: block;
-    }
-
-    .video-loading {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 40px;
-      height: 40px;
-      margin: -20px 0 0 -20px;
-      border: 4px solid rgba(56,189,248,0.3);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      pointer-events: none;
-      z-index: 10;
-      display: none;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .video-mute-btn {
-      position: absolute;
-      bottom: 8px;
-      right: 8px;
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid var(--accent);
-      border-radius: 999px;
-      width: 38px;
-      height: 38px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      color: var(--accent);
-      font-size: 18px;
-      transition: background 0.25s ease;
-      user-select: none;
-    }
-    .video-mute-btn:hover,
-    .video-mute-btn:focus-visible {
-      background: var(--accent);
-      color: #020617;
-      outline: none;
-      box-shadow: 0 0 0 2px #020617, 0 0 0 3px var(--focus-ring-color);
-    }
-
-    .status-row {
-      margin-top: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .status-pill {
-      padding: 8px 14px;
-      background: rgba(15, 23, 42, 0.92);
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: var(--text-muted);
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      user-select: none;
-      min-width: 180px;
-    }
-
-    .status-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      background: #22c55e;
-      box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.25);
-      flex-shrink: 0;
-    }
-
+    /* GRID + CARDS */
     .grid {
-      margin-top: 14px;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 16px;
-      order: 3;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 14px;
     }
 
     .card {
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: rgba(15, 23, 42, 0.9);
       border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
       overflow: hidden;
-      cursor: pointer;
-      transition: transform 0.16s ease, box-shadow 0.16s ease;
-      user-select: none;
-      outline-offset: 3px;
       display: flex;
       flex-direction: column;
-      height: 100%;
-    }
-
-    .card:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 2px #020617, 0 0 0 3px var(--focus-ring-color);
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+      min-height: 210px;
     }
     .card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 18px 30px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 18px 30px rgba(0, 0, 0, 0.7);
+      border-color: rgba(56, 189, 248, 0.9);
     }
 
-    .thumb video,
     .thumb img {
       width: 100%;
-      height: 110px;
+      height: 120px;
       object-fit: cover;
       display: block;
-      border-bottom: 1px solid rgba(148,163,184,0.2);
-      border-radius: 14px 14px 0 0;
-      user-select: none;
+      border-bottom: 1px solid rgba(148,163,184,0.25);
     }
 
     .card-info {
-      padding: 12px 14px;
-      flex-grow: 1;
+      padding: 10px 12px 10px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
       gap: 6px;
+      flex: 1;
     }
-
     .card-info h4 {
-      margin: 0 0 4px;
-      font-size: 15px;
-      font-weight: 600;
-      user-select: text;
-    }
-
-    .card-info p {
       margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .card-info p {
+      margin: 2px 0 0;
       font-size: 12px;
-      color: #9ca3af;
-      user-select: text;
+      color: var(--text-muted);
     }
 
     .card-meta-row {
+      margin-top: auto;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      margin-top: 6px;
+      font-size: 11px;
     }
 
     .mode-pill {
       font-size: 11px;
-      padding: 3px 8px;
+      padding: 2px 7px;
       border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.4);
+      border: 1px solid rgba(148,163,184,0.55);
       color: var(--text-muted);
+      white-space: nowrap;
     }
-    .mode-walk { border-color: #22c55e; color: #bbf7d0; }
-    .mode-drive { border-color: #38bdf8; color: #e0f2fe; }
-    .mode-fly { border-color: #a855f7; color: #f3e8ff; }
-    .mode-sit { border-color: #f97316; color: #ffedd5; }
+    .mode-walk { border-color:#22c55e; color:#bbf7d0; }
+    .mode-drive { border-color:#38bdf8; color:#e0f2fe; }
+    .mode-fly { border-color:#a855f7; color:#f3e8ff; }
+    .mode-sit { border-color:#f97316; color:#ffedd5; }
 
     .like-btn {
       border: none;
@@ -603,31 +375,39 @@
       padding: 2px 6px;
       border-radius: 999px;
       transition: background 0.12s ease, color 0.12s ease;
+      white-space: nowrap;
     }
-    .like-btn:hover,
-    .like-btn:focus-visible {
+    .like-btn:hover {
       background: rgba(248, 250, 252, 0.06);
       color: #f97316;
-      outline: none;
     }
-    .like-btn.liked {
-      color: #f97316;
-    }
+    .like-btn.liked { color:#f97316; }
 
+    /* Responsive */
     @media (max-width: 900px) {
-      body { padding: 14px 0; }
-      .shell { padding: 14px 14px 18px; border-radius: 0; }
-      .container { flex-direction: column; flex-wrap: nowrap; }
-      .map-panel { order: 1; width: 100%; }
-      .viewer-panel { order: 2; width: 100%; }
-      .grid { order: 3; }
-      .top-nav { position: static; margin-bottom: 14px; padding: 0 14px; }
-      .top-nav .nav-right { display: none; }
+      body { padding: 10px 0; }
+      .shell { padding: 14px 14px 18px; }
+      .top-nav {
+        position: static;
+        margin-bottom: 14px;
+        padding: 0 14px;
+      }
+      .top-nav .nav-right {
+        display: none;
+      }
+      .container {
+        flex-direction: column;
+      }
+      .map-panel,
+      .viewer-panel {
+        width: 100%;
+      }
+      #map { height: 260px; }
     }
   </style>
 </head>
-
 <body>
+
 <div class="shell">
 
   <div class="top-nav">
@@ -650,47 +430,38 @@
     </div>
 
     <div class="cta-row">
-      <div class="pill" aria-live="polite" aria-atomic="true">
-        Today • {{ streets|length }} streets available
-      </div>
+      <div class="pill">Today • {{ streets|length }} streets available</div>
 
-     
-
-      <div class="mode-switch" aria-label="Choose exploration mode">
+      <div class="mode-switch">
         <a href="{{ url_for('walk') }}"
            class="mode-btn walk {% if request.path.startswith('/walk') or request.path.startswith('/world/walk') %}is-active{% endif %}">
-          <span class="icon" aria-hidden="true">🚶</span>
-          <span>Walk</span>
+          🚶 Walk
         </a>
-
         <a href="{{ url_for('drive') }}"
            class="mode-btn drive {% if request.path.startswith('/drive') or request.path.startswith('/world/drive') %}is-active{% endif %}">
-          <span class="icon" aria-hidden="true">🚗</span>
-          <span>Drive</span>
+          🚗 Drive
         </a>
-
         <a href="{{ url_for('fly') }}"
            class="mode-btn fly {% if request.path.startswith('/fly') or request.path.startswith('/world/fly') %}is-active{% endif %}">
-          <span class="icon" aria-hidden="true">🪂</span>
-          <span>Fly</span>
+          🪂 Fly
         </a>
-
         <a href="{{ url_for('sit') }}"
            class="mode-btn sit {% if request.path.startswith('/sit') or request.path.startswith('/world/sit') %}is-active{% endif %}">
-          <span class="icon" aria-hidden="true">🪑</span>
-          <span>Sit</span>
+          🪑 Sit
         </a>
       </div>
     </div>
   </div>
 
   <div class="container">
-    <!-- LEFT: map / top-rated / recent -->
+
+    <!-- LEFT PANEL -->
     <div class="map-panel">
       <div class="map-header">
         <span>World map</span>
-        <span class="chip">Click a pin to preview</span>
+        <span class="chip">Click a pin to jump</span>
       </div>
+
       <div id="map"></div>
 
       <div class="map-footer">
@@ -709,31 +480,25 @@
       </div>
     </div>
 
-    <!-- RIGHT: viewer and street cards -->
+    <!-- RIGHT PANEL -->
     <div class="viewer-panel">
       <div class="viewer-header">
         <div class="viewer-header-main">
-          <h2 id="viewerTitle">Preview street</h2>
-          <p id="viewerSubtitle">Click any card or map pin to load a sample clip.</p>
+          <h2>Browse streets</h2>
+          <p>Click any card or map pin to go into that street.</p>
         </div>
-        <div class="viewer-meta" id="viewerMeta">
-          —
-        </div>
+        <div class="viewer-meta">{{ streets|length }} total streets</div>
       </div>
 
-      <div class="viewer-box">
-        <video id="previewVideo" muted playsinline></video>
-        <div class="video-loading" id="videoSpinner"></div>
-        <button type="button" id="muteBtn" class="video-mute-btn" aria-label="Toggle sound">🔇</button>
+      <!-- Search -->
+      <div style="margin-bottom:10px;">
+        <input id="homeSearchInput"
+               type="search"
+               placeholder="Search streets by name, city or country…"
+               style="width:100%; border-radius:999px; border:1px solid rgba(148,163,184,0.55); padding:8px 14px; background:rgba(15,23,42,0.9); color:#e5e7eb; font-size:13px;">
       </div>
 
-      <div class="status-row">
-        <div class="status-pill">
-          <div class="status-dot"></div>
-          <span id="statusText">Idle – choose any street to preview.</span>
-        </div>
-      </div>
-
+      <!-- GRID -->
       <div class="grid" id="streetsGrid">
         {% for st in streets %}
           <div class="card"
@@ -745,33 +510,48 @@
                data-city="{{ st.city }}"
                data-country="{{ st.country }}"
                data-mode="{{ st.mode if st.type == 'video' else '3d' }}"
-               data-href="{% if st.type == '3d' %}{{ url_for('world', street_id=st._id) }}{% elif st.mode == 'walk' %}{{ url_for('world_walk', street_id=st._id) }}{% elif st.mode == 'drive' %}{{ url_for('world_drive', street_id=st._id) }}{% elif st.mode == 'fly' %}{{ url_for('world_fly', street_id=st._id) }}{% elif st.mode == 'sit' %}{{ url_for('world_sit', street_id=st._id) }}{% else %}{{ url_for('world', street_id=st._id) }}{% endif %}">
+               data-href="
+                 {% if st.type == '3d' %}
+                   {{ url_for('world', street_id=st._id) }}
+                 {% elif st.mode == 'walk' %}
+                   {{ url_for('world_walk', street_id=st._id) }}
+                 {% elif st.mode == 'drive' %}
+                   {{ url_for('world_drive', street_id=st._id) }}
+                 {% elif st.mode == 'fly' %}
+                   {{ url_for('world_fly', street_id=st._id) }}
+                 {% elif st.mode == 'sit' %}
+                   {{ url_for('world_sit', street_id=st._id) }}
+                 {% else %}
+                   {{ url_for('world', street_id=st._id) }}
+                 {% endif %}
+               ">
             <div class="thumb">
               {% if st.type == 'video' and st.videos and st.videos[0].url %}
-                <video src="{{ st.videos[0].url }}#t=0.1" muted playsinline></video>
+                {# Cloudinary video thumb: insert transform after /video/upload/ #}
+                {% set base = st.videos[0].url %}
+                {% set thumb = base.replace('/video/upload/', '/video/upload/so_1,f_jpg,q_auto,w_320/') %}
+                <img src="{{ thumb }}" alt="thumbnail">
               {% else %}
                 <img src="https://dummyimage.com/320x180/020617/64748b&text=3D+World" alt="">
               {% endif %}
             </div>
+
             <div class="card-info">
               <div>
                 <h4>{{ st.name }}</h4>
                 <p>{{ st.city }}, {{ st.country }}</p>
               </div>
+
               <div class="card-meta-row">
                 {% if st.type == '3d' %}
                   <span class="mode-pill">3D</span>
                 {% else %}
-                  <span class="mode-pill
-                    {% if st.mode == 'walk' %}mode-walk{% elif st.mode == 'drive' %}mode-drive{% elif st.mode == 'fly' %}mode-fly{% elif st.mode == 'sit' %}mode-sit{% endif %}">
-                    {{ st.mode|capitalize }}
-                  </span>
+                  <span class="mode-pill mode-{{ st.mode }}">{{ st.mode|capitalize }}</span>
                 {% endif %}
-                <button
-                  type="button"
-                  class="like-btn"
-                  data-like-id="{{ st._id }}"
-                >
+
+                <button type="button"
+                        class="like-btn"
+                        data-like-id="{{ st._id }}">
                   ♥ <span class="like-count">{{ st.likes or 0 }}</span>
                 </button>
               </div>
@@ -787,7 +567,7 @@
 <script>
   const STREETS = {{ streets | tojson | safe }};
 
-  // Map init
+  /* MAP */
   const map = new maplibregl.Map({
     container: "map",
     style: "https://demotiles.maplibre.org/style.json",
@@ -799,23 +579,26 @@
   function addMarkers() {
     STREETS.forEach((st, index) => {
       if (st.lat == null || st.lng == null) return;
-      const marker = new maplibregl.Marker()
+      const m = new maplibregl.Marker()
         .setLngLat([st.lng, st.lat])
         .addTo(map);
 
-      marker.getElement().addEventListener("click", () => {
+      m.getElement().addEventListener("click", () => {
         focusCardByIndex(index);
       });
-      markers.push(marker);
+      markers.push(m);
     });
   }
   addMarkers();
 
-  // Top liked + recent
+  /* TOP RATED + RECENT */
   const topRatedList = document.getElementById("topRatedList");
   const recentList = document.getElementById("recentList");
 
-  const sortedByLikes = [...STREETS].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 5);
+  const sortedByLikes = [...STREETS]
+    .sort((a, b) => (b.likes || 0) - (a.likes || 0))
+    .slice(0, 5);
+
   sortedByLikes.forEach(st => {
     const li = document.createElement("li");
     li.className = "top-rated-item";
@@ -824,9 +607,10 @@
     topRatedList.appendChild(li);
   });
 
-  const sortedByTime = [...STREETS].sort((a, b) => {
-    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-  }).slice(0, 5);
+  const sortedByTime = [...STREETS]
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    .slice(0, 5);
+
   sortedByTime.forEach(st => {
     const li = document.createElement("li");
     li.className = "recent-item";
@@ -835,82 +619,29 @@
     recentList.appendChild(li);
   });
 
-  // Viewer preview
-  const previewVideo = document.getElementById("previewVideo");
-  const videoSpinner = document.getElementById("videoSpinner");
-  const muteBtn = document.getElementById("muteBtn");
-  const viewerTitle = document.getElementById("viewerTitle");
-  const viewerSubtitle = document.getElementById("viewerSubtitle");
-  const viewerMeta = document.getElementById("viewerMeta");
-  const statusText = document.getElementById("statusText");
-
-  let isMuted = true;
-  muteBtn.addEventListener("click", () => {
-    isMuted = !isMuted;
-    previewVideo.muted = isMuted;
-    muteBtn.textContent = isMuted ? "🔇" : "🔊";
-  });
-
-  function loadPreviewForStreet(st) {
-    viewerTitle.textContent = st.name;
-    viewerSubtitle.textContent =
-      `${st.city || ""}${st.city && st.country ? ", " : ""}${st.country || ""}`;
-    viewerMeta.textContent = st.mode
-      ? (st.mode.toUpperCase() + " • ♥ " + (st.likes || 0))
-      : "3D • ♥ " + (st.likes || 0);
-    statusText.textContent = "Preview loaded. Click card to enter full experience.";
-
-    const videoUrl =
-      (st.type === "video" && st.videos && st.videos.length > 0)
-        ? st.videos[0].url
-        : null;
-    if (!videoUrl) {
-      previewVideo.removeAttribute("src");
-      previewVideo.load();
-      return;
-    }
-    videoSpinner.style.display = "block";
-    previewVideo.src = videoUrl;
-    previewVideo.load();
-    previewVideo.oncanplay = () => {
-      videoSpinner.style.display = "none";
-      previewVideo.play().catch(() => {});
-    };
-  }
-
+  /* FOCUS CARD + MAP */
   function focusCardById(id) {
     const card = document.querySelector(`.card[data-id="${id}"]`);
-    if (card) {
-      card.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-      card.focus();
-      const st = STREETS.find(s => s._id === id);
-      if (st) {
-        loadPreviewForStreet(st);
-        if (st.lat != null && st.lng != null) {
-          map.flyTo({ center: [st.lng, st.lat], zoom: 13 });
-        }
-      }
+    if (!card) return;
+    card.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+    card.focus();
+
+    const st = STREETS.find(s => s._id === id);
+    if (st && st.lat != null && st.lng != null) {
+      map.flyTo({ center: [st.lng, st.lat], zoom: 13 });
     }
   }
 
-  function focusCardByIndex(index) {
-    const st = STREETS[index];
-    if (!st) return;
-    focusCardById(st._id);
+  function focusCardByIndex(i) {
+    const st = STREETS[i];
+    if (st) focusCardById(st._id);
   }
 
-  // Card interactions
+  /* CARD NAVIGATION */
   document.querySelectorAll(".card").forEach(card => {
     card.addEventListener("click", () => {
-      const id = card.dataset.id;
-      const href = card.dataset.href;
-      const st = STREETS.find(s => s._id === id);
-      if (st) loadPreviewForStreet(st);
-      if (href) {
-        setTimeout(() => {
-          window.location.href = href;
-        }, 120);
-      }
+      const href = card.dataset.href && card.dataset.href.trim();
+      if (href) window.location.href = href;
     });
 
     card.addEventListener("keydown", e => {
@@ -921,23 +652,23 @@
     });
   });
 
-  // Like buttons
+  /* LIKE BUTTONS */
   document.querySelectorAll(".like-btn").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
-      const streetId = btn.dataset.likeId;
-      if (!streetId) return;
+      const id = btn.dataset.likeId;
+      if (!id) return;
 
       try {
-        const res = await fetch(`/like/${streetId}`, {
+        const res = await fetch(`/like/${id}`, {
           method: "POST",
           headers: { "X-Requested-With": "XMLHttpRequest" }
         });
         if (!res.ok) return;
         const data = await res.json();
-        const countSpan = btn.querySelector(".like-count");
-        if (countSpan && typeof data.likes === "number") {
-          countSpan.textContent = data.likes;
+        const span = btn.querySelector(".like-count");
+        if (span && typeof data.likes === "number") {
+          span.textContent = data.likes;
         }
         btn.classList.add("liked");
       } catch (err) {
@@ -945,7 +676,29 @@
       }
     });
   });
-</script>
 
+  /* SEARCH FILTER */
+  const searchInput = document.getElementById("homeSearchInput");
+  const cards = Array.from(document.querySelectorAll("#streetsGrid .card"));
+
+  function applyHomeFilter() {
+    const q = (searchInput.value || "").trim().toLowerCase();
+    if (!q) {
+      cards.forEach(c => c.style.display = "");
+      return;
+    }
+    cards.forEach(card => {
+      const name = (card.dataset.name || "").toLowerCase();
+      const city = (card.dataset.city || "").toLowerCase();
+      const country = (card.dataset.country || "").toLowerCase();
+      const match = name.includes(q) || city.includes(q) || country.includes(q);
+      card.style.display = match ? "" : "none";
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener("input", applyHomeFilter);
+  }
+</script>
 </body>
 </html>
