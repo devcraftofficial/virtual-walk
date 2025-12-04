@@ -5,10 +5,10 @@
   <title>Virtual Street Walk – Avatar Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- MODEL-VIEWER for avatar only -->
+  <!-- MODEL-VIEWER -->
   <script type="module" src="https://unpkg.com/@google/model-viewer@^3.3.0/dist/model-viewer.min.js"></script>
 
-  <!-- MAPLIBRE only for full map -->
+  <!-- MAPLIBRE -->
   <link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
 
@@ -45,8 +45,10 @@
     /* Mini-map */
     .mini-map {
       position: absolute;
-      top: 16px; left: 16px;
-      width: 100px; height: 100px;
+      top: 16px;
+      left: 16px;
+      width: 100px;
+      height: 100px;
       border-radius: 999px;
       overflow: hidden;
       background: #020617;
@@ -57,7 +59,7 @@
     }
     .mini-map img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* Full Map */
+    /* Full map */
     #fullMapOverlay {
       position: fixed;
       inset: 0;
@@ -69,7 +71,8 @@
       z-index: 200;
     }
     #fullMapContainer {
-      width: 90%; height: 80%;
+      width: 90%;
+      height: 80%;
       background: #0b1120;
       border-radius: var(--radius-lg);
       border: 1px solid rgba(148,163,184,0.5);
@@ -77,8 +80,10 @@
     }
     #closeMapBtn {
       position: absolute;
-      top: 30px; right: 40px;
-      width: 48px; height: 48px;
+      top: 30px;
+      right: 40px;
+      width: 48px;
+      height: 48px;
       background: rgba(0,0,0,0.65);
       color: #fff;
       border-radius: 50%;
@@ -88,13 +93,17 @@
       z-index: 500;
     }
 
-    /* Gender Switch */
+    /* Gender switch */
     .gender-row {
       position: absolute;
-      top: 16px; right: 16px;
+      top: 16px;
+      right: 16px;
       z-index: 60;
     }
-    .gender-buttons { display: flex; gap: 6px; }
+    .gender-buttons {
+      display: flex;
+      gap: 6px;
+    }
     .gender-buttons button {
       padding: 6px 10px;
       font-size: 11px;
@@ -110,10 +119,11 @@
       border-color: #3b82f6;
     }
 
-    /* Street Info */
+    /* Street info */
     .street-info {
       position: absolute;
-      top: 60px; right: 16px;
+      top: 60px;
+      right: 16px;
       background: rgba(15,23,42,0.7);
       border: 1px solid rgba(148,163,184,0.4);
       padding: 8px 14px;
@@ -127,7 +137,8 @@
     #streetVideo {
       position: absolute;
       inset: 0;
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
       z-index: 1;
       pointer-events: none;
@@ -146,10 +157,11 @@
       z-index: 2;
     }
 
-    /* Avatar */
+    /* Avatar & shadow */
     #avatarShadow {
       position: absolute;
-      bottom: 20px; left: 50%;
+      bottom: 20px;
+      left: 50%;
       transform: translateX(-50%);
       width: 200px;
       height: 45px;
@@ -162,39 +174,96 @@
       bottom: -15px;
       left: 50%;
       transform: translateX(-50%);
-      width: 240px; height: 440px;
+      width: 240px;
+      height: 440px;
       z-index: 10;
       pointer-events: none;
+    }
+
+    /* Avatar speech bubble */
+    #avatarSpeech {
+      position: absolute;
+      bottom: 410px;
+      left: 50%;
+      transform: translateX(-50%) translateY(6px);
+      max-width: 260px;
+      padding: 6px 10px;
+      font-size: 12px;
+      background: rgba(15,23,42,0.96);
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.7);
+      color: #e5e7eb;
+      box-shadow: 0 18px 45px rgba(0,0,0,0.8);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease-out, transform 0.22s ease-out;
+      z-index: 11;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+    #avatarSpeech.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    /* NEW: Street-side reply bubble (right side) */
+    #streetSpeech {
+      position: absolute;
+      bottom: 420px;
+      right: 40px;
+      max-width: 240px;
+      padding: 6px 10px;
+      font-size: 12px;
+      background: rgba(30,41,59,0.95);
+      border-radius: 12px;
+      border: 1px solid rgba(148,163,184,0.7);
+      color: #f1f5f9;
+      box-shadow: 0 18px 45px rgba(0,0,0,0.8);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease-out, transform 0.22s ease-out;
+      z-index: 12;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+    #streetSpeech.visible {
+      opacity: 1;
+      transform: translateY(-4px);
     }
 
     /* Joystick */
     #joystickBase {
       position: absolute;
-      bottom: 20px; right: 20px;
-      width: 96px; height: 96px;
+      bottom: 20px;
+      right: 20px;
+      width: 96px;
+      height: 96px;
       border-radius: 50%;
       background: rgba(15,23,42,0.85);
       border: 1px solid rgba(148,163,184,0.6);
-      display: flex; justify-content: center; align-items: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       backdrop-filter: blur(8px);
       touch-action: none;
       z-index: 70;
     }
     #joystickKnob {
-      width: 48px; height: 48px;
+      width: 48px;
+      height: 48px;
       background: #2563eb;
       border-radius: 50%;
       box-shadow: 0 0 0 4px rgba(37,99,235,0.4);
       touch-action: none;
     }
 
-    /* Move joystick up on mobile */
     @media (max-width: 768px) {
-      #joystickBase {
-        bottom: 90px;
-      }
+      #joystickBase { bottom: 90px; }
     }
 
+    /* Fade layer */
     #fadeLayer {
       position: absolute;
       inset: 0;
@@ -205,10 +274,10 @@
       z-index: 200;
     }
 
-    /* Settings button: under mini map */
+    /* Settings button */
     #settingsBtn {
       position: absolute;
-      top: 126px;         /* 16px + 100px mini-map height + 10px gap */
+      top: 126px;
       left: 16px;
       width: 40px;
       height: 40px;
@@ -249,37 +318,13 @@
       transform: translateY(0);
       pointer-events: auto;
     }
-    #settingsPanel h3 {
-      margin: 0 0 6px;
-      font-size: 13px;
-    }
-    .settings-section {
-      margin-top: 6px;
-      padding-top: 6px;
-      border-top: 1px solid rgba(30,64,175,0.4);
-    }
-    .settings-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-top: 4px;
-    }
-    .settings-row label {
-      flex: 1;
-      cursor: pointer;
-    }
-    .settings-row input[type="checkbox"] {
-      width: 14px;
-      height: 14px;
-      accent-color: var(--accent);
-    }
+
   </style>
 </head>
 
 <body>
 
-<!-- FULL MAP -->
+<!-- FULL MAP OVERLAY -->
 <div id="fullMapOverlay">
   <div id="fullMapContainer"></div>
   <button id="closeMapBtn">✕</button>
@@ -287,17 +332,14 @@
 
 <!-- MAIN VIEWER -->
 <div class="viewer-panel">
-  <div class="viewer-canvas">
+  <div class="viewer-canvas" id="viewerCanvas">
 
-    <!-- Mini-map -->
     <div id="miniMap" class="mini-map">
       <img src="/static/img/minimap_placeholder.png" alt="">
     </div>
 
-    <!-- Settings button under mini-map -->
     <button id="settingsBtn" aria-label="Settings">⚙</button>
 
-    <!-- Gender -->
     <div class="gender-row">
       <div class="gender-buttons">
         <button class="active" data-gender="male">Male</button>
@@ -305,32 +347,38 @@
       </div>
     </div>
 
-    <!-- Street Info -->
     <div class="street-info">
       <h2 id="streetName">Select a Street</h2>
       <p id="streetLocation">Waiting…</p>
     </div>
 
-    <!-- Walking Video -->
+    <!-- VIDEO -->
     <video id="streetVideo" preload="metadata" muted playsinline disablepictureinpicture>
       <source id="videoSource" src="">
     </video>
 
-    <!-- Night overlay -->
     <div id="nightOverlay"></div>
 
-    <!-- Avatar -->
+    <!-- AVATAR -->
     <div id="avatarShadow"></div>
-    <model-viewer id="avatarMV" src="/static/avatars/male/idle.glb"
-      autoplay shadow-intensity="1" disable-zoom disable-pan>
+    <model-viewer id="avatarMV"
+      src="/static/avatars/male/idle.glb"
+      autoplay
+      shadow-intensity="1"
+      disable-zoom
+      disable-pan>
     </model-viewer>
 
-    <!-- Joystick -->
+    <!-- SPEECH BUBBLES -->
+    <div id="avatarSpeech"></div>
+    <div id="streetSpeech"></div> <!-- NEW -->
+
+    <!-- JOYSTICK -->
     <div id="joystickBase">
       <div id="joystickKnob"></div>
     </div>
 
-    <!-- Settings panel -->
+    <!-- SETTINGS PANEL -->
     <div id="settingsPanel" aria-label="View settings">
       <h3>View settings</h3>
 
@@ -367,14 +415,16 @@
       </div>
     </div>
 
-    <!-- Fade -->
+    <!-- FADE LAYER -->
     <div id="fadeLayer"></div>
-
   </div>
 </div>
 
+<!-- AUDIO -->
 <audio id="footstepAudio" src="/static/audio/footsteps_loop.wav" loop preload="auto"></audio>
+<audio id="voiceAudio" preload="auto"></audio>
 
+<!-- DATA FROM FLASK -->
 <script id="streets-data" type="application/json">
   {{ streets | tojson | safe }}
 </script>
@@ -383,39 +433,217 @@
   {{ selected_street | tojson | safe if selected_street else 'null' }}
 </script>
 
+
 <script type="module">
 /* ================== GLOBALS ================== */
-const STREETS = JSON.parse(document.getElementById('streets-data').textContent);
-const SELECTED = JSON.parse(document.getElementById('selected-street-data').textContent);
+const STREETS = JSON.parse(document.getElementById("streets-data").textContent);
+const SELECTED = JSON.parse(document.getElementById("selected-street-data").textContent);
 
-const video = document.getElementById("streetVideo");
-const vsrc = document.getElementById("videoSource");
-const avatar = document.getElementById("avatarMV");
-const shadowEl = document.getElementById("avatarShadow");
-const fadeLayer = document.getElementById("fadeLayer");
+const video        = document.getElementById("streetVideo");
+const vsrc         = document.getElementById("videoSource");
+const avatar       = document.getElementById("avatarMV");
+const shadowEl     = document.getElementById("avatarShadow");
+const fadeLayer    = document.getElementById("fadeLayer");
 const nightOverlay = document.getElementById("nightOverlay");
 const footstepAudio = document.getElementById("footstepAudio");
 
-let currentIndex = -1;
-let currentVideos = [];
-let currentVideoIndex = 0;
-let currentGender = "male";
+const speechEl       = document.getElementById("avatarSpeech");
+const streetSpeechEl = document.getElementById("streetSpeech"); // 👈 NEW
+const voiceAudio     = document.getElementById("voiceAudio");   // your main voice audio tag
 
-let yawCurrent = 180;
-let yawTarget = 180;
-let currentDir = 0;
-let joyDir = 0;
+const settingsBtn     = document.getElementById("settingsBtn");
+const settingsPanel   = document.getElementById("settingsPanel");
+const setVideoMuted   = document.getElementById("setVideoMuted");
+const setVideoSlow    = document.getElementById("setVideoSlow");
+const setHideAvatar   = document.getElementById("setHideAvatar");
+const setWalkNoAvatar = document.getElementById("setWalkNoAvatar");
+const setNightMode    = document.getElementById("setNightMode");
+
+const joystickBase = document.getElementById("joystickBase");
+const joystickKnob = document.getElementById("joystickKnob");
+
+let currentIndex       = -1;
+let currentVideos      = [];
+let currentVideoIndex  = 0;
+let currentGender      = "male";
+
+let yawCurrent   = 180;
+let yawTarget    = 180;
+let currentDir   = 0;
 let reversePlaying = false;
-let headBob = 0, bobDirection = 1;
-let strafe = 0;
+let headBob      = 0;
+let bobDirection = 1;
+let strafe       = 0;
 let strafeOffset = 0;
 const STRAFE_MAX = 120;
+
+let joyActive    = false;
+let fullMapReady = false;
+let fullMap;
+
+/* ========== AVATAR GLBs PRELOAD ========== */
+const avatarSources = {
+  male: {
+    idle: "/static/avatars/male/idle.glb",
+    walk: "/static/avatars/male/walk.glb"
+  },
+  female: {
+    idle: "/static/avatars/female/idle.glb",
+    walk: "/static/avatars/female/walk.glb"
+  }
+};
+
+function preloadAvatars() {
+  Object.values(avatarSources).forEach(group => {
+    Object.values(group).forEach(url => {
+      fetch(url).catch(() => {});
+    });
+  });
+}
+preloadAvatars();
+
+/* ========== VOICE CLIPS ========== */
+/*  Folders used (as per your structure):
+
+    static/audio/greetings/male/...
+    static/audio/greetings/female/...
+    static/audio/street/reply_1.mp3, reply_2.mp3
+    static/audio/teleport/tp_1.mp3 (optional extra)
+*/
+
+const voiceClips = {
+  male: {
+    greetings: [
+      { text: "Good morning!",           file: "/static/audio/greetings/male/male_greet_1.mp3" },
+      { text: "Hello there!",            file: "/static/audio/greetings/male/male_greet_2.mp3" },
+      { text: "Hey ready for walk",      file: "/static/audio/greetings/male/male_greet_3.mp3" }
+    ],
+    teleport: [
+      { text: "Teleporting to the next street.", file: "/static/audio/greetings/male/male_teleport_1.mp3" }
+    ]
+  },
+  female: {
+    greetings: [
+      { text: "hello how are you today", file: "/static/audio/greetings/female/female_greet_1.mp3" },
+      { text: "hi lets take a walk",     file: "/static/audio/greetings/female/female_greet_2.mp3" }
+    ],
+    teleport: [
+      { text: "Teleporting to the next street.", file: "/static/audio/greetings/female/female_teleport_1.mp3" }
+    ]
+  }
+};
+
+/* 👉 NEW: street replies (someone else on street) */
+const streetReplies = [
+  { text: "Good morning!",      file: "/static/audio/street/reply_1.mp3" },
+  { text: "Have a nice day!",   file: "/static/audio/street/reply_2.mp3" }
+];
+
+/* Optional: preload voice MP3s so first play is smooth */
+function preloadVoices() {
+  Object.values(voiceClips).forEach(set => {
+    (set.greetings || []).forEach(clip => {
+      const a = new Audio(); a.src = clip.file;
+    });
+    (set.teleport || []).forEach(clip => {
+      const a = new Audio(); a.src = clip.file;
+    });
+  });
+
+  streetReplies.forEach(clip => {
+    const a = new Audio(); a.src = clip.file;
+  });
+}
+preloadVoices();
+
+/* ========== SPEECH BUBBLES + VOICE ========== */
+let speechTimeout       = null;
+let streetSpeechTimeout = null;
+let lastGreetingTime    = 0;
+
+/* Avatar bubble (center, above avatar) */
+function showAvatarSpeech(text, duration) {
+  if (!speechEl) return;
+  if (!duration) duration = 2300;
+  speechEl.textContent = text;
+  speechEl.classList.add("visible");
+  if (speechTimeout) clearTimeout(speechTimeout);
+  speechTimeout = setTimeout(() => {
+    speechEl.classList.remove("visible");
+  }, duration);
+}
+
+/* Street bubble (right side – OPTION A) */
+function showStreetSpeech(text, duration) {
+  if (!streetSpeechEl) return;
+  if (!duration) duration = 2300;
+  streetSpeechEl.textContent = text;
+  streetSpeechEl.classList.add("visible");
+  if (streetSpeechTimeout) clearTimeout(streetSpeechTimeout);
+  streetSpeechTimeout = setTimeout(() => {
+    streetSpeechEl.classList.remove("visible");
+  }, duration);
+}
+
+/* Use one audio element for both, sequentially */
+function playVoice(file) {
+  if (!voiceAudio || !file) return;
+  try {
+    voiceAudio.pause();
+    voiceAudio.currentTime = 0;
+    voiceAudio.src = file;
+    voiceAudio.play().catch(() => {});
+  } catch (e) {
+    // ignore
+  }
+}
+
+/* Avatar speaks */
+function speakAvatarLine(text, file, duration) {
+  showAvatarSpeech(text, duration || 2200);
+  playVoice(file);
+}
+
+/* Street person replies */
+function speakStreetLine(text, file, duration) {
+  showStreetSpeech(text, duration || 2200);
+  playVoice(file);
+}
+
+/** Greeting + reply pair (avatar + someone from street) */
+function playGreetingPair() {
+  const avatarSet = voiceClips[currentGender];
+  if (!avatarSet) return;
+  const gArr = avatarSet.greetings || [];
+  if (!gArr.length || !streetReplies.length) return;
+
+  const greet = gArr[Math.floor(Math.random() * gArr.length)];
+  const reply = streetReplies[Math.floor(Math.random() * streetReplies.length)];
+
+  // Avatar says hi
+  speakAvatarLine(greet.text, greet.file, 1500);
+
+  // Street reply after a short delay (so it feels like conversation)
+  setTimeout(() => {
+    speakStreetLine(reply.text, reply.file, 2000);
+  }, 1500);
+}
+
+/** Only greet occasionally when walking starts */
+function maybeGreetOnWalkStart() {
+  const now = Date.now();
+  if (now - lastGreetingTime < 8000) return;
+  if (Math.random() < 0.5) {
+    playGreetingPair();
+    lastGreetingTime = now;
+  }
+}
 
 /* ================== VIDEO LOADING ================== */
 function loadStreet(street) {
   document.getElementById("streetName").textContent = street.name || "Untitled Street";
   document.getElementById("streetLocation").textContent =
-    `${street.city || ""}${street.city && street.country ? ", " : ""}${street.country || ""}`;
+    (street.city || "") + (street.city && street.country ? ", " : "") + (street.country || "");
 
   currentVideos = [];
   currentVideoIndex = 0;
@@ -442,7 +670,7 @@ function loadStreetByIndex(i) {
 /* ================== PLAYBACK ================== */
 function playForward() {
   reversePlaying = false;
-  const slow = document.getElementById("setVideoSlow").checked;
+  const slow = setVideoSlow.checked;
   video.playbackRate = slow ? 0.5 : 1;
   video.play().catch(() => {});
 }
@@ -450,10 +678,9 @@ function playForward() {
 function playReverse() {
   reversePlaying = true;
   video.pause();
-
   function frameBack() {
     if (!reversePlaying) return;
-    const slow = document.getElementById("setVideoSlow").checked;
+    const slow = setVideoSlow.checked;
     const step = slow ? 0.008 : 0.016;
     video.currentTime -= step;
     if (video.currentTime <= 0.02) {
@@ -466,7 +693,8 @@ function playReverse() {
 
 function setAvatarState() {
   const state = currentDir === 0 ? "idle" : "walk";
-  avatar.src = `/static/avatars/${currentGender}/${state}.glb`;
+  const src = avatarSources[currentGender] ? avatarSources[currentGender][state] : null;
+  if (src) avatar.src = src;
 }
 
 /* Footsteps */
@@ -485,22 +713,29 @@ function updateFootsteps() {
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lat2 - lon1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
   const a =
-    Math.sin(dLat/2)**2 +
-    Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
-    Math.sin(dLon/2)**2;
-  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) *
+      Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 function nearestStreetIndex() {
   const base = STREETS[currentIndex];
   if (!base) return -1;
-  let best = -1, bestDist = Infinity;
+  let best = -1;
+  let bestDist = Infinity;
   STREETS.forEach((s, i) => {
     if (i === currentIndex) return;
-    const d = haversine(parseFloat(base.lat), parseFloat(base.lng),
-                        parseFloat(s.lat), parseFloat(s.lng));
+    const d = haversine(
+      parseFloat(base.lat),
+      parseFloat(base.lng),
+      parseFloat(s.lat),
+      parseFloat(s.lng)
+    );
     if (!Number.isNaN(d) && d < bestDist) {
       bestDist = d;
       best = i;
@@ -512,6 +747,17 @@ function nearestStreetIndex() {
 async function teleportNearest() {
   const next = nearestStreetIndex();
   if (next === -1) return;
+
+  // Teleport voice line (avatar only)
+  const set   = voiceClips[currentGender];
+  const teleArr = set && set.teleport ? set.teleport : [];
+  if (teleArr.length) {
+    const clip = teleArr[Math.floor(Math.random() * teleArr.length)];
+    speakAvatarLine(clip.text, clip.file, 2600);
+  } else {
+    showAvatarSpeech("Teleporting to the next street.", 2600);
+  }
+
   fadeLayer.style.opacity = "1";
   await new Promise(r => setTimeout(r, 450));
   loadStreetByIndex(next);
@@ -536,16 +782,20 @@ video.addEventListener("ended", () => {
   teleportNearest();
 });
 
-/* ================== KEYBOARD ================== */
+/* ================== KEYBOARD CONTROLS ================== */
 window.addEventListener("keydown", e => {
   const k = e.key.toLowerCase();
-  if (k === "arrowleft" || k === "a") yawTarget -= 10;
-  else if (k === "arrowright" || k === "d") yawTarget += 10;
-  else if (k === "arrowup" || k === "w") {
+  if (k === "arrowleft" || k === "a") {
+    yawTarget -= 10;
+  } else if (k === "arrowright" || k === "d") {
+    yawTarget += 10;
+  } else if (k === "arrowup" || k === "w") {
+    const wasStopped = currentDir === 0;
     currentDir = 1;
     playForward();
     setAvatarState();
     updateFootsteps();
+    if (wasStopped) maybeGreetOnWalkStart();
   } else if (k === "arrowdown" || k === "s") {
     currentDir = -1;
     playReverse();
@@ -560,7 +810,7 @@ window.addEventListener("keydown", e => {
 
 window.addEventListener("keyup", e => {
   const k = e.key.toLowerCase();
-  if (["arrowup","w","arrowdown","s"].includes(k)) {
+  if (["arrowup", "w", "arrowdown", "s"].includes(k)) {
     currentDir = 0;
     reversePlaying = false;
     video.pause();
@@ -575,7 +825,9 @@ window.addEventListener("keyup", e => {
 /* ================== GENDER SWITCH ================== */
 document.querySelectorAll(".gender-buttons button").forEach(btn => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".gender-buttons button").forEach(b => b.classList.remove("active"));
+    document
+      .querySelectorAll(".gender-buttons button")
+      .forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     currentGender = btn.dataset.gender;
     setAvatarState();
@@ -583,22 +835,21 @@ document.querySelectorAll(".gender-buttons button").forEach(btn => {
 });
 
 /* ================== JOYSTICK ================== */
-const joystickBase = document.getElementById("joystickBase");
-const joystickKnob = document.getElementById("joystickKnob");
-let joyActive = false;
-
 function joyMove(ev) {
   const rect = joystickBase.getBoundingClientRect();
-  const cx = rect.left + rect.width/2;
-  const cy = rect.top + rect.height/2;
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
   const dx = ev.clientX - cx;
   const dy = ev.clientY - cy;
-  const r = rect.width/2;
+  const r  = rect.width / 2;
 
   const nx = dx / r;
   const ny = dy / r;
 
-  joystickKnob.style.transform = `translate(${nx*30}px, ${ny*30}px)`;
+  joystickKnob.style.transform =
+    "translate(" + nx * 30 + "px, " + ny * 30 + "px)";
+
+  const prevDir = currentDir;
 
   if (Math.abs(ny) > 0.2) currentDir = ny < 0 ? 1 : -1;
   else currentDir = 0;
@@ -606,9 +857,12 @@ function joyMove(ev) {
   if (Math.abs(nx) > 0.2) strafe = nx > 0 ? 1 : -1;
   else strafe = 0;
 
-  if (currentDir === 1) playForward();
-  else if (currentDir === -1) playReverse();
-  else {
+  if (currentDir === 1) {
+    playForward();
+    if (prevDir === 0) maybeGreetOnWalkStart();
+  } else if (currentDir === -1) {
+    playReverse();
+  } else {
     reversePlaying = false;
     video.pause();
   }
@@ -621,8 +875,10 @@ joystickBase.addEventListener("pointerdown", e => {
   joystickBase.setPointerCapture(e.pointerId);
   joyMove(e);
 });
-joystickBase.addEventListener("pointermove", e => { if (joyActive) joyMove(e); });
-joystickBase.addEventListener("pointerup", () => {
+joystickBase.addEventListener("pointermove", e => {
+  if (joyActive) joyMove(e);
+});
+function resetJoystick() {
   joyActive = false;
   joystickKnob.style.transform = "translate(0,0)";
   currentDir = 0;
@@ -631,32 +887,15 @@ joystickBase.addEventListener("pointerup", () => {
   video.pause();
   setAvatarState();
   updateFootsteps();
-});
-joystickBase.addEventListener("pointercancel", () => {
-  joyActive = false;
-  joystickKnob.style.transform = "translate(0,0)";
-  currentDir = 0;
-  strafe = 0;
-  reversePlaying = false;
-  video.pause();
-  setAvatarState();
-  updateFootsteps();
-});
+}
+joystickBase.addEventListener("pointerup", resetJoystick);
+joystickBase.addEventListener("pointercancel", resetJoystick);
 
 /* ================== SETTINGS PANEL ================== */
-const settingsBtn = document.getElementById("settingsBtn");
-const settingsPanel = document.getElementById("settingsPanel");
-const setVideoMuted = document.getElementById("setVideoMuted");
-const setVideoSlow = document.getElementById("setVideoSlow");
-const setHideAvatar = document.getElementById("setHideAvatar");
-const setWalkNoAvatar = document.getElementById("setWalkNoAvatar");
-const setNightMode = document.getElementById("setNightMode");
-
 settingsBtn.addEventListener("click", () => {
   settingsPanel.classList.toggle("open");
 });
 
-/* Video settings */
 setVideoMuted.addEventListener("change", () => {
   video.muted = setVideoMuted.checked;
 });
@@ -666,7 +905,6 @@ setVideoSlow.addEventListener("change", () => {
   }
 });
 
-/* Avatar settings */
 function applyAvatarVisibility() {
   const hide = setHideAvatar.checked || setWalkNoAvatar.checked;
   avatar.style.display = hide ? "none" : "block";
@@ -681,18 +919,16 @@ setWalkNoAvatar.addEventListener("change", () => {
   applyAvatarVisibility();
 });
 
-/* Night mode */
 setNightMode.addEventListener("change", () => {
   nightOverlay.style.opacity = setNightMode.checked ? "1" : "0";
 });
 
-/* defaults */
 video.muted = true;
 
 /* ================== ANIMATION LOOP ================== */
 function tick() {
   yawCurrent += (yawTarget - yawCurrent) * 0.18;
-  avatar.orientation = `0deg 0deg ${yawCurrent}deg`;
+  avatar.orientation = "0deg 0deg " + yawCurrent + "deg";
 
   if (currentDir !== 0) {
     headBob += bobDirection * 0.25;
@@ -703,23 +939,20 @@ function tick() {
 
   if (strafe !== 0) {
     strafeOffset += strafe * 4;
-    strafeOffset = Math.max(-STRAFE_MAX, Math.min(STRAFE_MAX, strafeOffset));
+    if (strafeOffset > STRAFE_MAX)  strafeOffset = STRAFE_MAX;
+    if (strafeOffset < -STRAFE_MAX) strafeOffset = -STRAFE_MAX;
   } else {
     strafeOffset *= 0.9;
   }
 
-  video.style.transform = `translateY(${headBob}px)`;
-  avatar.style.transform =
-    `translate(calc(-50% + ${strafeOffset}px), -15px)`;
+  video.style.transform  = "translateY(" + headBob + "px)";
+  avatar.style.transform = "translate(calc(-50% + " + strafeOffset + "px), -15px)";
 
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
 
 /* ================== MAPLIBRE (LAZY) ================== */
-let fullMapReady = false;
-let fullMap;
-
 function loadMap() {
   if (fullMapReady) return;
   fullMap = new maplibregl.Map({
@@ -731,7 +964,10 @@ function loadMap() {
   fullMap.addControl(new maplibregl.NavigationControl());
 
   STREETS.forEach((s, i) => {
-    const m = new maplibregl.Marker().setLngLat([parseFloat(s.lng), parseFloat(s.lat)]).addTo(fullMap);
+    const m = new maplibregl.Marker().setLngLat([
+      parseFloat(s.lng),
+      parseFloat(s.lat)
+    ]).addTo(fullMap);
     m.getElement().addEventListener("click", () => {
       loadStreetByIndex(i);
       document.getElementById("fullMapOverlay").style.display = "none";
@@ -757,5 +993,6 @@ if (SELECTED) {
   loadStreetByIndex(0);
 }
 </script>
+
 </body>
 </html>
