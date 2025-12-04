@@ -448,8 +448,8 @@ const nightOverlay = document.getElementById("nightOverlay");
 const footstepAudio = document.getElementById("footstepAudio");
 
 const speechEl       = document.getElementById("avatarSpeech");
-const streetSpeechEl = document.getElementById("streetSpeech"); // 👈 NEW
-const voiceAudio     = document.getElementById("voiceAudio");   // your main voice audio tag
+const streetSpeechEl = document.getElementById("streetSpeech"); // right-side bubble
+const voiceAudio     = document.getElementById("voiceAudio");   // main voice audio tag
 
 const settingsBtn     = document.getElementById("settingsBtn");
 const settingsPanel   = document.getElementById("settingsPanel");
@@ -502,69 +502,223 @@ function preloadAvatars() {
 }
 preloadAvatars();
 
-/* ========== VOICE CLIPS ========== */
-/*  Folders used (as per your structure):
-
-    static/audio/greetings/male/...
-    static/audio/greetings/female/...
-    static/audio/street/reply_1.mp3, reply_2.mp3
-    static/audio/teleport/tp_1.mp3 (optional extra)
-*/
-
-const voiceClips = {
-  male: {
-    greetings: [
-      { text: "Good morning!",           file: "/static/audio/greetings/male/male_greet_1.mp3" },
-      { text: "Hello there!",            file: "/static/audio/greetings/male/male_greet_2.mp3" },
-      { text: "Hey ready for walk",      file: "/static/audio/greetings/male/male_greet_3.mp3" }
-    ],
-    teleport: [
-      { text: "Teleporting to the next street.", file: "/static/audio/greetings/male/male_teleport_1.mp3" }
-    ]
-  },
-  female: {
-    greetings: [
-      { text: "hello how are you today", file: "/static/audio/greetings/female/female_greet_1.mp3" },
-      { text: "hi lets take a walk",     file: "/static/audio/greetings/female/female_greet_2.mp3" }
-    ],
-    teleport: [
-      { text: "Teleporting to the next street.", file: "/static/audio/greetings/female/female_teleport_1.mp3" }
-    ]
-  }
+/* ============================================================
+   DIALOGUE PAIRS  (YOU ONLY EDIT FILE PATHS + TEXT HERE)
+   Format: { q, a, qFile, aFile }
+============================================================ */
+const dialogues = {
+  male: [
+    {
+      q: "Good morning!",
+      a: "Good morning! Have a nice day!",
+      qFile: "/static/audio/greetings/male/male_greet_1.mp3",
+      aFile: "/static/audio/street/reply_1.mp3"
+    },
+    {
+      q: "Hello there!",
+      a: "Hi! Welcome to the street!",
+      qFile: "/static/audio/greetings/male/male_greet_2.mp3",
+      aFile: "/static/audio/street/reply_2.mp3"
+    },
+    {
+      q: "Hey, ready for a walk?",
+      a: "Yes! Enjoy your walk!",
+      qFile: "/static/audio/greetings/male/male_greet_3.mp3",
+      aFile: "/static/audio/street/reply_3.mp3"
+    },
+    {
+      q: "Nice to see you here!",
+      a: "Nice to see you too, enjoy this place!",
+      qFile: "/static/audio/greetings/male/male_greet_4.mp3",
+      aFile: "/static/audio/street/reply_4.mp3"
+    },
+    {
+      q: "Beautiful morning, right?",
+      a: "Perfect time for a street walk!",
+      qFile: "/static/audio/greetings/male/male_greet_5.mp3",
+      aFile: "/static/audio/street/reply_5.mp3"
+    },
+    {
+      q: "Ready to explore this street?",
+      a: "Of course, let’s see what’s around!",
+      qFile: "/static/audio/greetings/male/male_greet_6.mp3",
+      aFile: "/static/audio/street/reply_6.mp3"
+    },
+    {
+      q: "Do you like this street?",
+      a: "Yes, it’s one of my favorites!",
+      qFile: "/static/audio/greetings/male/male_greet_7.mp3",
+      aFile: "/static/audio/street/reply_7.mp3"
+    },
+    {
+      q: "Thanks for walking with me.",
+      a: "Anytime! Keep exploring!",
+      qFile: "/static/audio/greetings/male/male_greet_8.mp3",
+      aFile: "/static/audio/street/reply_8.mp3"
+    },
+    {
+      q: "How is your day going?",
+      a: "Pretty good, hope yours is great too!",
+      qFile: "/static/audio/greetings/male/male_greet_9.mp3",
+      aFile: "/static/audio/street/reply_9.mp3"
+    },
+    {
+      q: "Let’s keep moving forward.",
+      a: "Sure, the next street looks amazing!",
+      qFile: "/static/audio/greetings/male/male_greet_10.mp3",
+      aFile: "/static/audio/street/reply_10.mp3"
+    }
+  ],
+  female: [
+    {
+      q: "Hello, how are you today?",
+      a: "I’m good! Have a lovely day!",
+      qFile: "/static/audio/greetings/female/female_greet_1.mp3",
+      aFile: "/static/audio/street/reply_1.mp3"
+    },
+    {
+      q: "Hi, let’s take a walk.",
+      a: "Sure! Welcome to the street!",
+      qFile: "/static/audio/greetings/female/female_greet_2.mp3",
+      aFile: "/static/audio/street/reply_2.mp3"
+    },
+    {
+      q: "Good morning!",
+      a: "Good morning! Enjoy your walk!",
+      qFile: "/static/audio/greetings/female/female_greet_3.mp3",
+      aFile: "/static/audio/street/reply_3.mp3"
+    },
+    {
+      q: "Nice to meet you here!",
+      a: "Nice to meet you too, enjoy this view!",
+      qFile: "/static/audio/greetings/female/female_greet_4.mp3",
+      aFile: "/static/audio/street/reply_4.mp3"
+    },
+    {
+      q: "It’s a beautiful day.",
+      a: "Yes, perfect weather for walking!",
+      qFile: "/static/audio/greetings/female/female_greet_5.mp3",
+      aFile: "/static/audio/street/reply_5.mp3"
+    },
+    {
+      q: "Ready to explore this street?",
+      a: "Definitely, let’s look around!",
+      qFile: "/static/audio/greetings/female/female_greet_6.mp3",
+      aFile: "/static/audio/street/reply_6.mp3"
+    },
+    {
+      q: "Do you like this place?",
+      a: "Yes, it feels so cozy!",
+      qFile: "/static/audio/greetings/female/female_greet_7.mp3",
+      aFile: "/static/audio/street/reply_7.mp3"
+    },
+    {
+      q: "Thanks for joining me.",
+      a: "You’re welcome, let’s keep going!",
+      qFile: "/static/audio/greetings/female/female_greet_8.mp3",
+      aFile: "/static/audio/street/reply_8.mp3"
+    },
+    {
+      q: "How’s your day so far?",
+      a: "Pretty good, hope you’re doing well too!",
+      qFile: "/static/audio/greetings/female/female_greet_9.mp3",
+      aFile: "/static/audio/street/reply_9.mp3"
+    },
+    {
+      q: "Let’s walk a bit more.",
+      a: "Yes, the next corner looks interesting!",
+      qFile: "/static/audio/greetings/female/female_greet_10.mp3",
+      aFile: "/static/audio/street/reply_10.mp3"
+    }
+  ]
 };
 
-/* 👉 NEW: street replies (someone else on street) */
-const streetReplies = [
-  { text: "Good morning!",      file: "/static/audio/street/reply_1.mp3" },
-  { text: "Have a nice day!",   file: "/static/audio/street/reply_2.mp3" }
-];
+/* ============================================================
+   TELEPORT LINES (RANDOM FUN LINES)
+   Format: { text, file }
+============================================================ */
+const teleportLines = {
+  male: [
+    {
+      text: "Teleporting to the next street.",
+      file: "/static/audio/teleport/male_tp_1.mp3"
+    },
+    {
+      text: "Jumping to another street!",
+      file: "/static/audio/teleport/male_tp_2.mp3"
+    },
+    {
+      text: "Hold tight, moving ahead!",
+      file: "/static/audio/teleport/male_tp_3.mp3"
+    },
+    {
+      text: "Let’s explore the next street.",
+      file: "/static/audio/teleport/male_tp_4.mp3"
+    },
+    {
+      text: "Next stop, a new street!",
+      file: "/static/audio/teleport/male_tp_5.mp3"
+    }
+  ],
+  female: [
+    {
+      text: "Teleporting to the next street.",
+      file: "/static/audio/teleport/female_tp_1.mp3"
+    },
+    {
+      text: "Jumping to another cute street!",
+      file: "/static/audio/teleport/female_tp_2.mp3"
+    },
+    {
+      text: "Hold on, we’re moving ahead!",
+      file: "/static/audio/teleport/female_tp_3.mp3"
+    },
+    {
+      text: "Let’s explore the next street together.",
+      file: "/static/audio/teleport/female_tp_4.mp3"
+    },
+    {
+      text: "New street coming up!",
+      file: "/static/audio/teleport/female_tp_5.mp3"
+    }
+  ]
+};
 
-/* Optional: preload voice MP3s so first play is smooth */
+/* ========== PRELOAD VOICES ========== */
 function preloadVoices() {
-  Object.values(voiceClips).forEach(set => {
-    (set.greetings || []).forEach(clip => {
-      const a = new Audio(); a.src = clip.file;
-    });
-    (set.teleport || []).forEach(clip => {
-      const a = new Audio(); a.src = clip.file;
+  // Greeting + reply pairs
+  Object.values(dialogues).forEach(list => {
+    list.forEach(pair => {
+      if (pair.qFile) {
+        const a = new Audio();
+        a.src = pair.qFile;
+      }
+      if (pair.aFile) {
+        const b = new Audio();
+        b.src = pair.aFile;
+      }
     });
   });
 
-  streetReplies.forEach(clip => {
-    const a = new Audio(); a.src = clip.file;
+  // Teleport lines
+  Object.values(teleportLines).forEach(list => {
+    list.forEach(line => {
+      if (line.file) {
+        const a = new Audio();
+        a.src = line.file;
+      }
+    });
   });
 }
 preloadVoices();
 
-/* ========== SPEECH BUBBLES + VOICE ========== */
+/* ========== SPEECH + VOICE HELPERS ========== */
 let speechTimeout       = null;
 let streetSpeechTimeout = null;
-let lastGreetingTime    = 0;
 
-/* Avatar bubble (center, above avatar) */
-function showAvatarSpeech(text, duration) {
+/* Avatar bubble */
+function showAvatarSpeech(text, duration = 2300) {
   if (!speechEl) return;
-  if (!duration) duration = 2300;
   speechEl.textContent = text;
   speechEl.classList.add("visible");
   if (speechTimeout) clearTimeout(speechTimeout);
@@ -573,10 +727,9 @@ function showAvatarSpeech(text, duration) {
   }, duration);
 }
 
-/* Street bubble (right side – OPTION A) */
-function showStreetSpeech(text, duration) {
+/* Street bubble (always on right side) */
+function showStreetSpeech(text, duration = 2300) {
   if (!streetSpeechEl) return;
-  if (!duration) duration = 2300;
   streetSpeechEl.textContent = text;
   streetSpeechEl.classList.add("visible");
   if (streetSpeechTimeout) clearTimeout(streetSpeechTimeout);
@@ -585,7 +738,7 @@ function showStreetSpeech(text, duration) {
   }, duration);
 }
 
-/* Use one audio element for both, sequentially */
+/* Single audio element for all lines */
 function playVoice(file) {
   if (!voiceAudio || !file) return;
   try {
@@ -598,52 +751,65 @@ function playVoice(file) {
   }
 }
 
-/* Avatar speaks */
 function speakAvatarLine(text, file, duration) {
   showAvatarSpeech(text, duration || 2200);
   playVoice(file);
 }
 
-/* Street person replies */
 function speakStreetLine(text, file, duration) {
   showStreetSpeech(text, duration || 2200);
   playVoice(file);
 }
 
-/** Greeting + reply pair (avatar + someone from street) */
-function playGreetingPair() {
-  const avatarSet = voiceClips[currentGender];
-  if (!avatarSet) return;
-  const gArr = avatarSet.greetings || [];
-  if (!gArr.length || !streetReplies.length) return;
+/* ============================================================
+   IMPROVED GREETING SYSTEM (Q + REPLY PAIR)
+============================================================ */
+const GREETING_COOLDOWN = 6000; // 6s
+let lastGreetingAt = 0;
 
-  const greet = gArr[Math.floor(Math.random() * gArr.length)];
-  const reply = streetReplies[Math.floor(Math.random() * streetReplies.length)];
-
-  // Avatar says hi
-  speakAvatarLine(greet.text, greet.file, 1500);
-
-  // Street reply after a short delay (so it feels like conversation)
-  setTimeout(() => {
-    speakStreetLine(reply.text, reply.file, 2000);
-  }, 1500);
+function canGreet() {
+  const now = Date.now();
+  return (now - lastGreetingAt) > GREETING_COOLDOWN;
 }
 
-/** Only greet occasionally when walking starts */
-function maybeGreetOnWalkStart() {
-  const now = Date.now();
-  if (now - lastGreetingTime < 8000) return;
-  if (Math.random() < 0.5) {
-    playGreetingPair();
-    lastGreetingTime = now;
+function pickGreetingPair() {
+  const list = dialogues[currentGender] || dialogues.male;
+  if (!list || !list.length) return null;
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+/* Avatar + street conversation */
+function triggerGreeting() {
+  if (!canGreet()) return;
+
+  const pair = pickGreetingPair();
+  if (!pair) return;
+
+  lastGreetingAt = Date.now();
+
+  // Avatar asks / greets
+  speakAvatarLine(pair.q, pair.qFile, 1600);
+
+  // Street replies a bit later
+  if (pair.a && pair.aFile) {
+    setTimeout(() => {
+      speakStreetLine(pair.a, pair.aFile, 2000);
+    }, 1400);
   }
+}
+
+/* Called whenever walking STARTS from stop */
+function onWalkStart() {
+  triggerGreeting();
 }
 
 /* ================== VIDEO LOADING ================== */
 function loadStreet(street) {
   document.getElementById("streetName").textContent = street.name || "Untitled Street";
   document.getElementById("streetLocation").textContent =
-    (street.city || "") + (street.city && street.country ? ", " : "") + (street.country || "");
+    (street.city || "") +
+    (street.city && street.country ? ", " : "") +
+    (street.country || "");
 
   currentVideos = [];
   currentVideoIndex = 0;
@@ -693,7 +859,9 @@ function playReverse() {
 
 function setAvatarState() {
   const state = currentDir === 0 ? "idle" : "walk";
-  const src = avatarSources[currentGender] ? avatarSources[currentGender][state] : null;
+  const src = avatarSources[currentGender]
+    ? avatarSources[currentGender][state]
+    : null;
   if (src) avatar.src = src;
 }
 
@@ -748,12 +916,11 @@ async function teleportNearest() {
   const next = nearestStreetIndex();
   if (next === -1) return;
 
-  // Teleport voice line (avatar only)
-  const set   = voiceClips[currentGender];
-  const teleArr = set && set.teleport ? set.teleport : [];
-  if (teleArr.length) {
-    const clip = teleArr[Math.floor(Math.random() * teleArr.length)];
-    speakAvatarLine(clip.text, clip.file, 2600);
+  // Teleport voice – random fun line per gender
+  const list = teleportLines[currentGender] || teleportLines.male;
+  if (list && list.length) {
+    const line = list[Math.floor(Math.random() * list.length)];
+    speakAvatarLine(line.text, line.file, 2600);
   } else {
     showAvatarSpeech("Teleporting to the next street.", 2600);
   }
@@ -795,7 +962,7 @@ window.addEventListener("keydown", e => {
     playForward();
     setAvatarState();
     updateFootsteps();
-    if (wasStopped) maybeGreetOnWalkStart();
+    if (wasStopped) onWalkStart();   // 🔔 trigger greeting here
   } else if (k === "arrowdown" || k === "s") {
     currentDir = -1;
     playReverse();
@@ -859,7 +1026,7 @@ function joyMove(ev) {
 
   if (currentDir === 1) {
     playForward();
-    if (prevDir === 0) maybeGreetOnWalkStart();
+    if (prevDir === 0) onWalkStart();   // 🔔 joystick start greeting here
   } else if (currentDir === -1) {
     playReverse();
   } else {
@@ -993,6 +1160,5 @@ if (SELECTED) {
   loadStreetByIndex(0);
 }
 </script>
-
 </body>
 </html>
