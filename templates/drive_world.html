@@ -1,524 +1,528 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Drive Mode – Virtual Street Drive</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8" />
+<title>Drive Mode – Virtual Street Drive (Engine B Enhanced)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- MAPLIBRE for maps -->
-  <link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+<link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
+<script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
 
-  <style>
-    :root {
-      --bg-page: #020617;
-      --text-main: #e5e7eb;
-      --text-muted: #9ca3af;
-      --accent: #38bdf8;
-      --radius-lg: 18px;
-    }
-    *, *::before, *::after { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: radial-gradient(circle at top, #020617, #000 80%);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: var(--text-main);
-      overflow: hidden;
-    }
-    .viewer-panel {
-      position: relative;
-      width: 100%;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .viewer-canvas {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      background: black;
-      overflow: hidden;
-    }
-    .mini-map {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      width: 100px;
-      height: 100px;
-      border-radius: 999px;
-      overflow: hidden;
-      background: var(--bg-page);
-      border: 2px solid rgba(148, 163, 184, 0.6);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.75);
-      z-index: 50;
-      cursor: pointer;
-    }
-    .mini-map canvas { border-radius: 999px; }
-    #fullMapOverlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(6px);
-      z-index: 200;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    #fullMapContainer {
-      width: 90%;
-      height: 80%;
-      background: #0b1120;
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9);
-    }
-    #closeMapBtn {
-      position: absolute;
-      top: 30px;
-      right: 40px;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: none;
-      background: rgba(0, 0, 0, 0.65);
-      color: white;
-      font-size: 22px;
-      cursor: pointer;
-      backdrop-filter: blur(4px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-    }
-    .street-info {
-      position: absolute;
-      top: 20px;
-      right: 16px;
-      padding: 8px 14px;
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      border-radius: 14px;
-      backdrop-filter: blur(10px);
-      z-index: 50;
-      max-width: 220px;
-      user-select: none;
-    }
-    .street-info h2 {
-      margin: 0;
-      font-size: 15px;
-      line-height: 1.2;
-    }
-    .street-info p {
-      margin: 3px 0 0;
-      font-size: 12px;
-      color: #cbd5e1;
-      line-height: 1.2;
-    }
-    #streetVideo {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      pointer-events: none;
-      z-index: 1;
-      transition: transform 0.15s ease-out;
-      user-select: none;
-      -webkit-user-select: none;
-      will-change: transform;
-      transform: translateZ(0);
-      backface-visibility: hidden;
-    }
-    #joystickBase {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      width: 96px;
-      height: 96px;
-      background: rgba(15, 23, 42, 0.85);
-      border-radius: 50%;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      backdrop-filter: blur(8px);
-      touch-action: none;
-      z-index: 70;
-      user-select: none;
-    }
-    #joystickKnob {
-      width: 48px;
-      height: 48px;
-      background: #2563eb;
-      border-radius: 50%;
-      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.4);
-      touch-action: none;
-      user-select: none;
-    }
-    #fadeLayer {
-      position: absolute;
-      inset: 0;
-      background: black;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.7s;
-      z-index: 110;
-      user-select: none;
-    }
-    @media (max-width: 900px) {
-      #joystickBase {
-        bottom: calc(26px + env(safe-area-inset-bottom, 0px)) !important;
-        right: 18px !important;
-        width: 88px !important;
-        height: 88px !important;
-      }
-      #joystickKnob {
-        width: 42px !important;
-        height: 42px !important;
-      }
-      .mini-map {
-        width: 80px !important;
-        height: 80px !important;
-        top: 14px !important;
-        left: 14px !important;
-      }
-    }
-  </style>
+<style>
+:root{
+  --bg:#020617;--glass:rgba(15,23,42,0.82);--soft:rgba(15,23,42,0.7);
+  --border:rgba(148,163,184,0.45);--text:#e5e7eb;--muted:#9ca3af;--radius:14px;
+  --accent:#38bdf8;--accent-glow:0 0 12px rgba(56,189,248,0.4);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui,-apple-system,sans-serif;color:var(--text);overflow:hidden}
+.viewer-panel{position:relative;width:100%;height:100vh}
+.viewer-canvas{position:relative;width:100%;height:100%;background:#000}
+
+/* Title HUD */
+.top-street{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);
+  padding:10px 20px;border-radius:24px;background:var(--glass);
+  border:1px solid var(--border);backdrop-filter:blur(16px);font-size:14px;
+  font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,0.5);z-index:20;
+  white-space:nowrap;max-width:75%;overflow:hidden;text-align:center;
+  box-shadow:0 8px 32px rgba(0,0,0,0.3);
+}
+
+/* Mini map */
+.mini-map{position:absolute;top:80px;left:20px;width:96px;height:96px;
+  border-radius:50%;border:2px solid var(--border);object-fit:cover;
+  cursor:pointer;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  transition:transform 0.2s ease,box-shadow 0.2s ease}
+.mini-map:hover{transform:scale(1.05);box-shadow:0 12px 32px rgba(56,189,248,0.3)}
+.mini-btn{position:absolute;top:178px;left:20px;padding:8px 16px;
+  font-size:11px;border-radius:20px;background:var(--glass);
+  border:1px solid var(--border);cursor:pointer;font-weight:600;
+  backdrop-filter:blur(12px);transition:all 0.2s ease}
+.mini-btn:hover{background:var(--accent);border-color:var(--accent);box-shadow:var(--accent-glow)}
+
+/* Street info */
+.street-info{
+  position:absolute;bottom:28px;left:20px;padding:12px 16px;
+  background:var(--glass);border-radius:var(--radius);font-size:12px;
+  border:1px solid var(--border);backdrop-filter:blur(12px);
+  box-shadow:0 8px 32px rgba(0,0,0,0.3);font-weight:500}
+
+/* Video */
+#streetVideo{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  transition:transform .2s cubic-bezier(0.4,0,0.2,1),filter .4s ease;
+  z-index:1;will-change:transform,filter}
+
+/* Joystick */
+#joystickBase{
+  position:absolute;bottom:28px;right:24px;width:100px;height:100px;
+  border-radius:50%;border:2px solid var(--border);background:var(--glass);
+  display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);
+  touch-action:none;user-select:none;z-index:25;box-shadow:0 12px 40px rgba(0,0,0,0.4);
+  transition:box-shadow 0.2s ease}
+#joystickBase:active{box-shadow:0 8px 24px rgba(0,0,0,0.6)}
+#joystickKnob{width:48px;height:48px;background:linear-gradient(135deg,var(--accent),#1e40af);
+  border-radius:50%;box-shadow:0 4px 16px rgba(56,189,248,0.4);transition:all 0.15s ease}
+
+/* Settings */
+.settings-anchor{position:absolute;right:24px;bottom:140px;z-index:30}
+.settings-fab{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#1e293b,#334155);
+  border:2px solid var(--border);color:var(--text);font-size:22px;cursor:pointer;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);transition:all 0.2s ease}
+.settings-fab:hover{transform:scale(1.05);box-shadow:0 12px 32px rgba(56,189,248,0.3)}
+.settings-pop{
+  position:absolute;right:0;bottom:70px;min-width:220px;background:linear-gradient(135deg,#0f172a,#1e293b);
+  border:1px solid var(--border);display:none;padding:16px;border-radius:18px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);backdrop-filter:blur(20px)}
+.settings-pop.open{display:block;animation:slideUp 0.2s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.settings-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;
+  margin-bottom:12px;padding:8px 0;border-bottom:1px solid rgba(148,163,184,0.1)}
+.settings-row:last-child{border-bottom:none;margin-bottom:0}
+.btn-chip{padding:6px 14px;border-radius:20px;border:1px solid var(--border);
+  cursor:pointer;font-size:11px;font-weight:500;transition:all 0.2s ease;min-width:50px;text-align:center}
+.btn-chip.active{background:linear-gradient(135deg,var(--accent),#0ea5e9);border-color:var(--accent);
+  box-shadow:0 0 12px rgba(56,189,248,0.4);color:#fff}
+.chip-select{padding:6px 12px;border-radius:20px;border:1px solid var(--border);
+  background:var(--glass);color:var(--text);font-size:11px;cursor:pointer}
+
+/* Full Map */
+#fullMapOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);
+  display:none;align-items:center;justify-content:center;z-index:40}
+#fullMapContainer{width:92%;height:85%;background:linear-gradient(135deg,#0b1120,#1e293b);
+  border-radius:20px;border:1px solid var(--border);box-shadow:0 0 60px rgba(0,0,0,0.8);
+  overflow:hidden;position:relative}
+#closeMapBtn{position:absolute;top:24px;right:24px;width:48px;height:48px;
+  border-radius:50%;background:linear-gradient(135deg,#1e293b,#334155);color:#fff;
+  border:2px solid var(--border);font-size:20px;cursor:pointer;transition:all 0.2s ease;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+#closeMapBtn:hover{transform:scale(1.1);box-shadow:var(--accent-glow)}
+
+/* Fade */
+#fadeLayer{position:absolute;inset:0;background:linear-gradient(135deg,#000,#1e293b);opacity:0;
+  transition:opacity .4s cubic-bezier(0.4,0,0.2,1);z-index:15}
+
+/* Progress bar */
+.progress-container{position:absolute;top:60px;left:50%;transform:translateX(-50%);
+  width:300px;height:4px;background:var(--soft);border-radius:2px;overflow:hidden;z-index:20;
+  box-shadow:0 4px 12px rgba(0,0,0,0.3);display:none}
+#progressBar{height:100%;background:linear-gradient(90deg,var(--accent),#60a5fa);
+  border-radius:2px;width:0%;transition:width 0.1s ease;box-shadow:0 0 12px var(--accent)}
+</style>
 </head>
 
 <body>
-
-<div id="fullMapOverlay" role="dialog" aria-modal="true" aria-label="Full map view">
-  <div id="fullMapContainer" tabindex="0" aria-live="polite"></div>
-  <button id="closeMapBtn" aria-label="Close full map">✕</button>
+<!-- FULL MAP -->
+<div id="fullMapOverlay">
+  <div id="fullMapContainer"></div>
+  <button id="closeMapBtn" title="Close Map">✕</button>
 </div>
 
-<div class="viewer-panel" role="main" aria-live="polite">
-  <div class="viewer-canvas" id="viewerCanvas">
+<div class="viewer-panel">
+  <div class="viewer-canvas">
+    <div class="top-street"><span id="hudStreetName">Select a Drive</span></div>
 
-    <div id="miniMap" class="mini-map" aria-label="Mini map preview" role="button" tabindex="0"></div>
-
-    <div class="street-info" aria-live="polite" aria-atomic="true">
-      <h2 id="streetName">Select a Drive</h2>
-      <p id="streetLocation">Waiting…</p>
+    <div class="progress-container" id="progressContainer">
+      <div id="progressBar"></div>
     </div>
 
-    <video
-      id="streetVideo"
-      preload="auto"
-      muted
-      playsinline
-      disablepictureinpicture
-      controlslist="nodownload nofullscreen noplaybackrate"
-      aria-label="Drive view video">
+    <img id="miniMapStatic" class="mini-map"
+         src="{{ url_for('static', filename='img/minimap_placeholder.png') }}"
+         title="Click for Full Map" />
+    <button id="btnShowMap" class="mini-btn" title="Full Map">🗺️ Full Map</button>
+
+    <div class="street-info"><span id="streetSmallLabel">Ready to drive</span></div>
+
+    <video id="streetVideo" preload="metadata" muted playsinline>
       <source id="videoSource" src="">
     </video>
 
-    <div id="joystickBase" aria-label="Movement joystick" role="application" tabindex="0">
+    <div id="joystickBase" title="Drag to drive">
       <div id="joystickKnob"></div>
     </div>
 
-    <div id="fadeLayer" aria-hidden="true"></div>
+    <div class="settings-anchor">
+      <button id="settingsToggle" class="settings-fab" title="Settings">⚙</button>
+      <div id="settingsPop" class="settings-pop">
+        <div class="settings-row">
+          <span>Auto Drive</span>
+          <button id="btnAutoDrive" class="btn-chip">Off</button>
+        </div>
+        <div class="settings-row">
+          <span>Speed</span>
+          <select id="speedSelect" class="chip-select">
+            <option value="0.5">0.5×</option>
+            <option value="0.75">0.75×</option>
+            <option value="1" selected>1×</option>
+            <option value="1.25">1.25×</option>
+            <option value="1.5">1.5×</option>
+            <option value="2">2×</option>
+            <option value="3">3×</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <span>Camera Shake</span>
+          <button id="btnShake" class="btn-chip">Off</button>
+        </div>
+        <div class="settings-row">
+          <span>Night Mode</span>
+          <button id="btnDayNight" class="btn-chip">Off</button>
+        </div>
+        <div class="settings-row">
+          <span>Engine Volume</span>
+          <input type="range" id="engineVolume" min="0" max="1" step="0.1" value="0.55" class="chip-select">
+        </div>
+      </div>
+    </div>
+
+    <div id="fadeLayer"></div>
   </div>
 </div>
 
-<script id="streets-data" type="application/json">
-  {{ streets | tojson | safe }}
-</script>
-<script id="selected-street-data" type="application/json">
-  {{ selected_street | tojson | safe if selected_street else 'null' }}
-</script>
+<!-- DATA -->
+<script id="streets-data" type="application/json">{{ streets | tojson | safe }}</script>
+<script id="selected-street-data" type="application/json">{{ selected_street | tojson | safe if selected_street else 'null' }}</script>
 
-<script type="module">
-  const STREETS = JSON.parse(
-    document.getElementById('streets-data').textContent
-  );
-  const SELECTED_STREET = JSON.parse(
-    document.getElementById('selected-street-data').textContent
-  );
+<script>
+/* ---------------------------------------------------------------------
+   CORE VARS
+------------------------------------------------------------------------*/
+const STREETS  = JSON.parse(document.getElementById("streets-data").textContent || "[]");
+const SELECTED = JSON.parse(document.getElementById("selected-street-data").textContent || "null");
 
-  let miniMap, miniMarker;
-  let fullMap, fullMapReady = false;
+const video             = document.getElementById("streetVideo");
+const vsrc              = document.getElementById("videoSource");
+const progressContainer = document.getElementById("progressContainer");
+const progressBar       = document.getElementById("progressBar");
 
-  function initMiniMap() {
-    miniMap = new maplibregl.Map({
-      container: "miniMap",
-      style: "https://demotiles.maplibre.org/style.json",
-      center: [0, 20],
-      zoom: 1.5,
-      interactive: false,
-      attributionControl: false,
-    });
+let walkSpeed = 1;
+let currentStreetIndex = -1;
+let currentVideos = [];
+let currentVideoIndex = 0;
+
+let keyDir=0, joyDir=0, autoDir=0, currentDir=0;
+let reversePlaying=false, autoDrive=false;
+let cameraShake=false, nightFilter=false;
+let headBob=0, bobDir=1;
+let engineVolume = 0.55;
+
+/* ---------------------------------------------------------------------
+   AUDIO ENGINE
+------------------------------------------------------------------------*/
+const engine = new Audio("/static/audio/engine.mp3");
+engine.loop = true;
+engine.volume = engineVolume;
+
+const revBurst = new Audio("/static/audio/engine_rev.mp3");
+revBurst.volume = 0.9;
+
+const wind = new Audio("/static/audio/wind.mp3");
+wind.loop = true;
+wind.volume = 0;
+
+const reverseTone = new Audio("/static/audio/reverse.mp3");
+reverseTone.loop = true;
+reverseTone.volume = 0;
+
+const tireScreech = new Audio("/static/audio/tires.mp3");
+tireScreech.volume = 0.7;
+
+Promise.all([
+  engine.play().catch(()=>{}),
+  wind.play().catch(()=>{}),
+  reverseTone.play().catch(()=>{})
+]);
+
+function updateEngineSound(){
+  const speed = walkSpeed * Math.abs(currentDir);
+  engine.playbackRate = Math.max(0.8, 1 + speed * 0.45);
+  engine.volume       = currentDir === 0 ? 0.25 : Math.min(0.75, engineVolume * (speed * 0.8 + 0.2));
+  wind.volume         = Math.max(0, (engine.playbackRate - 1) * 0.6);
+  reverseTone.volume  = currentDir === -1 ? Math.min(0.7, engineVolume * 0.8) : 0;
+}
+function revEffect(){ revBurst.currentTime=0; revBurst.play().catch(()=>{}); }
+function screechEffect(){ tireScreech.currentTime=0; tireScreech.play().catch(()=>{}); }
+
+/* ---------------------------------------------------------------------
+   PROGRESS BAR
+------------------------------------------------------------------------*/
+function updateProgress(){
+  if(video.duration){
+    const progress = (video.currentTime / video.duration) * 100;
+    progressBar.style.width = progress + "%";
   }
+}
 
-  function ensureFullMap() {
-    if (fullMapReady) return;
+/* ---------------------------------------------------------------------
+   MAP SYSTEM
+------------------------------------------------------------------------*/
+let fullMap, fullMapReady=false;
 
-    fullMap = new maplibregl.Map({
-      container: "fullMapContainer",
-      style: "https://demotiles.maplibre.org/style.json",
-      center: [0, 20],
-      zoom: 2.5,
-    });
-    fullMap.addControl(new maplibregl.NavigationControl());
+function ensureFullMap(){
+  if(fullMapReady) return;
 
-    STREETS.forEach((st, index) => {
-      const lat = parseFloat(st.lat);
-      const lng = parseFloat(st.lng);
-      if (Number.isNaN(lat) || Number.isNaN(lng)) return;
-
-      const marker = new maplibregl.Marker().setLngLat([lng, lat]).addTo(fullMap);
-      marker.getElement().addEventListener("click", () => {
-        loadStreetByIndex(index);
-        hideFullMap();
-      });
-    });
-
-    fullMapReady = true;
-  }
-
-  function updateMiniMapForStreet(street) {
-    if (!miniMap) return;
-    const lat = parseFloat(street.lat);
-    const lng = parseFloat(street.lng);
-    if (Number.isNaN(lat) || Number.isNaN(lng)) return;
-
-    miniMap.jumpTo({ center: [lng, lat], zoom: 14 });
-
-    if (!miniMarker) {
-      miniMarker = new maplibregl.Marker({ color: "#ef4444", scale: 0.9 })
-        .setLngLat([lng, lat])
-        .addTo(miniMap);
-    } else {
-      miniMarker.setLngLat([lng, lat]);
-    }
-  }
-
-  const miniMapEl = document.getElementById("miniMap");
-  const fullMapOverlay = document.getElementById("fullMapOverlay");
-  const closeMapBtn = document.getElementById("closeMapBtn");
-
-  function showFullMap() {
-    fullMapOverlay.style.display = "flex";
-    ensureFullMap();
-  }
-
-  function hideFullMap() {
-    fullMapOverlay.style.display = "none";
-  }
-
-  miniMapEl.addEventListener("click", showFullMap);
-  miniMapEl.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") showFullMap();
+  fullMap = new maplibregl.Map({
+    container:"fullMapContainer",
+    style:"https://demotiles.maplibre.org/style.json",
+    center:[0,20], zoom:2.5,
+    attributionControl:false
   });
-  closeMapBtn.addEventListener("click", hideFullMap);
+  fullMap.addControl(new maplibregl.NavigationControl({visualizePitch:true}));
 
-  initMiniMap();
+  STREETS.forEach((s,i)=>{
+    if(s.lat && s.lng){
+      const marker = new maplibregl.Marker({color:'#38bdf8'})
+        .setLngLat([s.lng,s.lat]).addTo(fullMap);
 
-  const video = document.getElementById("streetVideo");
-  const vsrc = document.getElementById("videoSource");
-  const fadeLayer = document.getElementById("fadeLayer");
-  const joystickBase = document.getElementById("joystickBase");
-  const joystickKnob = document.getElementById("joystickKnob");
+      const popup = new maplibregl.Popup({closeButton:false})
+        .setText(s.name || ("Street " + (i+1)));
 
-  let currentStreetIndex = -1;
-  let walkSpeed = 1;
-  let yawCurrent = 0;
-  let yawTarget = 0;
-  let headBob = 0;
-  let bobDirection = 1;
-  let keyDir = 0;
-  let joyDir = 0;
-  let autoDir = 0;
-  let currentDir = 0;
-  let reversePlaying = false;
-  let joyActive = false;
+      const el = marker.getElement();
+      el.style.cursor='pointer';
+      el.onmouseenter = ()=>marker.setPopup(popup);
+      el.onmouseleave = ()=>marker.removePopup();
+      el.onclick = ()=>{ loadStreetByIndex(i); hideFullMap(); };
+    }
+  });
 
-  let currentVideos = [];
-  let currentVideoIndex = 0;
+  fullMapReady=true;
+}
+function showFullMap(){ fullMapOverlay.style.display="flex"; ensureFullMap(); fullMap.resize(); }
+function hideFullMap(){ fullMapOverlay.style.display="none"; }
 
-  function safePlay() {
-    if (!video || !video.paused) return;
-    video.play().catch(() => {});
+/* ---------------------------------------------------------------------
+   LOAD STREET
+------------------------------------------------------------------------*/
+function loadStreet(street){
+  hudStreetName.textContent = street.name || "Virtual Drive";
+  streetSmallLabel.textContent = `${street.city || ""} ${street.country || ""}`;
+
+  currentVideos = (street.videos || []).map(v=>v.url).filter(Boolean);
+  currentVideoIndex = 0;
+
+  const minimapUrl = street.minimap || "{{ url_for('static', filename='img/minimap_placeholder.png') }}";
+  miniMapStatic.src = minimapUrl;
+
+  vsrc.src = currentVideos[0] || "";
+  video.load();
+
+  progressContainer.style.display = currentVideos.length > 0 ? "block" : "none";
+}
+function loadStreetByIndex(i){
+  if(i<0 || i>=STREETS.length) return;
+  currentStreetIndex=i;
+  fadeLayer.style.opacity=1;
+  setTimeout(()=>{
+    loadStreet(STREETS[i]);
+    fadeLayer.style.opacity=0;
+  },300);
+}
+
+/* ---------------------------------------------------------------------
+   PLAYBACK ENGINE
+------------------------------------------------------------------------*/
+function safePlay(){
+  if(video.paused && !reversePlaying){
+    video.play().catch(()=>{});
   }
-  function safePause() {
-    if (!video || video.paused) return;
+}
+function safePause(){
+  if(!video.paused && !reversePlaying){
     video.pause();
   }
+}
+function playForward(){
+  if(reversePlaying){ reversePlaying=false; reverseTone.pause(); }
+  video.playbackRate = walkSpeed;
+  safePlay();
+  revEffect();
+}
+function playReverse(){
+  reversePlaying=true;
+  safePause();
+  reverseTone.currentTime=0;
+  reverseTone.play();
 
-  function loadStreet(street) {
-    document.getElementById("streetName").textContent = street.name || "Drive";
-    document.getElementById("streetLocation").textContent =
-      `${street.city || ""}${street.city && street.country ? ", " : ""}${street.country || ""}`;
-
-    currentVideos = [];
-    currentVideoIndex = 0;
-    if (street.videos && Array.isArray(street.videos) && street.videos.length > 0) {
-      currentVideos = street.videos.map(v => v.url).filter(Boolean);
-    }
-
-    const videoUrl = currentVideos[0] || "";
-    if (vsrc) vsrc.src = videoUrl;
-    video.load();
-    video.currentTime = 0;
-    safePause();
-
-    updateMiniMapForStreet(street);
-  }
-
-  function loadStreetByIndex(index) {
-    if (index < 0 || index >= STREETS.length) return;
-    currentStreetIndex = index;
-    loadStreet(STREETS[index]);
-  }
-
-  function playForward() {
-    reversePlaying = false;
-    if (!video) return;
-    video.playbackRate = walkSpeed;
-    safePlay();
-  }
-
-  function playReverse() {
-    if (!video) return;
-    reversePlaying = true;
-    safePause();
-
-    function stepReverse() {
-      if (!reversePlaying) return;
-
-      if (video.currentTime <= 0.02) {
-        video.currentTime = video.duration;
-      } else {
-        video.currentTime = Math.max(
-          0,
-          video.currentTime - (0.016 * walkSpeed)
-        );
-      }
-      requestAnimationFrame(stepReverse);
-    }
-
-    requestAnimationFrame(stepReverse);
-  }
-
-  function recomputeDirection() {
-    const newDir = keyDir || joyDir || autoDir;
-    if (newDir === currentDir) return;
-    currentDir = newDir;
-
-    if (currentDir === 1) playForward();
-    else if (currentDir === -1) playReverse();
-    else {
+  (function step(){
+    if(!reversePlaying) return;
+    const stepTime = 0.02 * walkSpeed;
+    video.currentTime = Math.max(0, video.currentTime - stepTime);
+    if(video.currentTime <= 0.01){
+      reversePlaying=false;
       safePause();
-      reversePlaying = false;
-    }
-  }
-
-  video.addEventListener("ended", () => {
-    if (currentVideos.length > 1 && currentVideoIndex < currentVideos.length - 1) {
-      currentVideoIndex += 1;
-      const nextUrl = currentVideos[currentVideoIndex];
-      if (vsrc) vsrc.src = nextUrl;
-      video.load();
-      video.currentTime = 0;
-
-      const isMoving = (autoDir === 1 || keyDir === 1 || joyDir === 1);
-      if (isMoving) {
-        playForward();
-      }
       return;
     }
-    safePause();
-  });
+    requestAnimationFrame(step);
+  })();
+}
+function recomputeDirection(){
+  const newDir = keyDir || joyDir || autoDir;
+  if(newDir === currentDir) return;
 
-  window.addEventListener("keydown", e => {
-    const k = e.key.toLowerCase();
-    if (k === "arrowleft" || k === "a") yawTarget -= 10;
-    else if (k === "arrowright" || k === "d") yawTarget += 10;
-    else if (k === "arrowup" || k === "w") { keyDir = 1; recomputeDirection(); }
-    else if (k === "arrowdown" || k === "s") { keyDir = -1; recomputeDirection(); }
-  });
-  window.addEventListener("keyup", e => {
-    const k = e.key.toLowerCase();
-    if (["arrowup", "w", "arrowdown", "s"].includes(k)) {
-      keyDir = 0;
-      recomputeDirection();
-    }
-  });
-
-  function setJoystickFromEvent(ev) {
-    const rect = joystickBase.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const dx = ev.clientX - cx;
-    const dy = ev.clientY - cy;
-    const r = rect.width / 2;
-    const nx = Math.max(-1, Math.min(1, dx / r));
-    const ny = Math.max(-1, Math.min(1, dy / r));
-    joystickKnob.style.transform = `translate(${nx * (r * 0.45)}px, ${ny * (r * 0.45)}px)`;
-
-    const move = -ny;
-    if (Math.abs(move) > 0.15) {
-      joyDir = move > 0 ? 1 : -1;
-    } else {
-      joyDir = 0;
-    }
-
-    recomputeDirection();
-  }
-  function resetJoystick() {
-    joyDir = 0;
-    joystickKnob.style.transform = "translate(0,0)";
-    recomputeDirection();
-  }
-  joystickBase.addEventListener("pointerdown", e => {
-    joystickBase.setPointerCapture(e.pointerId);
-    joyActive = true;
-    setJoystickFromEvent(e);
-  });
-  joystickBase.addEventListener("pointermove", e => {
-    if (!joyActive) return;
-    setJoystickFromEvent(e);
-  });
-  joystickBase.addEventListener("pointerup", () => {
-    joyActive = false;
-    resetJoystick();
-  });
-  joystickBase.addEventListener("pointercancel", () => {
-    joyActive = false;
-    resetJoystick();
-  });
-
-  function tick() {
-    yawCurrent += (yawTarget - yawCurrent) * 0.18;
-
-    if (currentDir !== 0) {
-      headBob += bobDirection * 0.25 * walkSpeed;
-      if (headBob > 2 || headBob < -2) bobDirection *= -1;
-    } else {
-      headBob *= 0.85;
-    }
-    const bobY = headBob;
-
-    video.style.transform = `translate3d(0, ${bobY}px, 0)`;
-
-    requestAnimationFrame(tick);
+  if(currentDir !== 0 && newDir !== 0 && newDir !== currentDir){
+    screechEffect();
   }
 
+  currentDir = newDir;
+  if(newDir === 1)      playForward();
+  else if(newDir === -1)playReverse();
+  else { safePause(); reversePlaying=false; }
+
+  updateEngineSound();
+}
+
+/* ---------------------------------------------------------------------
+   KEYBOARD
+------------------------------------------------------------------------*/
+const keys = {w:0,s:0};
+window.addEventListener("keydown",e=>{
+  const k=e.key.toLowerCase();
+  if(k==="w" && !keys.w){ keys.w=1; keyDir=1; recomputeDirection(); }
+  if(k==="s" && !keys.s){ keys.s=1; keyDir=-1; recomputeDirection(); }
+  if(k===" "){
+    e.preventDefault();
+    autoDrive=!autoDrive;
+    updateAutoDriveUI();
+  }
+});
+window.addEventListener("keyup",e=>{
+  const k=e.key.toLowerCase();
+  if(k==="w"){ keys.w=0; if(!keys.s) keyDir=0; recomputeDirection(); }
+  if(k==="s"){ keys.s=0; if(!keys.w) keyDir=0; recomputeDirection(); }
+});
+
+/* ---------------------------------------------------------------------
+   JOYSTICK
+------------------------------------------------------------------------*/
+function setJoy(ev){
+  const r=joystickBase.getBoundingClientRect();
+  const dy=(ev.clientY-(r.top+r.height/2))/(r.height/2);
+  const clamped = Math.max(-1,Math.min(1,dy));
+  joyDir = Math.abs(clamped)>0.15 ? (clamped<0?1:-1) : 0;
+  joystickKnob.style.transform = `translateY(${clamped*35}px) scale(${1+Math.abs(clamped)*0.1})`;
+  recomputeDirection();
+}
+joystickBase.onpointerdown=e=>{
+  e.preventDefault();
+  joystickBase.setPointerCapture(e.pointerId);
+  setJoy(e);
+};
+joystickBase.onpointermove=e=>{
+  if(e.buttons!==0) setJoy(e);
+};
+joystickBase.onpointerup=joystickBase.onpointercancel=()=>{
+  joyDir=0;
+  joystickKnob.style.transform="translate(0,0) scale(1)";
+  recomputeDirection();
+};
+
+/* ---------------------------------------------------------------------
+   SETTINGS
+------------------------------------------------------------------------*/
+settingsToggle.onclick=()=>settingsPop.classList.toggle("open");
+
+function updateAutoDriveUI(){
+  autoDir = autoDrive ? 1 : 0;
+  btnAutoDrive.classList.toggle("active", autoDrive);
+  btnAutoDrive.textContent = autoDrive ? "On" : "Off";
+  recomputeDirection();
+}
+btnAutoDrive.onclick=()=>{ autoDrive=!autoDrive; updateAutoDriveUI(); };
+
+speedSelect.onchange=()=>{
+  walkSpeed=parseFloat(speedSelect.value);
+  if(!video.paused && !reversePlaying){ video.playbackRate=walkSpeed; }
+  updateEngineSound();
+};
+btnShake.onclick=()=>{
+  cameraShake=!cameraShake;
+  btnShake.classList.toggle("active",cameraShake);
+  btnShake.textContent = cameraShake ? "On" : "Off";
+};
+btnDayNight.onclick=()=>{
+  nightFilter=!nightFilter;
+  btnDayNight.classList.toggle("active",nightFilter);
+  btnDayNight.textContent = nightFilter ? "On" : "Off";
+  video.style.filter = nightFilter
+    ? "brightness(0.52) contrast(1.25) saturate(0.85) hue-rotate(-15deg)"
+    : "none";
+};
+engineVolume.oninput=e=>{
+  engineVolume=parseFloat(e.target.value);
+  updateEngineSound();
+};
+
+/* ---------------------------------------------------------------------
+   CAMERA SHAKE
+------------------------------------------------------------------------*/
+let shakeIntensity=0;
+(function tick(){
+  if(currentDir!==0 && cameraShake){
+    shakeIntensity = Math.min(shakeIntensity + 0.3*walkSpeed,3.5);
+    headBob += bobDir*0.3*walkSpeed*(shakeIntensity/3);
+    if(Math.abs(headBob)>shakeIntensity) bobDir*=-1;
+  }else{
+    shakeIntensity*=0.92;
+    headBob*=0.88;
+  }
+  video.style.transform = `translateY(${headBob.toFixed(1)}px) scale(${1+shakeIntensity*0.002})`;
   requestAnimationFrame(tick);
+})();
 
-  // initial street
-  if (SELECTED_STREET) {
-    const idx = STREETS.findIndex(s => s._id === SELECTED_STREET._id);
-    if (idx !== -1) {
-      loadStreetByIndex(idx);
-    } else if (Array.isArray(STREETS) && STREETS.length > 0) {
-      loadStreetByIndex(0);
-    }
-  } else if (Array.isArray(STREETS) && STREETS.length > 0) {
+/* ---------------------------------------------------------------------
+   VIDEO EVENTS
+------------------------------------------------------------------------*/
+video.addEventListener("timeupdate",updateProgress);
+video.onloadedmetadata=()=>{
+  progressContainer.style.display = currentVideos.length>0 ? "block" : "none";
+};
+video.onended=()=>{
+  if(currentVideos.length>1 && currentVideoIndex<currentVideos.length-1){
+    currentVideoIndex++;
+    vsrc.src=currentVideos[currentVideoIndex];
+    video.load();
+    safePlay();
+    return;
+  }
+  safePause();
+  currentDir=0;
+  updateEngineSound();
+};
+
+/* ---------------------------------------------------------------------
+   TOUCH SWIPE
+------------------------------------------------------------------------*/
+let touchStartY=0;
+video.addEventListener("touchstart",e=>{
+  touchStartY=e.touches[0].clientY;
+},{passive:true});
+video.addEventListener("touchmove",e=>{
+  const dy=e.touches[0].clientY-touchStartY;
+  if(Math.abs(dy)>30){
+    keyDir = dy<0?1:-1;
+    recomputeDirection();
+    touchStartY=e.touches[0].clientY;
+  }
+},{passive:true});
+video.addEventListener("touchend",()=>{
+  setTimeout(()=>{ keyDir=0; recomputeDirection(); },100);
+});
+
+/* ---------------------------------------------------------------------
+   INIT
+------------------------------------------------------------------------*/
+document.addEventListener("DOMContentLoaded",()=>{
+  if(SELECTED){
+    const idx = STREETS.findIndex(s=>s._id===SELECTED._id);
+    loadStreetByIndex(idx>=0?idx:0);
+  }else if(STREETS.length>0){
     loadStreetByIndex(0);
   }
+});
+btnShowMap.onclick = showFullMap;
+miniMapStatic.onclick = showFullMap;
+closeMapBtn.onclick = hideFullMap;
 </script>
-
 </body>
 </html>
