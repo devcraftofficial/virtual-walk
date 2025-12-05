@@ -427,6 +427,38 @@ def upload():
 
     return render_template("upload.html")
 
+# --------------------------------------------------------
+# Dashboard Page
+# --------------------------------------------------------
+@app.route("/dashboard")
+def dashboard():
+    # Get all streets (for map and stats)
+    streets = list_with_str_id(streets_collection.find())
+
+    # Simple stats (you can improve later)
+    total_streets = len(streets)
+    total_likes = sum(s.get("likes", 0) for s in streets)
+    walk_count = sum(1 for s in streets if s.get("type") == "video" and s.get("mode") == "walk")
+    drive_count = sum(1 for s in streets if s.get("type") == "video" and s.get("mode") == "drive")
+    fly_count = sum(1 for s in streets if s.get("type") == "video" and s.get("mode") == "fly")
+
+    # sort by createdAt desc for recent list
+    recent_streets = sorted(
+        streets,
+        key=lambda s: s.get("createdAt") or datetime.min,
+        reverse=True
+    )[:8]
+
+    return render_template(
+        "dash.html",          # your dashboard template file
+        streets=streets,
+        total_streets=total_streets,
+        total_likes=total_likes,
+        walk_count=walk_count,
+        drive_count=drive_count,
+        fly_count=fly_count,
+        recent_streets=recent_streets,
+    )
 
 # --------------------------------------------------------
 # Like Endpoint
@@ -447,7 +479,7 @@ def like_street(street_id):
 # --------------------------------------------------------
 # Start Server
 # --------------------------------------------------------
-if __name__ == "__main__":
+  if __name__ == "__main__":
     app.run(debug=True)
     app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
 
