@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -356,17 +357,17 @@
 
     .file-input-label {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      padding: 14px 20px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 16px 20px;
       border: 2px dashed rgba(148,163,184,0.4);
       border-radius: var(--radius-sm);
       background: rgba(15,23,42,0.4);
       cursor: pointer;
       transition: all 0.3s ease;
-      text-align: center;
       font-weight: 500;
+      min-height: 72px;
     }
 
     .file-input-label:hover {
@@ -377,6 +378,24 @@
     .file-input-label i {
       font-size: 20px;
       color: var(--accent);
+      width: 24px;
+    }
+
+    .file-input-label.has-files {
+      border-color: var(--success);
+      background: rgba(16,185,129,0.1);
+    }
+
+    .file-input-label.has-files i {
+      color: var(--success);
+    }
+
+    .file-list {
+      font-size: 13px;
+      color: var(--text-light);
+      line-height: 1.4;
+      max-height: 100px;
+      overflow-y: auto;
     }
 
     /* COORDINATES */
@@ -470,12 +489,12 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-    @media (max-width: 600px) {
-  .card {
-    backdrop-filter: blur(10px); /* reduce blur for mobile */
-  }
-}
 
+    @media (max-width: 600px) {
+      .card {
+        backdrop-filter: blur(10px);
+      }
+    }
   </style>
 </head>
 
@@ -628,16 +647,18 @@ Paste multiple URLs (one per line)" rows="3"></textarea>
 
   <script>
     /* ===============================
-         ENHANCED MAP PICKER
+       ENHANCED MAPTILER MAP PICKER
     =============================== */
     let map, marker;
+    const MAPTILER_KEY = 'PqdU3M5vnOQK0dDQnkIq'; // Your MapTiler key
 
     function initMap() {
       map = new maplibregl.Map({
         container: "mapPicker",
-        style: "https://demotiles.maplibre.org/style.json",
+        style: `https://api.maptiler.com/maps/streets/style.json?key=${MAPTILER_KEY}`,
         center: [55.2708, 25.2048], // Dubai
-        zoom: 11,
+        zoom: 12,
+        pitch: 45,
         attributionControl: false
       });
 
@@ -654,13 +675,14 @@ Paste multiple URLs (one per line)" rows="3"></textarea>
           color: '#38bdf8',
           scale: 1.2
         })
-          .setLngLat([lng, lat])
-          .setPopup(new maplibregl.Popup().setText(`📍 ${lat}, ${lng}`))
-          .addTo(map);
+        .setLngLat([lng, lat])
+        .setPopup(new maplibregl.Popup().setText(`📍 ${lat}, ${lng}`))
+        .addTo(map);
 
         map.flyTo({
           center: [lng, lat],
-          zoom: 15,
+          zoom: 16,
+          pitch: 60,
           duration: 1000
         });
       });
@@ -692,12 +714,13 @@ Paste multiple URLs (one per line)" rows="3"></textarea>
             color: '#38bdf8',
             scale: 1.2
           })
-            .setLngLat([lng, lat])
-            .addTo(map);
+          .setLngLat([lng, lat])
+          .addTo(map);
 
           map.flyTo({
             center: [lng, lat],
-            zoom: 15,
+            zoom: 16,
+            pitch: 60,
             duration: 900
           });
         });
@@ -705,7 +728,7 @@ Paste multiple URLs (one per line)" rows="3"></textarea>
     }
 
     /* ===============================
-         DYNAMIC FIELD TOGGLING
+       DYNAMIC FIELD TOGGLING
     =============================== */
     const streetType = document.getElementById('streetType');
     const videoFields = document.getElementById('videoFields');
@@ -723,7 +746,7 @@ Paste multiple URLs (one per line)" rows="3"></textarea>
     });
 
     /* ===============================
-         VIDEO MODE SELECTION
+       VIDEO MODE SELECTION
     =============================== */
     document.querySelectorAll('.mode-option').forEach(option => {
       option.addEventListener('click', () => {
@@ -736,7 +759,48 @@ Paste multiple URLs (one per line)" rows="3"></textarea>
     });
 
     /* ===============================
-         FORM VALIDATION & SUBMISSION
+       SHOW SELECTED FILE NAMES
+    =============================== */
+    function displaySelectedFiles(inputId, labelSelector) {
+      const input = document.getElementById(inputId);
+      const label = input.nextElementSibling;
+      
+      input.addEventListener("change", () => {
+        const files = input.files;
+
+        if (!files || files.length === 0) {
+          label.innerHTML = `
+            <i class="fas fa-cloud-upload-alt"></i>
+            Choose Files or Drag & Drop
+          `;
+          label.classList.remove('has-files');
+          return;
+        }
+
+        let html = "";
+        if (files.length === 1) {
+          html = `<strong>${files[0].name}</strong>`;
+        } else {
+          html = `${files.length} files selected:<br><div class="file-list">`;
+          for (let f of files) {
+            html += `• ${f.name}<br>`;
+          }
+          html += `</div>`;
+        }
+
+        label.innerHTML = `
+          <i class="fas fa-check-circle"></i>
+          ${html}
+        `;
+        label.classList.add('has-files');
+      });
+    }
+
+    displaySelectedFiles("videoUpload");
+    displaySelectedFiles("modelUpload");
+
+    /* ===============================
+       FORM VALIDATION & SUBMISSION
     =============================== */
     const form = document.getElementById('streetForm');
     const submitBtn = form.querySelector('button[type="submit"]');
@@ -769,7 +833,7 @@ Paste multiple URLs (one per line)" rows="3"></textarea>
     });
 
     /* ===============================
-         FILE DRAG & DROP
+       FILE DRAG & DROP
     =============================== */
     ['videoUpload', 'modelUpload'].forEach(id => {
       const input = document.getElementById(id);
@@ -794,11 +858,12 @@ Paste multiple URLs (one per line)" rows="3"></textarea>
 
       label.addEventListener('drop', (e) => {
         input.files = e.dataTransfer.files;
+        displaySelectedFiles(id); // Trigger file display update
       });
     });
 
     /* ===============================
-         GEOLOCATION ON LAT FOCUS
+       GEOLOCATION ON LAT FOCUS
     =============================== */
     document.getElementById('lat').addEventListener('focus', () => {
       if (navigator.geolocation) {
