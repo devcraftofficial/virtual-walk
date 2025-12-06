@@ -96,6 +96,28 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
   display: block;
 }
 
+/* MOBILE JOYSTICK POSITION */
+@media (max-width: 768px) {
+  #joystickBase {
+    bottom: 140px !important; /* Move up 112px from original 28px */
+    right: 16px;              /* Slightly less right padding */
+    width: 90px;              /* Slightly smaller */
+    height: 90px;
+  }
+  
+  #joystickKnob {
+    width: 44px;
+    height: 44px;
+  }
+  
+  /* Ensure settings don't overlap */
+  .settings-anchor {
+    right: 16px;
+    bottom: 240px; /* Move settings up too */
+  }
+}
+
+
 </style>
 </head>
 
