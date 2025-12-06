@@ -156,6 +156,10 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
 /* =========================================================
    VARIABLES
 ========================================================= */
+const fullMapOverlay = document.getElementById("fullMapOverlay");
+const fullMapContainer = document.getElementById("fullMapContainer");
+const closeMapBtn = document.getElementById("closeMapBtn");
+
 const STREETS = JSON.parse(document.getElementById("streets-data").textContent || "[]");
 const SELECTED = JSON.parse(document.getElementById("selected-street-data").textContent || "null");
 
