@@ -830,187 +830,248 @@
     </div>
   </div>
 
-  <script>
-    const STREETS = {{ streets | tojson | safe }};
+<script>
+  /* ============================================
+     MAPTILER KEY
+  ============================================ */
+  const MAPTILER_KEY = "PqdU3M5vnOQK0dDQnkIq";   // ← replace with your key
 
-    const map = new maplibregl.Map({
-      container: "map",
-      style: "https://demotiles.maplibre.org/style.json",
-      center: [55.2708, 25.2048],
-      zoom: 2.5,
+  /* ============================================
+     DATA FROM BACKEND
+  ============================================ */
+  const STREETS = {{ streets | tojson | safe }};
+
+  /* ============================================
+     MAPTILER MAP INITIALIZATION
+  ============================================ */
+  const map = new maplibregl.Map({
+    container: "map",
+    style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`,
+    center: [55.2708, 25.2048],   // world view
+    zoom: 2.5,
+    attributionControl: false
+  });
+
+  map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+
+  /* ============================================
+     MARKERS
+  ============================================ */
+  let markers = [];
+
+  function addMarkers() {
+    STREETS.forEach((st, index) => {
+      if (st.lat == null || st.lng == null) return;
+
+      const marker = new maplibregl.Marker({
+        color: "#38bdf8"
+      })
+        .setLngLat([st.lng, st.lat])
+        .addTo(map);
+
+      // Glow effect
+      marker.getElement().style.filter =
+        "drop-shadow(0 0 6px rgba(56,189,248,0.8))";
+      marker.getElement().style.transition = "all 0.2s ease";
+
+      marker.getElement().addEventListener("click", () => {
+        focusCardByIndex(index);
+      });
+
+      markers.push(marker);
     });
+  }
 
-    let markers = [];
-    function addMarkers() {
-      STREETS.forEach((st, index) => {
-        if (st.lat == null || st.lng == null) return;
-        const m = new maplibregl.Marker({ color: '#38bdf8' })
-          .setLngLat([st.lng, st.lat])
-          .addTo(map);
+  map.on("load", addMarkers);
 
-        m.getElement().addEventListener("click", () => {
-          focusCardByIndex(index);
-        });
-        m.getElement().style.transition = 'all 0.2s ease';
-        markers.push(m);
+
+  /* ============================================
+     TOP RATED & RECENT LISTS
+  ============================================ */
+  const topRatedList = document.getElementById("topRatedList");
+  const recentList = document.getElementById("recentList");
+
+  /* ---- Top liked ---- */
+  const sortedByLikes = [...STREETS]
+    .sort((a, b) => (b.likes || 0) - (a.likes || 0))
+    .slice(0, 5);
+
+  sortedByLikes.forEach((st, i) => {
+    const li = document.createElement("li");
+    li.className = "top-rated-item";
+    li.innerHTML = `<span>♥ ${st.likes || 0}</span> ${st.name}`;
+    li.style.animationDelay = `${i * 0.05}s`;
+    li.addEventListener("click", () => focusCardById(st._id));
+    topRatedList.appendChild(li);
+  });
+
+  /* ---- Recent ---- */
+  const sortedByTime = [...STREETS]
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    .slice(0, 5);
+
+  sortedByTime.forEach((st, i) => {
+    const li = document.createElement("li");
+    li.className = "recent-item";
+    li.textContent = `${st.name} · ${st.city || ""}`;
+    li.style.animationDelay = `${i * 0.05}s`;
+    li.addEventListener("click", () => focusCardById(st._id));
+    recentList.appendChild(li);
+  });
+
+
+  /* ============================================
+     FOCUS CARD + FLY TO STREET
+  ============================================ */
+  function focusCardById(id) {
+    const card = document.querySelector(`.card[data-id="${id}"]`);
+    if (!card) return;
+
+    // UI highlight
+    card.scrollIntoView({ behavior: "smooth", block: "center" });
+    card.focus();
+    card.style.transform = "scale(1.02)";
+    setTimeout(() => (card.style.transform = ""), 260);
+
+    // map jump
+    const st = STREETS.find(s => s._id === id);
+    if (st && st.lat != null && st.lng != null) {
+      map.flyTo({
+        center: [st.lng, st.lat],
+        zoom: 13,
+        duration: 1600,
+        essential: true
       });
     }
-    map.on('load', addMarkers);
+  }
 
-    const topRatedList = document.getElementById("topRatedList");
-    const recentList = document.getElementById("recentList");
+  function focusCardByIndex(i) {
+    const st = STREETS[i];
+    if (st) focusCardById(st._id);
+  }
 
-    const sortedByLikes = [...STREETS]
-      .sort((a, b) => (b.likes || 0) - (a.likes || 0))
-      .slice(0, 5);
 
-    sortedByLikes.forEach((st, i) => {
-      const li = document.createElement("li");
-      li.className = "top-rated-item";
-      li.innerHTML = `<span>♥ ${st.likes || 0}</span> ${st.name}`;
-      li.style.animationDelay = `${i * 0.05}s`;
-      li.addEventListener("click", () => focusCardById(st._id));
-      topRatedList.appendChild(li);
-    });
+  /* ============================================
+     CARD CLICK
+  ============================================ */
+  document.querySelectorAll(".card").forEach((card, index) => {
+    card.style.animationDelay = `${index * 0.04}s`;
 
-    const sortedByTime = [...STREETS]
-      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-      .slice(0, 5);
-
-    sortedByTime.forEach((st, i) => {
-      const li = document.createElement("li");
-      li.className = "recent-item";
-      li.textContent = `${st.name} · ${st.city || ""}`;
-      li.style.animationDelay = `${i * 0.05}s`;
-      li.addEventListener("click", () => focusCardById(st._id));
-      recentList.appendChild(li);
-    });
-
-    function focusCardById(id) {
-      const card = document.querySelector(`.card[data-id="${id}"]`);
-      if (!card) return;
-
-      card.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-      card.focus();
-      card.style.transform = 'scale(1.02)';
-      setTimeout(() => card.style.transform = '', 280);
-
-      const st = STREETS.find(s => s._id === id);
-      if (st && st.lat != null && st.lng != null) {
-        map.flyTo({
-          center: [st.lng, st.lat],
-          zoom: 13,
-          duration: 1500
-        });
+    card.addEventListener("click", () => {
+      const href = card.dataset.href?.trim();
+      if (href) {
+        card.style.transform = "scale(0.97)";
+        setTimeout(() => (window.location.href = href), 120);
       }
-    }
-
-    function focusCardByIndex(i) {
-      const st = STREETS[i];
-      if (st) focusCardById(st._id);
-    }
-
-    document.querySelectorAll(".card").forEach((card, index) => {
-      card.style.animationDelay = `${index * 0.04}s`;
-
-      card.addEventListener("click", () => {
-        const href = card.dataset.href && card.dataset.href.trim();
-        if (href) {
-          card.style.transform = 'scale(0.97)';
-          setTimeout(() => window.location.href = href, 120);
-        }
-      });
-
-      card.addEventListener("keydown", e => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          card.click();
-        }
-      });
     });
 
-    document.getElementById('streetsGrid').classList.remove('loading');
-
-    document.querySelectorAll(".like-btn").forEach(btn => {
-      btn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const id = btn.dataset.likeId;
-        if (!id) return;
-
-        btn.style.transform = 'scale(1.18)';
-        try {
-          const res = await fetch(`/like/${id}`, {
-            method: "POST",
-            headers: { "X-Requested-With": "XMLHttpRequest" }
-          });
-          if (!res.ok) return;
-          const data = await res.json();
-          const span = btn.querySelector(".like-count");
-          if (span && typeof data.likes === "number") {
-            span.textContent = data.likes;
-            btn.classList.add("liked");
-          }
-        } catch (err) {
-          console.error("Like failed", err);
-        }
-        setTimeout(() => btn.style.transform = '', 140);
-      });
-    });
-
-    const searchInput = document.getElementById("homeSearchInput");
-    const cards = Array.from(document.querySelectorAll("#streetsGrid .card"));
-    const searchResultsCount = document.getElementById("searchResultsCount");
-
-    function applyHomeFilter() {
-      const q = (searchInput.value || "").trim().toLowerCase();
-      let visibleCount = 0;
-
-      if (!q) {
-        cards.forEach(c => {
-          c.style.display = "";
-        });
-        searchResultsCount.textContent = "";
-        return;
-      }
-
-      cards.forEach(card => {
-        const name = (card.dataset.name || "").toLowerCase();
-        const city = (card.dataset.city || "").toLowerCase();
-        const country = (card.dataset.country || "").toLowerCase();
-        const match = name.includes(q) || city.includes(q) || country.includes(q);
-
-        if (match) {
-          visibleCount++;
-          card.style.display = "";
-        } else {
-          card.style.display = "none";
-        }
-      });
-
-      searchResultsCount.textContent = `${visibleCount} result${visibleCount !== 1 ? 's' : ''}`;
-    }
-
-    if (searchInput) {
-      searchInput.addEventListener("input", applyHomeFilter);
-    }
-
-    document.addEventListener('keydown', (e) => {
-      if (e.target.matches('#homeSearchInput')) return;
-
-      const visibleCards = cards.filter(c => c.style.display !== 'none');
-      if (!visibleCards.length) return;
-
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        const focused = document.activeElement;
-        const currentIndex = visibleCards.indexOf(focused);
-        const nextIndex = e.key === 'ArrowDown'
+        card.click();
+      }
+    });
+  });
+
+  document.getElementById("streetsGrid").classList.remove("loading");
+
+
+  /* ============================================
+     LIKE BUTTON
+  ============================================ */
+  document.querySelectorAll(".like-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.likeId;
+      if (!id) return;
+
+      btn.style.transform = "scale(1.18)";
+
+      try {
+        const res = await fetch(`/like/${id}`, {
+          method: "POST",
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+        });
+
+        if (!res.ok) return;
+        const data = await res.json();
+
+        const span = btn.querySelector(".like-count");
+        if (span && typeof data.likes === "number") {
+          span.textContent = data.likes;
+          btn.classList.add("liked");
+        }
+      } catch (err) {
+        console.error("Like failed", err);
+      }
+
+      setTimeout(() => (btn.style.transform = ""), 140);
+    });
+  });
+
+
+  /* ============================================
+     SEARCH FILTER
+  ============================================ */
+  const searchInput = document.getElementById("homeSearchInput");
+  const cards = Array.from(document.querySelectorAll("#streetsGrid .card"));
+  const searchResultsCount = document.getElementById("searchResultsCount");
+
+  function applyHomeFilter() {
+    const q = (searchInput.value || "").trim().toLowerCase();
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+      const name = card.dataset.name.toLowerCase();
+      const city = card.dataset.city.toLowerCase();
+      const country = card.dataset.country.toLowerCase();
+
+      const match =
+        name.includes(q) ||
+        city.includes(q) ||
+        country.includes(q);
+
+      if (match) {
+        visibleCount++;
+        card.style.display = "";
+      } else {
+        card.style.display = "none";
+      }
+    });
+
+    searchResultsCount.textContent =
+      q ? `${visibleCount} result${visibleCount !== 1 ? "s" : ""}` : "";
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener("input", applyHomeFilter);
+  }
+
+
+  /* ============================================
+     KEYBOARD NAVIGATION
+  ============================================ */
+  document.addEventListener("keydown", (e) => {
+    if (e.target.matches("#homeSearchInput")) return;
+
+    const visibleCards = cards.filter(c => c.style.display !== "none");
+    if (!visibleCards.length) return;
+
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+
+      const focused = document.activeElement;
+      const currentIndex = visibleCards.indexOf(focused);
+      const nextIndex =
+        e.key === "ArrowDown"
           ? (currentIndex + 1) % visibleCards.length
           : (currentIndex - 1 + visibleCards.length) % visibleCards.length;
 
-        visibleCards[nextIndex]?.focus();
-      }
-    });
-  </script>
+      visibleCards[nextIndex]?.focus();
+    }
+  });
+</script>
+
 </body>
 </html>
