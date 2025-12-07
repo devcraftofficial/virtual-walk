@@ -318,6 +318,56 @@
       transform: translateY(0);
       pointer-events: auto;
     }
+/* STREET POPUP */
+#streetPopup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+#streetPopupCard {
+  width: 90%;
+  max-width: 420px;
+  background: rgba(15,23,42,0.92);
+  border: 1px solid rgba(148,163,184,0.4);
+  padding: 26px;
+  border-radius: 18px;
+  animation: popupFade 0.3s ease;
+}
+
+#streetPopupCard h2 {
+  margin: 0 0 10px 0;
+  font-size: 22px;
+  color: var(--accent);
+}
+
+#streetPopupCard p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: var(--text);
+}
+
+#popupClose {
+  margin-top: 16px;
+  padding: 10px 22px;
+  background: var(--accent);
+  border: none;
+  border-radius: 10px;
+  color: #000;
+  font-weight: 700;
+  cursor: pointer;
+  width:100%;
+}
+
+@keyframes popupFade {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
   </style>
 </head>
@@ -414,6 +464,18 @@
         </div>
       </div>
     </div>
+
+    <!-- STREET DESCRIPTION POPUP -->
+<div id="streetPopup">
+  <div id="streetPopupCard">
+    <h2 id="popupTitle"></h2>
+    <p id="popupCity"></p>
+    <p id="popupCategory"></p>
+    <p id="popupDescription"></p>
+
+    <button id="popupClose">Close</button>
+  </div>
+</div>
 
     <!-- FADE LAYER -->
     <div id="fadeLayer"></div>
@@ -1159,6 +1221,41 @@ if (SELECTED) {
 } else if (Array.isArray(STREETS) && STREETS.length > 0) {
   loadStreetByIndex(0);
 }
+/* =========================================================
+   STREET DESCRIPTION POPUP (FIXED FOR NEW UI)
+========================================================= */
+
+const popup = document.getElementById("streetPopup");
+const popupTitle = document.getElementById("popupTitle");
+const popupCity = document.getElementById("popupCity");
+const popupCategory = document.getElementById("popupCategory");
+const popupDescription = document.getElementById("popupDescription");
+const popupClose = document.getElementById("popupClose");
+
+const streetNameEl = document.getElementById("streetName");  // NEW FIX
+
+streetNameEl.onclick = () => {
+  const name = streetNameEl.textContent;
+  const st = STREETS.find(s => s.name === name);
+
+  if (!st) return;
+
+  popupTitle.textContent = st.name;
+  popupCity.textContent = `📍 ${st.city || ""}${st.country ? ", " + st.country : ""}`;
+  popupCategory.textContent = st.category ? `🏷 Category: ${st.category}` : "🏷 No category";
+  popupDescription.textContent = st.description || "No description added.";
+
+  popup.style.display = "flex";
+};
+
+popupClose.onclick = () => popup.style.display = "none";
+
+// close popup if clicking outside card
+popup.onclick = e => {
+  if (e.target === popup) popup.style.display = "none";
+};
+
+
 </script>
 </body>
 </html>
