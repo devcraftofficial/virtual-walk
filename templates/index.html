@@ -432,7 +432,7 @@
 
     /* Search */
     .search-container {
-      margin-bottom: 14px;
+      margin-bottom: 8px;
       position: relative;
     }
 
@@ -464,6 +464,53 @@
       transform: translateY(-50%);
       color: var(--text-muted);
       font-size: 14px;
+    }
+
+    /* CATEGORY BAR */
+    .category-bar {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 8px;
+      margin: 6px 0 10px;
+      padding-bottom: 2px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .category-bar::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .category-bar::-webkit-scrollbar-thumb {
+      background: rgba(148,163,184,0.5);
+      border-radius: 999px;
+    }
+
+    .cat-chip {
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.5);
+      background: rgba(15,23,42,0.95);
+      color: var(--text-muted);
+      font-size: 11px;
+      padding: 4px 10px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      flex-shrink: 0;
+    }
+
+    .cat-chip:hover {
+      background: rgba(15,23,42,1);
+      color: var(--text-main);
+    }
+
+    .cat-chip.active {
+      background: var(--accent-soft);
+      color: #e0f2fe;
+      border-color: var(--accent);
+      box-shadow:
+        0 0 0 1px rgba(15,23,42,1),
+        0 0 18px rgba(56,189,248,0.5);
     }
 
     /* Grid + cards */
@@ -686,7 +733,6 @@
         <a href="{{ url_for('upload') }}" class="nav-link">+ Add street</a>
         <a href="{{ url_for('dashboard') }}" class="nav-link dashboard-btn">📊 Dashboard</a>
       </div>
-    
     </div>
 
     <div class="header-row">
@@ -767,6 +813,9 @@
           <div id="searchResultsCount" style="font-size: 11px; color: var(--text-muted); margin-top: 4px;"></div>
         </div>
 
+        <!-- CATEGORY FILTER BAR -->
+        <div class="category-bar" id="categoryBar"></div>
+
         <div class="grid loading" id="streetsGrid">
           {% for st in streets %}
             <div class="card"
@@ -778,6 +827,7 @@
                  data-city="{{ st.city }}"
                  data-country="{{ st.country }}"
                  data-mode="{{ st.mode if st.type == 'video' else '3d' }}"
+                 data-category="{{ st.category if st.category else '' }}"
                  data-href="
                    {% if st.type == '3d' %}
                      {{ url_for('world', street_id=st._id) }}
@@ -806,7 +856,10 @@
               <div class="card-info">
                 <div>
                   <h4>{{ st.name }}</h4>
-                  <p>{{ st.city }}, {{ st.country }}</p>
+                  <p>
+                    {{ st.city }}, {{ st.country }}
+                    {% if st.category %} • {{ st.category }}{% endif %}
+                  </p>
                 </div>
 
                 <div class="card-meta-row">
@@ -847,12 +900,18 @@
   const map = new maplibregl.Map({
     container: "map",
     style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`,
-    center: [55.2708, 25.2048],   // world view
+    center: [55.2708, 25.2048],
     zoom: 2.5,
     attributionControl: false
   });
 
   map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+  map.on("load", () => {
+    // Fix half-render map issue
+    setTimeout(() => map.resize(), 200);
+    setTimeout(() => map.resize(), 800);
+  });
 
 
   /* ============================================
@@ -1012,27 +1071,76 @@
 
 
   /* ============================================
-     SEARCH FILTER
+     SEARCH + CATEGORY FILTER
   ============================================ */
   const searchInput = document.getElementById("homeSearchInput");
   const cards = Array.from(document.querySelectorAll("#streetsGrid .card"));
   const searchResultsCount = document.getElementById("searchResultsCount");
+  const categoryBar = document.getElementById("categoryBar");
+
+  let currentCategory = "all"; // default: show everything
+
+  // Build category chips from STREETS data
+  if (categoryBar) {
+    const catSet = new Set();
+    STREETS.forEach(st => {
+      if (st.category) {
+        catSet.add(st.category);
+      }
+    });
+
+    function createChip(label, value, isActive = false) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "cat-chip" + (isActive ? " active" : "");
+      btn.textContent = label;
+      btn.dataset.cat = value;
+
+      btn.addEventListener("click", () => {
+        // update active state
+        document.querySelectorAll(".cat-chip").forEach(c => c.classList.remove("active"));
+        btn.classList.add("active");
+
+        currentCategory = value;
+        applyHomeFilter();
+      });
+
+      categoryBar.appendChild(btn);
+    }
+
+    // "All" chip first
+    createChip("All categories", "all", true);
+
+    // Actual categories (sorted for nicer UX)
+    Array.from(catSet).sort().forEach(cat => {
+      createChip(cat, cat, false);
+    });
+  }
 
   function applyHomeFilter() {
-    const q = (searchInput.value || "").trim().toLowerCase();
+    const q = (searchInput?.value || "").trim().toLowerCase();
     let visibleCount = 0;
 
     cards.forEach(card => {
-      const name = card.dataset.name.toLowerCase();
-      const city = card.dataset.city.toLowerCase();
-      const country = card.dataset.country.toLowerCase();
+      const name = (card.dataset.name || "").toLowerCase();
+      const city = (card.dataset.city || "").toLowerCase();
+      const country = (card.dataset.country || "").toLowerCase();
+      const cardCat = (card.dataset.category || "").toLowerCase();
 
-      const match =
+      const matchesText =
+        !q ||
         name.includes(q) ||
         city.includes(q) ||
         country.includes(q);
 
-      if (match) {
+      const matchesCategory =
+        currentCategory === "all" ||
+        currentCategory === "" ||
+        cardCat === currentCategory.toLowerCase();
+
+      const show = matchesText && matchesCategory;
+
+      if (show) {
         visibleCount++;
         card.style.display = "";
       } else {
@@ -1041,7 +1149,9 @@
     });
 
     searchResultsCount.textContent =
-      q ? `${visibleCount} result${visibleCount !== 1 ? "s" : ""}` : "";
+      q || currentCategory !== "all"
+        ? `${visibleCount} result${visibleCount !== 1 ? "s" : ""}`
+        : "";
   }
 
   if (searchInput) {
