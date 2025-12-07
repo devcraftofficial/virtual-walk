@@ -8,6 +8,8 @@
 <!-- MAPTILER / MAPLIBRE -->
 <link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
 <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
 
 <style>
 :root{
@@ -116,6 +118,56 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
     bottom: 240px; /* Move settings up too */
   }
 }
+/* STREET POPUP */
+#streetPopup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+#streetPopupCard {
+  width: 90%;
+  max-width: 420px;
+  background: rgba(15,23,42,0.92);
+  border: 1px solid rgba(148,163,184,0.4);
+  padding: 26px;
+  border-radius: 18px;
+  animation: popupFade 0.3s ease;
+}
+
+#streetPopupCard h2 {
+  margin: 0 0 10px 0;
+  font-size: 22px;
+  color: var(--accent);
+}
+
+#streetPopupCard p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: var(--text);
+}
+
+#popupClose {
+  margin-top: 16px;
+  padding: 10px 22px;
+  background: var(--accent);
+  border: none;
+  border-radius: 10px;
+  color: #000;
+  font-weight: 700;
+  cursor: pointer;
+  width:100%;
+}
+
+@keyframes popupFade {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 
 </style>
@@ -178,6 +230,19 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
       </div>
     </div>
 
+    <!-- STREET DESCRIPTION POPUP -->
+<div id="streetPopup">
+  <div id="streetPopupCard">
+    <h2 id="popupTitle"></h2>
+    <p id="popupCity"></p>
+    <p id="popupCategory"></p>
+    <p id="popupDescription"></p>
+
+    <button id="popupClose">Close</button>
+  </div>
+</div>
+
+
   </div>
 </div>
 
@@ -197,15 +262,16 @@ const STREETS = JSON.parse(document.getElementById("streets-data").textContent |
 const SELECTED = JSON.parse(document.getElementById("selected-street-data").textContent || "null");
 
 const video = document.getElementById("streetVideo");
-const vsrc  = document.getElementById("videoSource");
 
 let walkSpeed = 1;
 let currentDir = 0;
-let keyDir=0, joyDir=0, autoDir=0;
-let autoDrive=false;
-let nightFilter=false;
-let engineVol=0.55;
-let currentVideos=[], currentVideoIndex=0;
+let keyDir = 0, joyDir = 0, autoDir = 0;
+let autoDrive = false;
+let nightFilter = false;
+let engineVol = 0.55;
+
+let currentVideos = [];
+let currentVideoIndex = 0;
 
 /* =========================================================
    AUDIO ENGINE
@@ -215,145 +281,186 @@ engine.loop = true;
 engine.volume = engineVol;
 engine.play().catch(()=>{});
 
-function updateEngineSound(){
+function updateEngineSound() {
   const sp = walkSpeed * Math.abs(currentDir);
   engine.playbackRate = 1 + sp * 0.4;
   engine.volume = currentDir ? engineVol : 0.3;
 }
 
+/* =========================================================
+   HLS VIDEO LOADING ⇢ NO AUTO-PLAY
+========================================================= */
+let hlsInstance = null;
+
+function playVideo(url) {
+  if (hlsInstance) {
+    hlsInstance.destroy();
+    hlsInstance = null;
+  }
+
+  if (url.includes(".m3u8") && Hls.isSupported()) {
+    hlsInstance = new Hls({
+      maxBufferLength: 10,
+      maxMaxBufferLength: 30
+    });
+    hlsInstance.loadSource(url);
+    hlsInstance.attachMedia(video);
+
+  } else {
+    video.src = url;
+    video.load();
+  }
+
+  /** 🔥 IMPORTANT FIX:
+      Do NOT auto-play on load
+  **/
+  video.pause();
+}
 
 /* =========================================================
-   LOAD STREET
+   LOAD STREET (NEVER AUTO-PLAYS)
 ========================================================= */
-function loadStreet(st){
+function loadStreet(st) {
   hudStreetName.textContent = st.name;
   streetSmallLabel.textContent = st.city;
 
-  currentVideos = st.videos.map(v=>v.url);
+  currentVideos = st.videos.map(v => v.url);
   currentVideoIndex = 0;
 
-  vsrc.src = currentVideos[0];
-  video.load();
-  
+  playVideo(currentVideos[0]);  // load only
 }
 
-function loadStreetByIndex(i){
+function loadStreetByIndex(i) {
   loadStreet(STREETS[i]);
 }
 
 /* =========================================================
-   DRIVE ENGINE
+   DRIVE ENGINE (PLAY ONLY WHEN USER MOVES)
 ========================================================= */
-function safePlay(){ if(video.paused) video.play().catch(()=>{}); }
-function safePause(){ if(!video.paused) video.pause(); }
+function safePlay() {
+  if (currentDir !== 0) {
+    if (video.paused) video.play().catch(()=>{});
+  }
+}
 
-function playForward(){
+function safePause() {
+  if (!video.paused) video.pause();
+}
+
+function playForward() {
   video.playbackRate = walkSpeed;
   safePlay();
 }
-function playReverse(){ safePause(); }
 
-function recomputeDirection(){
+function playReverse() {
+  safePause();
+}
+
+function recomputeDirection() {
   const newDir = keyDir || joyDir || autoDir;
   currentDir = newDir;
 
-  if(newDir === 1) playForward();
-  else if(newDir === -1) playReverse();
+  if (newDir === 1) playForward();
+  else if (newDir === -1) playReverse();
   else safePause();
 
   updateEngineSound();
 }
 
 /* KEYBOARD */
-window.onkeydown = e=>{
-  if(e.key==="w"){ keyDir=1; recomputeDirection(); }
-  if(e.key==="s"){ keyDir=-1; recomputeDirection(); }
+window.onkeydown = e => {
+  if (e.key === "w") { keyDir = 1; recomputeDirection(); }
+  if (e.key === "s") { keyDir = -1; recomputeDirection(); }
 };
-window.onkeyup = e=>{
-  if(["w","s"].includes(e.key)) keyDir=0;
+window.onkeyup = e => {
+  if (["w","s"].includes(e.key)) keyDir = 0;
   recomputeDirection();
 };
 
 /* JOYSTICK */
-joystickBase.onpointerdown = e=>{
+joystickBase.onpointerdown = e => {
   joystickBase.setPointerCapture(e.pointerId);
   moveJoy(e);
 };
-joystickBase.onpointermove = e=>{ if(e.buttons) moveJoy(e); };
-joystickBase.onpointerup = ()=>{ joyDir=0; joystickKnob.style.transform="translateY(0)"; recomputeDirection(); };
+joystickBase.onpointermove = e => { if (e.buttons) moveJoy(e); };
+joystickBase.onpointerup = () => {
+  joyDir = 0;
+  joystickKnob.style.transform = "translateY(0)";
+  recomputeDirection();
+};
 
-function moveJoy(e){
-  const r=joystickBase.getBoundingClientRect();
-  const dy=(e.clientY-(r.top+r.height/2))/(r.height/2);
-  const c=Math.max(-1,Math.min(1,dy));
-  joyDir = Math.abs(c)>0.2 ? (c<0?1:-1) : 0;
-  joystickKnob.style.transform=`translateY(${c*35}px)`;
+function moveJoy(e) {
+  const r = joystickBase.getBoundingClientRect();
+  const dy = (e.clientY - (r.top + r.height/2)) / (r.height/2);
+  const c = Math.max(-1, Math.min(1, dy));
+  joyDir = Math.abs(c) > 0.2 ? (c < 0 ? 1 : -1) : 0;
+  joystickKnob.style.transform = `translateY(${c * 35}px)`;
   recomputeDirection();
 }
 
 /* SETTINGS */
-settingsToggle.onclick = ()=> settingsPop.classList.toggle("open");
+settingsToggle.onclick = () => settingsPop.classList.toggle("open");
 
-btnAutoDrive.onclick = ()=>{
-  autoDrive=!autoDrive;
-  autoDir = autoDrive?1:0;
-  btnAutoDrive.classList.toggle("active",autoDrive);
-  btnAutoDrive.textContent = autoDrive?"On":"Off";
+btnAutoDrive.onclick = () => {
+  autoDrive = !autoDrive;
+  autoDir = autoDrive ? 1 : 0;
+  btnAutoDrive.classList.toggle("active", autoDrive);
+  btnAutoDrive.textContent = autoDrive ? "On" : "Off";
   recomputeDirection();
 };
 
-speedSelect.onchange = ()=>{
+speedSelect.onchange = () => {
   walkSpeed = parseFloat(speedSelect.value);
   video.playbackRate = walkSpeed;
   updateEngineSound();
 };
 
-btnDayNight.onclick = ()=>{
-  nightFilter=!nightFilter;
-  btnDayNight.classList.toggle("active",nightFilter);
+btnDayNight.onclick = () => {
+  nightFilter = !nightFilter;
+  btnDayNight.classList.toggle("active", nightFilter);
   video.style.filter = nightFilter ? "brightness(0.55) contrast(1.2)" : "none";
 };
 
-engineVolume.oninput = e=>{
+engineVolume.oninput = e => {
   engineVol = parseFloat(e.target.value);
   updateEngineSound();
 };
 
 /* =========================================================
-   MAPTILER HD MAP
+   MAPTILER FULL MAP
 ========================================================= */
 let fullMap = null;
 const MAP_KEY = "PqdU3M5vnOQK0dDQnkIq";
 
-function initFullMap(){
-  if(fullMap) return;
+function initFullMap() {
+  if (fullMap) return;
 
   fullMap = new maplibregl.Map({
     container: "fullMapContainer",
     style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAP_KEY}`,
-    center: [55.2708, 25.2048], // Dubai center
+    center: [55.2708, 25.2048],
     zoom: 2.5,
     attributionControl: false
   });
 
   fullMap.addControl(new maplibregl.NavigationControl());
 
-  STREETS.forEach((s,i)=>{
-    if(s.lat && s.lng){
-      new maplibregl.Marker({color:"#38bdf8"})
-        .setLngLat([s.lng,s.lat])
+  STREETS.forEach((s, i) => {
+    if (s.lat && s.lng) {
+      new maplibregl.Marker({ color:"#38bdf8" })
+        .setLngLat([s.lng, s.lat])
         .addTo(fullMap)
-        .getElement().onclick = ()=>{ loadStreetByIndex(i); hideFull(); };
+        .getElement().onclick = () => { loadStreetByIndex(i); hideFull(); };
     }
   });
 }
 
-function showFull(){
-  fullMapOverlay.style.display="flex";
+function showFull() {
+  fullMapOverlay.style.display = "flex";
   initFullMap();
   setTimeout(()=> fullMap.resize(), 100);
 }
-function hideFull(){ fullMapOverlay.style.display="none"; }
+function hideFull() { fullMapOverlay.style.display = "none"; }
 
 btnShowMap.onclick = showFull;
 miniMapStatic.onclick = showFull;
@@ -362,55 +469,73 @@ closeMapBtn.onclick = hideFull;
 /* =========================================================
    INIT
 ========================================================= */
-document.addEventListener("DOMContentLoaded",()=>{
-  if(SELECTED){
-    const idx = STREETS.findIndex(s=>s._id === SELECTED._id);
+document.addEventListener("DOMContentLoaded", () => {
+  if (SELECTED) {
+    const idx = STREETS.findIndex(s => s._id === SELECTED._id);
     loadStreetByIndex(idx >= 0 ? idx : 0);
-  } else if(STREETS.length){
+  } else if (STREETS.length) {
     loadStreetByIndex(0);
   }
 });
 
 /* =========================================================
-   AUTO-TELEPORT TO NEXT STREET WHEN VIDEO ENDS
+   AUTO TELEPORT ON VIDEO END
 ========================================================= */
-
 video.addEventListener("ended", () => {
-  console.log("Video finished.");
 
-  // 1️⃣ Try next video inside same street
+  // next video inside same street
   if (currentVideos.length > 1 && currentVideoIndex < currentVideos.length - 1) {
     currentVideoIndex++;
-    console.log("Playing next video in same street:", currentVideos[currentVideoIndex]);
-
-    vsrc.src = currentVideos[currentVideoIndex];
-    video.load();
-    video.play().catch(()=>{});
+    playVideo(currentVideos[currentVideoIndex]);
     return;
   }
 
-  // 2️⃣ Find next street
+  // next street
   const currentIndex = STREETS.findIndex(s => s.name === hudStreetName.textContent);
-
   let nextIndex = currentIndex + 1;
-  if (nextIndex >= STREETS.length) nextIndex = 0; // loop to first street
+  if (nextIndex >= STREETS.length) nextIndex = 0;
 
-  console.log("Teleporting to next street:", STREETS[nextIndex].name);
-
-  // 3️⃣ TELEPORT effect (fade to black → change street → fade back)
   document.body.style.transition = "opacity 0.6s";
   document.body.style.opacity = 0;
 
   setTimeout(() => {
     loadStreetByIndex(nextIndex);
-
-    setTimeout(() => {
-      document.body.style.opacity = 1;
-    }, 150);
+    setTimeout(() => { document.body.style.opacity = 1; }, 150);
   }, 500);
 });
 
-</script>
+/* =========================================================
+   STREET DESCRIPTION POPUP
+========================================================= */
 
+const popup = document.getElementById("streetPopup");
+const popupTitle = document.getElementById("popupTitle");
+const popupCity = document.getElementById("popupCity");
+const popupCategory = document.getElementById("popupCategory");
+const popupDescription = document.getElementById("popupDescription");
+const popupClose = document.getElementById("popupClose");
+
+document.querySelector(".top-street").onclick = () => {
+  const name = hudStreetName.textContent;
+  const st = STREETS.find(s => s.name === name);
+
+  if (!st) return;
+
+  popupTitle.textContent = st.name;
+  popupCity.textContent = `📍 ${st.city}, ${st.country}`;
+  popupCategory.textContent = st.category ? `🏷 Category: ${st.category}` : "";
+  popupDescription.textContent = st.description || "No description added.";
+
+  popup.style.display = "flex";
+};
+
+popupClose.onclick = () => popup.style.display = "none";
+
+// Close popup when clicking outside card
+popup.onclick = e => {
+  if (e.target === popup) popup.style.display = "none";
+};
+
+</script>
 </body>
 </html>
