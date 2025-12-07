@@ -105,6 +105,20 @@ def list_with_str_id(cursor):
     return items
 
 
+def distinct_categories_for_mode(mode: str):
+    """
+    Return sorted unique category names for a given mode.
+    Only applied to video streets with that mode.
+    """
+    cats = streets_collection.distinct(
+        "category",
+        {"type": "video", "mode": mode}
+    )
+    # filter out None / empty
+    cats = [c for c in cats if c]
+    return sorted(cats)
+
+
 # --------------------------------------------------------
 # Home Page - show all streets
 # --------------------------------------------------------
@@ -198,7 +212,7 @@ def world_drive():
         selected_street = None
 
     return render_template(
-        "drive_world.html",    # <— separate template without avatar
+        "drive_world.html",    # separate template without avatar
         streets=streets,
         center=center,
         selected_street=selected_street,
@@ -265,37 +279,82 @@ def world_sit():
 
 # --------------------------------------------------------
 # LIST PAGES for each mode (selection before entering world)
+# Now support optional ?category= filter
 # --------------------------------------------------------
 @app.route("/walk")
 def walk():
-    walk_streets = list_with_str_id(
-        streets_collection.find({"type": "video", "mode": "walk"})
+    category = request.args.get("category", "").strip() or None
+
+    query = {"type": "video", "mode": "walk"}
+    if category and category.lower() != "all":
+        query["category"] = category
+
+    walk_streets = list_with_str_id(streets_collection.find(query))
+    categories = distinct_categories_for_mode("walk")
+
+    return render_template(
+        "walk.html",
+        streets=walk_streets,
+        categories=categories,
+        active_category=category or "all",
     )
-    return render_template("walk.html", streets=walk_streets)
 
 
 @app.route("/drive")
 def drive():
-    drive_streets = list_with_str_id(
-        streets_collection.find({"type": "video", "mode": "drive"})
+    category = request.args.get("category", "").strip() or None
+
+    query = {"type": "video", "mode": "drive"}
+    if category and category.lower() != "all":
+        query["category"] = category
+
+    drive_streets = list_with_str_id(streets_collection.find(query))
+    categories = distinct_categories_for_mode("drive")
+
+    return render_template(
+        "drive.html",
+        streets=drive_streets,
+        categories=categories,
+        active_category=category or "all",
     )
-    return render_template("drive.html", streets=drive_streets)
 
 
 @app.route("/fly")
 def fly():
-    fly_streets = list_with_str_id(
-        streets_collection.find({"type": "video", "mode": "fly"})
+    category = request.args.get("category", "").strip() or None
+
+    query = {"type": "video", "mode": "fly"}
+    if category and category.lower() != "all":
+        query["category"] = category
+
+    fly_streets = list_with_str_id(streets_collection.find(query))
+    categories = distinct_categories_for_mode("fly")
+
+    return render_template(
+        "fly.html",
+        streets=fly_streets,
+        categories=categories,
+        active_category=category or "all",
     )
-    return render_template("fly.html", streets=fly_streets)
 
 
 @app.route("/sit")
 def sit():
-    sit_streets = list_with_str_id(
-        streets_collection.find({"type": "video", "mode": "sit"})
+    category = request.args.get("category", "").strip() or None
+
+    query = {"type": "video", "mode": "sit"}
+    if category and category.lower() != "all":
+        query["category"] = category
+
+    sit_streets = list_with_str_id(streets_collection.find(query))
+    categories = distinct_categories_for_mode("sit")
+
+    return render_template(
+        "sit.html",
+        streets=sit_streets,
+        categories=categories,
+        active_category=category or "all",
     )
-    return render_template("sit.html", streets=sit_streets)
 
 
 # --------------------------------------------------------
@@ -327,7 +386,7 @@ def drive_view(street_id):
 
 # --------------------------------------------------------
 # Upload Route - MULTIPLE VIDEOS SUPPORTED
-# Now includes 'mode' for video streets
+# Now includes 'mode' + 'category' for video streets
 # --------------------------------------------------------
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
@@ -339,6 +398,11 @@ def upload():
         country = request.form.get("country")
         lat = float(request.form.get("lat"))
         lng = float(request.form.get("lng"))
+
+        # category (for video streets)
+        category = request.form.get("category", "").strip() or None
+        description = request.form.get("description", "").strip() or None
+
 
         # ---------------- VIDEO STREET ----------------
         if street_type == "video":
@@ -375,11 +439,13 @@ def upload():
             street_doc = {
                 "type": "video",
                 "mode": mode,  # walk / drive / fly / sit
+                "category": category,  # e.g. "airport", "highway", "mall", ...
                 "name": name,
                 "city": city,
                 "country": country,
                 "lat": lat,
                 "lng": lng,
+                "description": description,   # ⭐ ADDED
                 "videos": [
                     {"url": url, "title": f"Part {i + 1}"}
                     for i, url in enumerate(video_urls)
@@ -410,6 +476,7 @@ def upload():
                 "name": name,
                 "city": city,
                 "country": country,
+                "description": description,   # ⭐ ADDED
                 "lat": lat,
                 "lng": lng,
                 "glbUrl": glb_url,
@@ -427,6 +494,7 @@ def upload():
 
     return render_template("upload.html")
 
+
 # --------------------------------------------------------
 # Dashboard Page
 # --------------------------------------------------------
@@ -441,6 +509,7 @@ def dashboard():
     walk_count = sum(1 for s in streets if s.get("type") == "video" and s.get("mode") == "walk")
     drive_count = sum(1 for s in streets if s.get("type") == "video" and s.get("mode") == "drive")
     fly_count = sum(1 for s in streets if s.get("type") == "video" and s.get("mode") == "fly")
+    sit_count = sum(1 for s in streets if s.get("type") == "video" and s.get("mode") == "sit")
 
     # sort by createdAt desc for recent list
     recent_streets = sorted(
@@ -457,8 +526,10 @@ def dashboard():
         walk_count=walk_count,
         drive_count=drive_count,
         fly_count=fly_count,
+        sit_count=sit_count,
         recent_streets=recent_streets,
     )
+
 
 # --------------------------------------------------------
 # Like Endpoint
@@ -482,5 +553,4 @@ def like_street(street_id):
 if __name__ == "__main__":
     app.run(debug=True)
     app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
-
 
