@@ -137,7 +137,7 @@
       object-fit: cover;
       z-index: 1;
       pointer-events: none;
-      transition: transform 0.12s ease-out;
+      transition: transform 0.12s ease-out, opacity 0.2s ease-out;
     }
 
     #nightOverlay {
@@ -371,6 +371,25 @@
       50%  { transform: scale(1.3); opacity: 0.7; }
       100% { transform: scale(1);   opacity: 1;   }
     }
+
+    /* First-load video overlay */
+    #videoLoading {
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,0.9);
+      z-index:5;
+      pointer-events:none;
+    }
+    #videoLoadingSpinner{
+      width:36px;height:36px;border-radius:50%;
+      border:3px solid rgba(148,163,184,0.4);
+      border-top-color:#38bdf8;
+      animation:spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 
@@ -405,6 +424,11 @@
     <video id="streetVideo" preload="metadata" muted playsinline disablepictureinpicture>
       <source id="videoSource" src="">
     </video>
+
+    <!-- first-load overlay -->
+    <div id="videoLoading">
+      <div id="videoLoadingSpinner"></div>
+    </div>
 
     <div id="nightOverlay"></div>
 
@@ -498,6 +522,7 @@
   const fadeLayer     = document.getElementById("fadeLayer");
   const nightOverlay  = document.getElementById("nightOverlay");
   const footstepAudio = document.getElementById("footstepAudio");
+  const videoLoading  = document.getElementById("videoLoading");
 
   const speechEl        = document.getElementById("avatarSpeech");
   const streetSpeechEl  = document.getElementById("streetSpeech");
@@ -532,6 +557,8 @@
   let joyActive    = false;
   let fullMapReady = false;
   let fullMap;
+
+  let isFirstStreetLoad = true;
 
   const avatarSources = {
     male: {
@@ -673,9 +700,36 @@
     triggerGreeting();
   }
 
+  function buildVideoList(street) {
+    const vids = [];
+    if (Array.isArray(street.videos) && street.videos.length) {
+      street.videos.forEach(v => { if (v && v.url) vids.push(v.url); });
+    }
+    if (!vids.length && street.videoUrl) vids.push(street.videoUrl);
+    return vids;
+  }
+
+  function preloadNextStreetVideo(fromIndex) {
+    const base = STREETS[fromIndex];
+    if (!base) return;
+    const next = nearestStreetIndex();
+    if (next === -1 || !STREETS[next]) return;
+    const s = STREETS[next];
+    const vids = buildVideoList(s);
+    if (!vids.length) return;
+    const url = vids[0];
+
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "video";
+    link.href = url;
+    document.head.appendChild(link);
+
+  }
+
   function loadStreet(street) {
     const nameEl = document.getElementById("streetName");
-    const locEl = document.getElementById("streetLocation");
+    const locEl  = document.getElementById("streetLocation");
 
     nameEl.textContent = street.name || "Untitled Street";
     locEl.textContent =
@@ -683,13 +737,12 @@
       (street.city && street.country ? ", " : "") +
       (street.country || "");
 
-    currentVideos = [];
+    currentVideos = buildVideoList(street);
     currentVideoIndex = 0;
 
-    if (Array.isArray(street.videos) && street.videos.length) {
-      currentVideos = street.videos.map(v => v.url).filter(Boolean);
-    } else if (street.videoUrl) {
-      currentVideos = [street.videoUrl];
+    if (isFirstStreetLoad) {
+      videoLoading.style.display = "flex";
+      video.style.opacity = "0";
     }
 
     const url = currentVideos[0] || "";
@@ -715,6 +768,8 @@
         speed: 0.9
       });
     }
+
+    preloadNextStreetVideo(i);
   }
 
   function playForward() {
@@ -825,6 +880,21 @@
     setAvatarState();
     updateFootsteps();
     teleportNearest();
+  });
+
+  // hide first-load overlay when the first video is ready or fails
+  video.addEventListener("loadeddata", () => {
+    video.style.opacity = "1";
+    if (isFirstStreetLoad) {
+      videoLoading.style.display = "none";
+      isFirstStreetLoad = false;
+    }
+  });
+  video.addEventListener("error", () => {
+    if (isFirstStreetLoad) {
+      videoLoading.style.display = "none";
+      isFirstStreetLoad = false;
+    }
   });
 
   window.addEventListener("keydown", e => {
