@@ -168,6 +168,21 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+.map-marker {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 8px rgba(37,99,235,0.7);
+}
+
+.map-marker-selected {
+  width: 22px;
+  height: 22px;
+  background: #38bdf8;
+  box-shadow: 0 0 18px rgba(56,189,248,0.9);
+}
 
 
 </style>
@@ -262,6 +277,10 @@ const STREETS = JSON.parse(document.getElementById("streets-data").textContent |
 const SELECTED = JSON.parse(document.getElementById("selected-street-data").textContent || "null");
 
 const video = document.getElementById("streetVideo");
+let currentIndex = 0;     // <--- REQUIRED for markers + flyTo
+let fullMapReady = false; // <--- REQUIRED to prevent load errors
+let fullMap = null;       // <--- REQUIRED so maplibre loads only once
+
 
 let walkSpeed = 1;
 let currentDir = 0;
@@ -426,45 +445,95 @@ engineVolume.oninput = e => {
   updateEngineSound();
 };
 
-/* =========================================================
-   MAPTILER FULL MAP
-========================================================= */
-let fullMap = null;
-const MAP_KEY = "PqdU3M5vnOQK0dDQnkIq";
+/* ================== MAPLIBRE (LAZY) ================== */
+let markerEls = [];
 
-function initFullMap() {
-  if (fullMap) return;
+function loadMap() {
+  // First time: create map
+  if (!fullMapReady) {
+    fullMap = new maplibregl.Map({
+      container: "fullMapContainer",
+      style: "https://demotiles.maplibre.org/style.json",
+      center: [0, 20],
+      zoom: 2,
+      renderWorldCopies: false   // 👈 important: no repeated worlds
+    });
 
-  fullMap = new maplibregl.Map({
-    container: "fullMapContainer",
-    style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAP_KEY}`,
-    center: [55.2708, 25.2048],
-    zoom: 2.5,
-    attributionControl: false
-  });
+    fullMap.addControl(new maplibregl.NavigationControl());
 
-  fullMap.addControl(new maplibregl.NavigationControl());
+    fullMap.on("load", () => {
+      addStreetMarkers();
+      focusOnCurrentStreet();
+    });
+
+    fullMapReady = true;
+  } else {
+    // Map already exists – just recenter on current street
+    focusOnCurrentStreet();
+  }
+}
+
+/* Create markers for all streets */
+function addStreetMarkers() {
+  markerEls = [];
 
   STREETS.forEach((s, i) => {
-    if (s.lat && s.lng) {
-      new maplibregl.Marker({ color:"#38bdf8" })
-        .setLngLat([s.lng, s.lat])
-        .addTo(fullMap)
-        .getElement().onclick = () => { loadStreetByIndex(i); hideFull(); };
+    const lat = Number(s.lat);
+    const lng = Number(s.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return; // skip bad coords
+
+    const el = document.createElement("div");
+    el.className = "map-marker";          // base style from CSS
+    if (i === currentIndex) {
+      el.classList.add("map-marker-selected");  // highlight current
     }
+
+    const marker = new maplibregl.Marker({ element: el })
+      .setLngLat([lng, lat])
+      .addTo(fullMap);
+
+    el.addEventListener("click", () => {
+  currentIndex = i;                 // <-- IMPORTANT FIX
+  loadStreetByIndex(i);
+  focusOnCurrentStreet();           // <-- update map highlight
+  document.getElementById("fullMapOverlay").style.display = "none";
+});
+
+    markerEls.push({ index: i, el });
   });
 }
 
-function showFull() {
-  fullMapOverlay.style.display = "flex";
-  initFullMap();
-  setTimeout(()=> fullMap.resize(), 100);
-}
-function hideFull() { fullMapOverlay.style.display = "none"; }
+/* Center + zoom on current street */
+function focusOnCurrentStreet() {
+  const st = STREETS[currentIndex];
+  if (!st) return;
 
-btnShowMap.onclick = showFull;
-miniMapStatic.onclick = showFull;
-closeMapBtn.onclick = hideFull;
+  const lat = Number(st.lat);
+  const lng = Number(st.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+  fullMap.flyTo({
+    center: [lng, lat],
+    zoom: 8,
+    speed: 0.9
+  });
+
+  // update highlight class
+  markerEls.forEach(m => {
+    if (m.index === currentIndex) m.el.classList.add("map-marker-selected");
+    else m.el.classList.remove("map-marker-selected");
+  });
+}
+
+/* Open / close overlay */
+document.getElementById("miniMapStatic").onclick = () => {
+
+  document.getElementById("fullMapOverlay").style.display = "flex";
+  loadMap();
+};
+document.getElementById("closeMapBtn").onclick = () => {
+  document.getElementById("fullMapOverlay").style.display = "none";
+};
 
 /* =========================================================
    INIT
