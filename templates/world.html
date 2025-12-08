@@ -42,7 +42,6 @@
       overflow: hidden;
     }
 
-    /* Mini-map */
     .mini-map {
       position: absolute;
       top: 16px;
@@ -59,7 +58,6 @@
     }
     .mini-map img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* Full map */
     #fullMapOverlay {
       position: fixed;
       inset: 0;
@@ -93,7 +91,6 @@
       z-index: 500;
     }
 
-    /* Gender switch */
     .gender-row {
       position: absolute;
       top: 16px;
@@ -119,7 +116,6 @@
       border-color: #3b82f6;
     }
 
-    /* Street info */
     .street-info {
       position: absolute;
       top: 60px;
@@ -133,7 +129,6 @@
       font-size: 12px;
     }
 
-    /* Video */
     #streetVideo {
       position: absolute;
       inset: 0;
@@ -142,10 +137,9 @@
       object-fit: cover;
       z-index: 1;
       pointer-events: none;
-      transition: transform 0.15s ease-out, filter 0.3s ease-out;
+      transition: transform 0.12s ease-out;
     }
 
-    /* Night overlay */
     #nightOverlay {
       position: absolute;
       inset: 0;
@@ -157,7 +151,6 @@
       z-index: 2;
     }
 
-    /* Avatar & shadow */
     #avatarShadow {
       position: absolute;
       bottom: 20px;
@@ -180,7 +173,18 @@
       pointer-events: none;
     }
 
-    /* Avatar speech bubble */
+    #avatarSpeech,
+    #streetSpeech {
+      font-size: 12px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+      box-shadow: 0 18px 45px rgba(0,0,0,0.8);
+      border: 1px solid rgba(148,163,184,0.7);
+    }
     #avatarSpeech {
       position: absolute;
       bottom: 410px;
@@ -188,52 +192,31 @@
       transform: translateX(-50%) translateY(6px);
       max-width: 260px;
       padding: 6px 10px;
-      font-size: 12px;
       background: rgba(15,23,42,0.96);
       border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.7);
       color: #e5e7eb;
-      box-shadow: 0 18px 45px rgba(0,0,0,0.8);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.22s ease-out, transform 0.22s ease-out;
       z-index: 11;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
     }
-    #avatarSpeech.visible {
-      opacity: 1;
-      transform: translateX(-50%) translateY(-4px);
-    }
-
-    /* NEW: Street-side reply bubble (right side) */
     #streetSpeech {
       position: absolute;
       bottom: 420px;
       right: 40px;
       max-width: 240px;
       padding: 6px 10px;
-      font-size: 12px;
       background: rgba(30,41,59,0.95);
       border-radius: 12px;
-      border: 1px solid rgba(148,163,184,0.7);
       color: #f1f5f9;
-      box-shadow: 0 18px 45px rgba(0,0,0,0.8);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.22s ease-out, transform 0.22s ease-out;
       z-index: 12;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
+    }
+    #avatarSpeech.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-4px);
     }
     #streetSpeech.visible {
       opacity: 1;
       transform: translateY(-4px);
     }
 
-    /* Joystick */
     #joystickBase {
       position: absolute;
       bottom: 20px;
@@ -263,21 +246,19 @@
       #joystickBase { bottom: 90px; }
     }
 
-    /* Fade layer */
     #fadeLayer {
       position: absolute;
       inset: 0;
       background: black;
       opacity: 0;
-      transition: opacity 0.7s;
+      transition: opacity 0.5s;
       pointer-events: none;
       z-index: 200;
     }
 
-    /* Settings button */
     #settingsBtn {
       position: absolute;
-      top: 126px;
+      top: 190px;
       left: 16px;
       width: 40px;
       height: 40px;
@@ -294,7 +275,6 @@
       backdrop-filter: blur(8px);
     }
 
-    /* Settings panel */
     #settingsPanel {
       position: absolute;
       right: 16px;
@@ -318,77 +298,95 @@
       transform: translateY(0);
       pointer-events: auto;
     }
-/* STREET POPUP */
-#streetPopup {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.65);
-  backdrop-filter: blur(6px);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-}
+    .settings-section {
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(30,64,175,0.5);
+    }
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 4px;
+      gap: 8px;
+      font-size: 11px;
+    }
 
-#streetPopupCard {
-  width: 90%;
-  max-width: 420px;
-  background: rgba(15,23,42,0.92);
-  border: 1px solid rgba(148,163,184,0.4);
-  padding: 26px;
-  border-radius: 18px;
-  animation: popupFade 0.3s ease;
-}
+    #streetPopup {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+    #streetPopupCard {
+      width: 90%;
+      max-width: 420px;
+      background: rgba(15,23,42,0.92);
+      border: 1px solid rgba(148,163,184,0.4);
+      padding: 26px;
+      border-radius: 18px;
+      animation: popupFade 0.3s ease;
+    }
+    #streetPopupCard h2 {
+      margin: 0 0 10px 0;
+      font-size: 22px;
+      color: var(--accent);
+    }
+    #streetPopupCard p {
+      margin: 6px 0;
+      font-size: 14px;
+      color: var(--text-main);
+    }
+    #popupClose {
+      margin-top: 16px;
+      padding: 10px 22px;
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      color: #000;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+    }
+    @keyframes popupFade {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0);   }
+    }
 
-#streetPopupCard h2 {
-  margin: 0 0 10px 0;
-  font-size: 22px;
-  color: var(--accent);
-}
-
-#streetPopupCard p {
-  margin: 6px 0;
-  font-size: 14px;
-  color: var(--text);
-}
-
-#popupClose {
-  margin-top: 16px;
-  padding: 10px 22px;
-  background: var(--accent);
-  border: none;
-  border-radius: 10px;
-  color: #000;
-  font-weight: 700;
-  cursor: pointer;
-  width:100%;
-}
-
-@keyframes popupFade {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
+    .map-marker-selected {
+      width: 26px !important;
+      height: 26px !important;
+      background: #38bdf8 !important;
+      border-radius: 50%;
+      border: 3px solid white !important;
+      box-shadow: 0 0 18px #38bdf8, 0 0 32px #38bdf8;
+      animation: markerPulse 1.4s infinite ease-in-out;
+    }
+    @keyframes markerPulse {
+      0%   { transform: scale(1);   opacity: 1;   }
+      50%  { transform: scale(1.3); opacity: 0.7; }
+      100% { transform: scale(1);   opacity: 1;   }
+    }
   </style>
 </head>
 
 <body>
 
-<!-- FULL MAP OVERLAY -->
 <div id="fullMapOverlay">
   <div id="fullMapContainer"></div>
   <button id="closeMapBtn">✕</button>
 </div>
 
-<!-- MAIN VIEWER -->
 <div class="viewer-panel">
   <div class="viewer-canvas" id="viewerCanvas">
 
     <div id="miniMap" class="mini-map">
       <img src="/static/img/minimap_placeholder.png" alt="">
     </div>
-
-    <button id="settingsBtn" aria-label="Settings">⚙</button>
 
     <div class="gender-row">
       <div class="gender-buttons">
@@ -402,14 +400,14 @@
       <p id="streetLocation">Waiting…</p>
     </div>
 
-    <!-- VIDEO -->
+    <button id="settingsBtn" aria-label="Settings">⚙</button>
+
     <video id="streetVideo" preload="metadata" muted playsinline disablepictureinpicture>
       <source id="videoSource" src="">
     </video>
 
     <div id="nightOverlay"></div>
 
-    <!-- AVATAR -->
     <div id="avatarShadow"></div>
     <model-viewer id="avatarMV"
       src="/static/avatars/male/idle.glb"
@@ -419,18 +417,15 @@
       disable-pan>
     </model-viewer>
 
-    <!-- SPEECH BUBBLES -->
     <div id="avatarSpeech"></div>
-    <div id="streetSpeech"></div> <!-- NEW -->
+    <div id="streetSpeech"></div>
 
-    <!-- JOYSTICK -->
     <div id="joystickBase">
       <div id="joystickKnob"></div>
     </div>
 
-    <!-- SETTINGS PANEL -->
     <div id="settingsPanel" aria-label="View settings">
-      <h3>View settings</h3>
+      <h3 style="margin:0 0 6px 0;font-size:13px;">View settings</h3>
 
       <div class="settings-section">
         <strong style="font-size:11px;">Video</strong>
@@ -465,28 +460,23 @@
       </div>
     </div>
 
-    <!-- STREET DESCRIPTION POPUP -->
-<div id="streetPopup">
-  <div id="streetPopupCard">
-    <h2 id="popupTitle"></h2>
-    <p id="popupCity"></p>
-    <p id="popupCategory"></p>
-    <p id="popupDescription"></p>
+    <div id="streetPopup">
+      <div id="streetPopupCard">
+        <h2 id="popupTitle"></h2>
+        <p id="popupCity"></p>
+        <p id="popupCategory"></p>
+        <p id="popupDescription"></p>
+        <button id="popupClose">Close</button>
+      </div>
+    </div>
 
-    <button id="popupClose">Close</button>
-  </div>
-</div>
-
-    <!-- FADE LAYER -->
     <div id="fadeLayer"></div>
   </div>
 </div>
 
-<!-- AUDIO -->
 <audio id="footstepAudio" src="/static/audio/footsteps_loop.wav" loop preload="auto"></audio>
 <audio id="voiceAudio" preload="auto"></audio>
 
-<!-- DATA FROM FLASK -->
 <script id="streets-data" type="application/json">
   {{ streets | tojson | safe }}
 </script>
@@ -495,767 +485,631 @@
   {{ selected_street | tojson | safe if selected_street else 'null' }}
 </script>
 
-
 <script type="module">
-/* ================== GLOBALS ================== */
-const STREETS = JSON.parse(document.getElementById("streets-data").textContent);
-const SELECTED = JSON.parse(document.getElementById("selected-street-data").textContent);
+  let markerEls = [];
 
-const video        = document.getElementById("streetVideo");
-const vsrc         = document.getElementById("videoSource");
-const avatar       = document.getElementById("avatarMV");
-const shadowEl     = document.getElementById("avatarShadow");
-const fadeLayer    = document.getElementById("fadeLayer");
-const nightOverlay = document.getElementById("nightOverlay");
-const footstepAudio = document.getElementById("footstepAudio");
+  const STREETS = JSON.parse(document.getElementById("streets-data").textContent);
+  const SELECTED = JSON.parse(document.getElementById("selected-street-data").textContent);
 
-const speechEl       = document.getElementById("avatarSpeech");
-const streetSpeechEl = document.getElementById("streetSpeech"); // right-side bubble
-const voiceAudio     = document.getElementById("voiceAudio");   // main voice audio tag
+  const video         = document.getElementById("streetVideo");
+  const vsrc          = document.getElementById("videoSource");
+  const avatar        = document.getElementById("avatarMV");
+  const shadowEl      = document.getElementById("avatarShadow");
+  const fadeLayer     = document.getElementById("fadeLayer");
+  const nightOverlay  = document.getElementById("nightOverlay");
+  const footstepAudio = document.getElementById("footstepAudio");
 
-const settingsBtn     = document.getElementById("settingsBtn");
-const settingsPanel   = document.getElementById("settingsPanel");
-const setVideoMuted   = document.getElementById("setVideoMuted");
-const setVideoSlow    = document.getElementById("setVideoSlow");
-const setHideAvatar   = document.getElementById("setHideAvatar");
-const setWalkNoAvatar = document.getElementById("setWalkNoAvatar");
-const setNightMode    = document.getElementById("setNightMode");
+  const speechEl        = document.getElementById("avatarSpeech");
+  const streetSpeechEl  = document.getElementById("streetSpeech");
+  const voiceAudio      = document.getElementById("voiceAudio");
 
-const joystickBase = document.getElementById("joystickBase");
-const joystickKnob = document.getElementById("joystickKnob");
+  const settingsBtn      = document.getElementById("settingsBtn");
+  const settingsPanel    = document.getElementById("settingsPanel");
+  const setVideoMuted    = document.getElementById("setVideoMuted");
+  const setVideoSlow     = document.getElementById("setVideoSlow");
+  const setHideAvatar    = document.getElementById("setHideAvatar");
+  const setWalkNoAvatar  = document.getElementById("setWalkNoAvatar");
+  const setNightMode     = document.getElementById("setNightMode");
 
-let currentIndex       = -1;
-let currentVideos      = [];
-let currentVideoIndex  = 0;
-let currentGender      = "male";
+  const joystickBase = document.getElementById("joystickBase");
+  const joystickKnob = document.getElementById("joystickKnob");
 
-let yawCurrent   = 180;
-let yawTarget    = 180;
-let currentDir   = 0;
-let reversePlaying = false;
-let headBob      = 0;
-let bobDirection = 1;
-let strafe       = 0;
-let strafeOffset = 0;
-const STRAFE_MAX = 120;
+  let currentIndex       = -1;
+  let currentVideos      = [];
+  let currentVideoIndex  = 0;
+  let currentGender      = "male";
 
-let joyActive    = false;
-let fullMapReady = false;
-let fullMap;
+  let yawCurrent   = 180;
+  let yawTarget    = 180;
+  let currentDir   = 0;
+  let reversePlaying = false;
+  let headBob      = 0;
+  let bobDirection = 1;
+  let strafe       = 0;
+  let strafeOffset = 0;
+  const STRAFE_MAX = 120;
 
-/* ========== AVATAR GLBs PRELOAD ========== */
-const avatarSources = {
-  male: {
-    idle: "/static/avatars/male/idle.glb",
-    walk: "/static/avatars/male/walk.glb"
-  },
-  female: {
-    idle: "/static/avatars/female/idle.glb",
-    walk: "/static/avatars/female/walk.glb"
+  let joyActive    = false;
+  let fullMapReady = false;
+  let fullMap;
+
+  const avatarSources = {
+    male: {
+      idle: "/static/avatars/male/idle.glb",
+      walk: "/static/avatars/male/walk.glb"
+    },
+    female: {
+      idle: "/static/avatars/female/idle.glb",
+      walk: "/static/avatars/female/walk.glb"
+    }
+  };
+
+  function preloadAvatars() {
+    Object.values(avatarSources).forEach(group => {
+      Object.values(group).forEach(url => {
+        fetch(url).catch(() => {});
+      });
+    });
   }
-};
+  preloadAvatars();
 
-function preloadAvatars() {
-  Object.values(avatarSources).forEach(group => {
-    Object.values(group).forEach(url => {
-      fetch(url).catch(() => {});
+  const dialogues = {
+    male: [
+      { q: "Good morning!", a: "Good morning! Have a nice day!", qFile: "/static/audio/greetings/male/male_greet_1.mp3", aFile: "/static/audio/street/reply_1.mp3" },
+      { q: "Hello there!", a: "Hi! Welcome to the street!", qFile: "/static/audio/greetings/male/male_greet_2.mp3", aFile: "/static/audio/street/reply_2.mp3" },
+      { q: "Hey, ready for a walk?", a: "Yes! Enjoy your walk!", qFile: "/static/audio/greetings/male/male_greet_3.mp3", aFile: "/static/audio/street/reply_3.mp3" },
+      { q: "Nice to see you here!", a: "Nice to see you too, enjoy this place!", qFile: "/static/audio/greetings/male/male_greet_4.mp3", aFile: "/static/audio/street/reply_4.mp3" },
+      { q: "Beautiful morning, right?", a: "Perfect time for a street walk!", qFile: "/static/audio/greetings/male/male_greet_5.mp3", aFile: "/static/audio/street/reply_5.mp3" },
+      { q: "Ready to explore this street?", a: "Of course, let’s see what’s around!", qFile: "/static/audio/greetings/male/male_greet_6.mp3", aFile: "/static/audio/street/reply_6.mp3" },
+      { q: "Do you like this street?", a: "Yes, it’s one of my favorites!", qFile: "/static/audio/greetings/male/male_greet_7.mp3", aFile: "/static/audio/street/reply_7.mp3" },
+      { q: "Thanks for walking with me.", a: "Anytime! Keep exploring!", qFile: "/static/audio/greetings/male/male_greet_8.mp3", aFile: "/static/audio/street/reply_8.mp3" },
+      { q: "How is your day going?", a: "Pretty good, hope yours is great too!", qFile: "/static/audio/greetings/male/male_greet_9.mp3", aFile: "/static/audio/street/reply_9.mp3" },
+      { q: "Let’s keep moving forward.", a: "Sure, the next street looks amazing!", qFile: "/static/audio/greetings/male/male_greet_10.mp3", aFile: "/static/audio/street/reply_10.mp3" }
+    ],
+    female: [
+      { q: "Hello, how are you today?", a: "I’m good! Have a lovely day!", qFile: "/static/audio/greetings/female/female_greet_1.mp3", aFile: "/static/audio/street/reply_1.mp3" },
+      { q: "Hi, let’s take a walk.", a: "Sure! Welcome to the street!", qFile: "/static/audio/greetings/female/female_greet_2.mp3", aFile: "/static/audio/street/reply_2.mp3" },
+      { q: "Good morning!", a: "Good morning! Enjoy your walk!", qFile: "/static/audio/greetings/female/female_greet_3.mp3", aFile: "/static/audio/street/reply_3.mp3" },
+      { q: "Nice to meet you here!", a: "Nice to meet you too, enjoy this view!", qFile: "/static/audio/greetings/female/female_greet_4.mp3", aFile: "/static/audio/street/reply_4.mp3" },
+      { q: "It’s a beautiful day.", a: "Yes, perfect weather for walking!", qFile: "/static/audio/greetings/female/female_greet_5.mp3", aFile: "/static/audio/street/reply_5.mp3" },
+      { q: "Ready to explore this street?", a: "Definitely, let’s look around!", qFile: "/static/audio/greetings/female/female_greet_6.mp3", aFile: "/static/audio/street/reply_6.mp3" },
+      { q: "Do you like this place?", a: "Yes, it feels so cozy!", qFile: "/static/audio/greetings/female/female_greet_7.mp3", aFile: "/static/audio/street/reply_7.mp3" },
+      { q: "Thanks for joining me.", a: "You’re welcome, let’s keep going!", qFile: "/static/audio/greetings/female/female_greet_8.mp3", aFile: "/static/audio/street/reply_8.mp3" },
+      { q: "How’s your day so far?", a: "Pretty good, hope you’re doing well too!", qFile: "/static/audio/greetings/female/female_greet_9.mp3", aFile: "/static/audio/street/reply_9.mp3" },
+      { q: "Let’s walk a bit more.", a: "Yes, the next corner looks interesting!", qFile: "/static/audio/greetings/female/female_greet_10.mp3", aFile: "/static/audio/street/reply_10.mp3" }
+    ]
+  };
+
+  const teleportLines = {
+    male: [
+      { text: "Teleporting to the next street.", file: "/static/audio/teleport/male_tp_1.mp3" },
+      { text: "Jumping to another street!", file: "/static/audio/teleport/male_tp_2.mp3" },
+      { text: "Hold tight, moving ahead!", file: "/static/audio/teleport/male_tp_3.mp3" },
+      { text: "Let’s explore the next street.", file: "/static/audio/teleport/male_tp_4.mp3" },
+      { text: "Next stop, a new street!", file: "/static/audio/teleport/male_tp_5.mp3" }
+    ],
+    female: [
+      { text: "Teleporting to the next street.", file: "/static/audio/teleport/female_tp_1.mp3" },
+      { text: "Jumping to another cute street!", file: "/static/audio/teleport/female_tp_2.mp3" },
+      { text: "Hold on, we’re moving ahead!", file: "/static/audio/teleport/female_tp_3.mp3" },
+      { text: "Let’s explore the next street together.", file: "/static/audio/teleport/female_tp_4.mp3" },
+      { text: "New street coming up!", file: "/static/audio/teleport/female_tp_5.mp3" }
+    ]
+  };
+
+  function preloadVoices() {
+    Object.values(dialogues).forEach(list => {
+      list.forEach(pair => {
+        if (pair.qFile) new Audio(pair.qFile);
+        if (pair.aFile) new Audio(pair.aFile);
+      });
     });
-  });
-}
-preloadAvatars();
-
-/* ============================================================
-   DIALOGUE PAIRS  (YOU ONLY EDIT FILE PATHS + TEXT HERE)
-   Format: { q, a, qFile, aFile }
-============================================================ */
-const dialogues = {
-  male: [
-    {
-      q: "Good morning!",
-      a: "Good morning! Have a nice day!",
-      qFile: "/static/audio/greetings/male/male_greet_1.mp3",
-      aFile: "/static/audio/street/reply_1.mp3"
-    },
-    {
-      q: "Hello there!",
-      a: "Hi! Welcome to the street!",
-      qFile: "/static/audio/greetings/male/male_greet_2.mp3",
-      aFile: "/static/audio/street/reply_2.mp3"
-    },
-    {
-      q: "Hey, ready for a walk?",
-      a: "Yes! Enjoy your walk!",
-      qFile: "/static/audio/greetings/male/male_greet_3.mp3",
-      aFile: "/static/audio/street/reply_3.mp3"
-    },
-    {
-      q: "Nice to see you here!",
-      a: "Nice to see you too, enjoy this place!",
-      qFile: "/static/audio/greetings/male/male_greet_4.mp3",
-      aFile: "/static/audio/street/reply_4.mp3"
-    },
-    {
-      q: "Beautiful morning, right?",
-      a: "Perfect time for a street walk!",
-      qFile: "/static/audio/greetings/male/male_greet_5.mp3",
-      aFile: "/static/audio/street/reply_5.mp3"
-    },
-    {
-      q: "Ready to explore this street?",
-      a: "Of course, let’s see what’s around!",
-      qFile: "/static/audio/greetings/male/male_greet_6.mp3",
-      aFile: "/static/audio/street/reply_6.mp3"
-    },
-    {
-      q: "Do you like this street?",
-      a: "Yes, it’s one of my favorites!",
-      qFile: "/static/audio/greetings/male/male_greet_7.mp3",
-      aFile: "/static/audio/street/reply_7.mp3"
-    },
-    {
-      q: "Thanks for walking with me.",
-      a: "Anytime! Keep exploring!",
-      qFile: "/static/audio/greetings/male/male_greet_8.mp3",
-      aFile: "/static/audio/street/reply_8.mp3"
-    },
-    {
-      q: "How is your day going?",
-      a: "Pretty good, hope yours is great too!",
-      qFile: "/static/audio/greetings/male/male_greet_9.mp3",
-      aFile: "/static/audio/street/reply_9.mp3"
-    },
-    {
-      q: "Let’s keep moving forward.",
-      a: "Sure, the next street looks amazing!",
-      qFile: "/static/audio/greetings/male/male_greet_10.mp3",
-      aFile: "/static/audio/street/reply_10.mp3"
-    }
-  ],
-  female: [
-    {
-      q: "Hello, how are you today?",
-      a: "I’m good! Have a lovely day!",
-      qFile: "/static/audio/greetings/female/female_greet_1.mp3",
-      aFile: "/static/audio/street/reply_1.mp3"
-    },
-    {
-      q: "Hi, let’s take a walk.",
-      a: "Sure! Welcome to the street!",
-      qFile: "/static/audio/greetings/female/female_greet_2.mp3",
-      aFile: "/static/audio/street/reply_2.mp3"
-    },
-    {
-      q: "Good morning!",
-      a: "Good morning! Enjoy your walk!",
-      qFile: "/static/audio/greetings/female/female_greet_3.mp3",
-      aFile: "/static/audio/street/reply_3.mp3"
-    },
-    {
-      q: "Nice to meet you here!",
-      a: "Nice to meet you too, enjoy this view!",
-      qFile: "/static/audio/greetings/female/female_greet_4.mp3",
-      aFile: "/static/audio/street/reply_4.mp3"
-    },
-    {
-      q: "It’s a beautiful day.",
-      a: "Yes, perfect weather for walking!",
-      qFile: "/static/audio/greetings/female/female_greet_5.mp3",
-      aFile: "/static/audio/street/reply_5.mp3"
-    },
-    {
-      q: "Ready to explore this street?",
-      a: "Definitely, let’s look around!",
-      qFile: "/static/audio/greetings/female/female_greet_6.mp3",
-      aFile: "/static/audio/street/reply_6.mp3"
-    },
-    {
-      q: "Do you like this place?",
-      a: "Yes, it feels so cozy!",
-      qFile: "/static/audio/greetings/female/female_greet_7.mp3",
-      aFile: "/static/audio/street/reply_7.mp3"
-    },
-    {
-      q: "Thanks for joining me.",
-      a: "You’re welcome, let’s keep going!",
-      qFile: "/static/audio/greetings/female/female_greet_8.mp3",
-      aFile: "/static/audio/street/reply_8.mp3"
-    },
-    {
-      q: "How’s your day so far?",
-      a: "Pretty good, hope you’re doing well too!",
-      qFile: "/static/audio/greetings/female/female_greet_9.mp3",
-      aFile: "/static/audio/street/reply_9.mp3"
-    },
-    {
-      q: "Let’s walk a bit more.",
-      a: "Yes, the next corner looks interesting!",
-      qFile: "/static/audio/greetings/female/female_greet_10.mp3",
-      aFile: "/static/audio/street/reply_10.mp3"
-    }
-  ]
-};
-
-/* ============================================================
-   TELEPORT LINES (RANDOM FUN LINES)
-   Format: { text, file }
-============================================================ */
-const teleportLines = {
-  male: [
-    {
-      text: "Teleporting to the next street.",
-      file: "/static/audio/teleport/male_tp_1.mp3"
-    },
-    {
-      text: "Jumping to another street!",
-      file: "/static/audio/teleport/male_tp_2.mp3"
-    },
-    {
-      text: "Hold tight, moving ahead!",
-      file: "/static/audio/teleport/male_tp_3.mp3"
-    },
-    {
-      text: "Let’s explore the next street.",
-      file: "/static/audio/teleport/male_tp_4.mp3"
-    },
-    {
-      text: "Next stop, a new street!",
-      file: "/static/audio/teleport/male_tp_5.mp3"
-    }
-  ],
-  female: [
-    {
-      text: "Teleporting to the next street.",
-      file: "/static/audio/teleport/female_tp_1.mp3"
-    },
-    {
-      text: "Jumping to another cute street!",
-      file: "/static/audio/teleport/female_tp_2.mp3"
-    },
-    {
-      text: "Hold on, we’re moving ahead!",
-      file: "/static/audio/teleport/female_tp_3.mp3"
-    },
-    {
-      text: "Let’s explore the next street together.",
-      file: "/static/audio/teleport/female_tp_4.mp3"
-    },
-    {
-      text: "New street coming up!",
-      file: "/static/audio/teleport/female_tp_5.mp3"
-    }
-  ]
-};
-
-/* ========== PRELOAD VOICES ========== */
-function preloadVoices() {
-  // Greeting + reply pairs
-  Object.values(dialogues).forEach(list => {
-    list.forEach(pair => {
-      if (pair.qFile) {
-        const a = new Audio();
-        a.src = pair.qFile;
-      }
-      if (pair.aFile) {
-        const b = new Audio();
-        b.src = pair.aFile;
-      }
+    Object.values(teleportLines).forEach(list => {
+      list.forEach(line => {
+        if (line.file) new Audio(line.file);
+      });
     });
-  });
+  }
+  preloadVoices();
 
-  // Teleport lines
-  Object.values(teleportLines).forEach(list => {
-    list.forEach(line => {
-      if (line.file) {
-        const a = new Audio();
-        a.src = line.file;
-      }
-    });
-  });
-}
-preloadVoices();
+  let speechTimeout       = null;
+  let streetSpeechTimeout = null;
 
-/* ========== SPEECH + VOICE HELPERS ========== */
-let speechTimeout       = null;
-let streetSpeechTimeout = null;
+  function showAvatarSpeech(text, duration = 2300) {
+    speechEl.textContent = text;
+    speechEl.classList.add("visible");
+    clearTimeout(speechTimeout);
+    speechTimeout = setTimeout(() => {
+      speechEl.classList.remove("visible");
+    }, duration);
+  }
 
-/* Avatar bubble */
-function showAvatarSpeech(text, duration = 2300) {
-  if (!speechEl) return;
-  speechEl.textContent = text;
-  speechEl.classList.add("visible");
-  if (speechTimeout) clearTimeout(speechTimeout);
-  speechTimeout = setTimeout(() => {
-    speechEl.classList.remove("visible");
-  }, duration);
-}
+  function showStreetSpeech(text, duration = 2300) {
+    streetSpeechEl.textContent = text;
+    streetSpeechEl.classList.add("visible");
+    clearTimeout(streetSpeechTimeout);
+    streetSpeechTimeout = setTimeout(() => {
+      streetSpeechEl.classList.remove("visible");
+    }, duration);
+  }
 
-/* Street bubble (always on right side) */
-function showStreetSpeech(text, duration = 2300) {
-  if (!streetSpeechEl) return;
-  streetSpeechEl.textContent = text;
-  streetSpeechEl.classList.add("visible");
-  if (streetSpeechTimeout) clearTimeout(streetSpeechTimeout);
-  streetSpeechTimeout = setTimeout(() => {
-    streetSpeechEl.classList.remove("visible");
-  }, duration);
-}
-
-/* Single audio element for all lines */
-function playVoice(file) {
-  if (!voiceAudio || !file) return;
-  try {
+  function playVoice(file) {
+    if (!file) return;
     voiceAudio.pause();
     voiceAudio.currentTime = 0;
     voiceAudio.src = file;
     voiceAudio.play().catch(() => {});
-  } catch (e) {
-    // ignore
-  }
-}
-
-function speakAvatarLine(text, file, duration) {
-  showAvatarSpeech(text, duration || 2200);
-  playVoice(file);
-}
-
-function speakStreetLine(text, file, duration) {
-  showStreetSpeech(text, duration || 2200);
-  playVoice(file);
-}
-
-/* ============================================================
-   IMPROVED GREETING SYSTEM (Q + REPLY PAIR)
-============================================================ */
-const GREETING_COOLDOWN = 6000; // 6s
-let lastGreetingAt = 0;
-
-function canGreet() {
-  const now = Date.now();
-  return (now - lastGreetingAt) > GREETING_COOLDOWN;
-}
-
-function pickGreetingPair() {
-  const list = dialogues[currentGender] || dialogues.male;
-  if (!list || !list.length) return null;
-  return list[Math.floor(Math.random() * list.length)];
-}
-
-/* Avatar + street conversation */
-function triggerGreeting() {
-  if (!canGreet()) return;
-
-  const pair = pickGreetingPair();
-  if (!pair) return;
-
-  lastGreetingAt = Date.now();
-
-  // Avatar asks / greets
-  speakAvatarLine(pair.q, pair.qFile, 1600);
-
-  // Street replies a bit later
-  if (pair.a && pair.aFile) {
-    setTimeout(() => {
-      speakStreetLine(pair.a, pair.aFile, 2000);
-    }, 1400);
-  }
-}
-
-/* Called whenever walking STARTS from stop */
-function onWalkStart() {
-  triggerGreeting();
-}
-
-/* ================== VIDEO LOADING ================== */
-function loadStreet(street) {
-  document.getElementById("streetName").textContent = street.name || "Untitled Street";
-  document.getElementById("streetLocation").textContent =
-    (street.city || "") +
-    (street.city && street.country ? ", " : "") +
-    (street.country || "");
-
-  currentVideos = [];
-  currentVideoIndex = 0;
-
-  if (Array.isArray(street.videos) && street.videos.length) {
-    currentVideos = street.videos.map(v => v.url).filter(Boolean);
-  } else if (street.videoUrl) {
-    currentVideos = [street.videoUrl];
   }
 
-  const url = currentVideos[0] || "";
-  vsrc.src = url;
-  video.load();
-  video.currentTime = 0;
-  video.pause();
-}
+  function speakAvatarLine(text, file, duration) {
+    showAvatarSpeech(text, duration || 2200);
+    playVoice(file);
+  }
 
-function loadStreetByIndex(i) {
-  if (i < 0 || i >= STREETS.length) return;
-  currentIndex = i;
-  loadStreet(STREETS[i]);
-}
+  function speakStreetLine(text, file, duration) {
+    showStreetSpeech(text, duration || 2200);
+    playVoice(file);
+  }
 
-/* ================== PLAYBACK ================== */
-function playForward() {
-  reversePlaying = false;
-  const slow = setVideoSlow.checked;
-  video.playbackRate = slow ? 0.5 : 1;
-  video.play().catch(() => {});
-}
+  const GREETING_COOLDOWN = 6000;
+  let lastGreetingAt = 0;
 
-function playReverse() {
-  reversePlaying = true;
-  video.pause();
-  function frameBack() {
-    if (!reversePlaying) return;
-    const slow = setVideoSlow.checked;
-    const step = slow ? 0.008 : 0.016;
-    video.currentTime -= step;
-    if (video.currentTime <= 0.02) {
-      video.currentTime = video.duration || 0;
+  function triggerGreeting() {
+    const now = Date.now();
+    if (now - lastGreetingAt < GREETING_COOLDOWN) return;
+    const list = dialogues[currentGender] || dialogues.male;
+    if (!list.length) return;
+    const pair = list[Math.floor(Math.random() * list.length)];
+    lastGreetingAt = now;
+    speakAvatarLine(pair.q, pair.qFile, 1600);
+    if (pair.a && pair.aFile) {
+      setTimeout(() => {
+        speakStreetLine(pair.a, pair.aFile, 2000);
+      }, 1400);
+    }
+  }
+
+  function onWalkStart() {
+    triggerGreeting();
+  }
+
+  function loadStreet(street) {
+    const nameEl = document.getElementById("streetName");
+    const locEl = document.getElementById("streetLocation");
+
+    nameEl.textContent = street.name || "Untitled Street";
+    locEl.textContent =
+      (street.city || "") +
+      (street.city && street.country ? ", " : "") +
+      (street.country || "");
+
+    currentVideos = [];
+    currentVideoIndex = 0;
+
+    if (Array.isArray(street.videos) && street.videos.length) {
+      currentVideos = street.videos.map(v => v.url).filter(Boolean);
+    } else if (street.videoUrl) {
+      currentVideos = [street.videoUrl];
+    }
+
+    const url = currentVideos[0] || "";
+    if (vsrc.src !== url) {
+      vsrc.src = url;
+      video.load();
+    }
+    video.currentTime = 0;
+    video.pause();
+  }
+
+  function loadStreetByIndex(i) {
+    if (i < 0 || i >= STREETS.length) return;
+    currentIndex = i;
+    loadStreet(STREETS[i]);
+    updateMapMarkerHighlight();
+
+    if (fullMap && STREETS[i]) {
+      const s = STREETS[i];
+      fullMap.flyTo({
+        center: [parseFloat(s.lng), parseFloat(s.lat)],
+        zoom: 12,
+        speed: 0.9
+      });
+    }
+  }
+
+  function playForward() {
+    reversePlaying = false;
+    video.playbackRate = setVideoSlow.checked ? 0.5 : 1;
+    video.play().catch(() => {});
+  }
+
+  function playReverse() {
+    reversePlaying = true;
+    video.pause();
+    function frameBack() {
+      if (!reversePlaying) return;
+      const step = setVideoSlow.checked ? 0.008 : 0.016;
+      video.currentTime -= step;
+      if (video.currentTime <= 0.02) {
+        video.currentTime = video.duration || 0;
+      }
+      requestAnimationFrame(frameBack);
     }
     requestAnimationFrame(frameBack);
   }
-  requestAnimationFrame(frameBack);
-}
 
-function setAvatarState() {
-  const state = currentDir === 0 ? "idle" : "walk";
-  const src = avatarSources[currentGender]
-    ? avatarSources[currentGender][state]
-    : null;
-  if (src) avatar.src = src;
-}
+  function setAvatarState() {
+    const state = currentDir === 0 ? "idle" : "walk";
+    const srcSet = avatarSources[currentGender] || avatarSources.male;
+    const src = srcSet[state];
+    if (src && avatar.src !== src) avatar.src = src;
+  }
 
-/* Footsteps */
-function updateFootsteps() {
-  if (currentDir !== 0) {
-    if (footstepAudio.paused) {
-      footstepAudio.play().catch(() => {});
+  function updateFootsteps() {
+    if (currentDir !== 0) {
+      if (footstepAudio.paused) {
+        footstepAudio.play().catch(() => {});
+      }
+    } else {
+      footstepAudio.pause();
+      footstepAudio.currentTime = 0;
     }
-  } else {
-    footstepAudio.pause();
-    footstepAudio.currentTime = 0;
   }
-}
 
-/* ================== NEAREST TELEPORT ================== */
-function haversine(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) *
-      Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
+  function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) *
+        Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
 
-function nearestStreetIndex() {
-  const base = STREETS[currentIndex];
-  if (!base) return -1;
-  let best = -1;
-  let bestDist = Infinity;
-  STREETS.forEach((s, i) => {
-    if (i === currentIndex) return;
-    const d = haversine(
-      parseFloat(base.lat),
-      parseFloat(base.lng),
-      parseFloat(s.lat),
-      parseFloat(s.lng)
-    );
-    if (!Number.isNaN(d) && d < bestDist) {
-      bestDist = d;
-      best = i;
+  function nearestStreetIndex() {
+    const base = STREETS[currentIndex];
+    if (!base) return -1;
+    let best = -1;
+    let bestDist = Infinity;
+    const baseLat = parseFloat(base.lat);
+    const baseLng = parseFloat(base.lng);
+
+    STREETS.forEach((s, i) => {
+      if (i === currentIndex) return;
+      const d = haversine(
+        baseLat,
+        baseLng,
+        parseFloat(s.lat),
+        parseFloat(s.lng)
+      );
+      if (!Number.isNaN(d) && d < bestDist) {
+        bestDist = d;
+        best = i;
+      }
+    });
+    return best;
+  }
+
+  async function teleportNearest() {
+    const next = nearestStreetIndex();
+    if (next === -1) return;
+
+    const list = teleportLines[currentGender] || teleportLines.male;
+    if (list && list.length) {
+      const line = list[Math.floor(Math.random() * list.length)];
+      speakAvatarLine(line.text, line.file, 2200);
     }
-  });
-  return best;
-}
 
-async function teleportNearest() {
-  const next = nearestStreetIndex();
-  if (next === -1) return;
-
-  // Teleport voice – random fun line per gender
-  const list = teleportLines[currentGender] || teleportLines.male;
-  if (list && list.length) {
-    const line = list[Math.floor(Math.random() * list.length)];
-    speakAvatarLine(line.text, line.file, 2600);
-  } else {
-    showAvatarSpeech("Teleporting to the next street.", 2600);
+    fadeLayer.style.opacity = "1";
+    await new Promise(r => setTimeout(r, 350));
+    loadStreetByIndex(next);
+    fadeLayer.style.opacity = "0";
   }
 
-  fadeLayer.style.opacity = "1";
-  await new Promise(r => setTimeout(r, 450));
-  loadStreetByIndex(next);
-  fadeLayer.style.opacity = "0";
-}
-
-/* ================== VIDEO ENDED ================== */
-video.addEventListener("ended", () => {
-  if (currentVideos.length > 1 && currentVideoIndex < currentVideos.length - 1) {
-    currentVideoIndex++;
-    vsrc.src = currentVideos[currentVideoIndex] || "";
-    video.load();
-    video.currentTime = 0;
-    if (currentDir === 1) playForward();
-    return;
-  }
-  reversePlaying = false;
-  currentDir = 0;
-  video.pause();
-  setAvatarState();
-  updateFootsteps();
-  teleportNearest();
-});
-
-/* ================== KEYBOARD CONTROLS ================== */
-window.addEventListener("keydown", e => {
-  const k = e.key.toLowerCase();
-  if (k === "arrowleft" || k === "a") {
-    yawTarget -= 10;
-  } else if (k === "arrowright" || k === "d") {
-    yawTarget += 10;
-  } else if (k === "arrowup" || k === "w") {
-    const wasStopped = currentDir === 0;
-    currentDir = 1;
-    playForward();
-    setAvatarState();
-    updateFootsteps();
-    if (wasStopped) onWalkStart();   // 🔔 trigger greeting here
-  } else if (k === "arrowdown" || k === "s") {
-    currentDir = -1;
-    playReverse();
-    setAvatarState();
-    updateFootsteps();
-  } else if (k === "q") {
-    strafe = -1;
-  } else if (k === "e") {
-    strafe = 1;
-  }
-});
-
-window.addEventListener("keyup", e => {
-  const k = e.key.toLowerCase();
-  if (["arrowup", "w", "arrowdown", "s"].includes(k)) {
+  video.addEventListener("ended", () => {
+    if (currentVideos.length > 1 && currentVideoIndex < currentVideos.length - 1) {
+      currentVideoIndex++;
+      const nextUrl = currentVideos[currentVideoIndex] || "";
+      vsrc.src = nextUrl;
+      video.load();
+      video.currentTime = 0;
+      if (currentDir === 1) playForward();
+      return;
+    }
+    reversePlaying = false;
     currentDir = 0;
-    reversePlaying = false;
     video.pause();
     setAvatarState();
     updateFootsteps();
-  }
-  if (k === "q" || k === "e") {
-    strafe = 0;
-  }
-});
-
-/* ================== GENDER SWITCH ================== */
-document.querySelectorAll(".gender-buttons button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document
-      .querySelectorAll(".gender-buttons button")
-      .forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    currentGender = btn.dataset.gender;
-    setAvatarState();
+    teleportNearest();
   });
-});
 
-/* ================== JOYSTICK ================== */
-function joyMove(ev) {
-  const rect = joystickBase.getBoundingClientRect();
-  const cx = rect.left + rect.width / 2;
-  const cy = rect.top + rect.height / 2;
-  const dx = ev.clientX - cx;
-  const dy = ev.clientY - cy;
-  const r  = rect.width / 2;
-
-  const nx = dx / r;
-  const ny = dy / r;
-
-  joystickKnob.style.transform =
-    "translate(" + nx * 30 + "px, " + ny * 30 + "px)";
-
-  const prevDir = currentDir;
-
-  if (Math.abs(ny) > 0.2) currentDir = ny < 0 ? 1 : -1;
-  else currentDir = 0;
-
-  if (Math.abs(nx) > 0.2) strafe = nx > 0 ? 1 : -1;
-  else strafe = 0;
-
-  if (currentDir === 1) {
-    playForward();
-    if (prevDir === 0) onWalkStart();   // 🔔 joystick start greeting here
-  } else if (currentDir === -1) {
-    playReverse();
-  } else {
-    reversePlaying = false;
-    video.pause();
-  }
-  setAvatarState();
-  updateFootsteps();
-}
-
-joystickBase.addEventListener("pointerdown", e => {
-  joyActive = true;
-  joystickBase.setPointerCapture(e.pointerId);
-  joyMove(e);
-});
-joystickBase.addEventListener("pointermove", e => {
-  if (joyActive) joyMove(e);
-});
-function resetJoystick() {
-  joyActive = false;
-  joystickKnob.style.transform = "translate(0,0)";
-  currentDir = 0;
-  strafe = 0;
-  reversePlaying = false;
-  video.pause();
-  setAvatarState();
-  updateFootsteps();
-}
-joystickBase.addEventListener("pointerup", resetJoystick);
-joystickBase.addEventListener("pointercancel", resetJoystick);
-
-/* ================== SETTINGS PANEL ================== */
-settingsBtn.addEventListener("click", () => {
-  settingsPanel.classList.toggle("open");
-});
-
-setVideoMuted.addEventListener("change", () => {
-  video.muted = setVideoMuted.checked;
-});
-setVideoSlow.addEventListener("change", () => {
-  if (!video.paused && !reversePlaying) {
-    video.playbackRate = setVideoSlow.checked ? 0.5 : 1;
-  }
-});
-
-function applyAvatarVisibility() {
-  const hide = setHideAvatar.checked || setWalkNoAvatar.checked;
-  avatar.style.display = hide ? "none" : "block";
-  shadowEl.style.display = hide ? "none" : "block";
-}
-setHideAvatar.addEventListener("change", () => {
-  if (setHideAvatar.checked) setWalkNoAvatar.checked = false;
-  applyAvatarVisibility();
-});
-setWalkNoAvatar.addEventListener("change", () => {
-  if (setWalkNoAvatar.checked) setHideAvatar.checked = false;
-  applyAvatarVisibility();
-});
-
-setNightMode.addEventListener("change", () => {
-  nightOverlay.style.opacity = setNightMode.checked ? "1" : "0";
-});
-
-video.muted = true;
-
-/* ================== ANIMATION LOOP ================== */
-function tick() {
-  yawCurrent += (yawTarget - yawCurrent) * 0.18;
-  avatar.orientation = "0deg 0deg " + yawCurrent + "deg";
-
-  if (currentDir !== 0) {
-    headBob += bobDirection * 0.25;
-    if (headBob > 2 || headBob < -2) bobDirection *= -1;
-  } else {
-    headBob *= 0.85;
-  }
-
-  if (strafe !== 0) {
-    strafeOffset += strafe * 4;
-    if (strafeOffset > STRAFE_MAX)  strafeOffset = STRAFE_MAX;
-    if (strafeOffset < -STRAFE_MAX) strafeOffset = -STRAFE_MAX;
-  } else {
-    strafeOffset *= 0.9;
-  }
-
-  video.style.transform  = "translateY(" + headBob + "px)";
-  avatar.style.transform = "translate(calc(-50% + " + strafeOffset + "px), -15px)";
-
-  requestAnimationFrame(tick);
-}
-requestAnimationFrame(tick);
-
-/* ================== MAPLIBRE (LAZY) ================== */
-function loadMap() {
-  if (fullMapReady) return;
-  fullMap = new maplibregl.Map({
-    container: "fullMapContainer",
-    style: "https://demotiles.maplibre.org/style.json",
-    center: [0, 20],
-    zoom: 2
+  window.addEventListener("keydown", e => {
+    const k = e.key.toLowerCase();
+    if (k === "arrowleft" || k === "a") {
+      yawTarget -= 10;
+    } else if (k === "arrowright" || k === "d") {
+      yawTarget += 10;
+    } else if (k === "arrowup" || k === "w") {
+      const wasStopped = currentDir === 0;
+      currentDir = 1;
+      playForward();
+      setAvatarState();
+      updateFootsteps();
+      if (wasStopped) onWalkStart();
+    } else if (k === "arrowdown" || k === "s") {
+      currentDir = -1;
+      playReverse();
+      setAvatarState();
+      updateFootsteps();
+    } else if (k === "q") {
+      strafe = -1;
+    } else if (k === "e") {
+      strafe = 1;
+    }
   });
-  fullMap.addControl(new maplibregl.NavigationControl());
 
-  STREETS.forEach((s, i) => {
-    const m = new maplibregl.Marker().setLngLat([
-      parseFloat(s.lng),
-      parseFloat(s.lat)
-    ]).addTo(fullMap);
-    m.getElement().addEventListener("click", () => {
-      loadStreetByIndex(i);
-      document.getElementById("fullMapOverlay").style.display = "none";
+  window.addEventListener("keyup", e => {
+    const k = e.key.toLowerCase();
+    if (["arrowup", "w", "arrowdown", "s"].includes(k)) {
+      currentDir = 0;
+      reversePlaying = false;
+      video.pause();
+      setAvatarState();
+      updateFootsteps();
+    }
+    if (k === "q" || k === "e") {
+      strafe = 0;
+    }
+  });
+
+  document.querySelectorAll(".gender-buttons button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document
+        .querySelectorAll(".gender-buttons button")
+        .forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentGender = btn.dataset.gender;
+      setAvatarState();
     });
   });
 
-  fullMapReady = true;
-}
+  function joyMove(ev) {
+    const rect = joystickBase.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = ev.clientX - cx;
+    const dy = ev.clientY - cy;
+    const r  = rect.width / 2;
 
-document.getElementById("miniMap").onclick = () => {
-  document.getElementById("fullMapOverlay").style.display = "flex";
-  loadMap();
-};
-document.getElementById("closeMapBtn").onclick = () => {
-  document.getElementById("fullMapOverlay").style.display = "none";
-};
+    const nx = dx / r;
+    const ny = dy / r;
 
-/* ================== INITIAL STREET ================== */
-if (SELECTED) {
-  const idx = STREETS.findIndex(s => s._id === SELECTED._id);
-  loadStreetByIndex(idx !== -1 ? idx : 0);
-} else if (Array.isArray(STREETS) && STREETS.length > 0) {
-  loadStreetByIndex(0);
-}
-/* =========================================================
-   STREET DESCRIPTION POPUP (FIXED FOR NEW UI)
-========================================================= */
+    joystickKnob.style.transform =
+      "translate(" + nx * 30 + "px, " + ny * 30 + "px)";
 
-const popup = document.getElementById("streetPopup");
-const popupTitle = document.getElementById("popupTitle");
-const popupCity = document.getElementById("popupCity");
-const popupCategory = document.getElementById("popupCategory");
-const popupDescription = document.getElementById("popupDescription");
-const popupClose = document.getElementById("popupClose");
+    const prevDir = currentDir;
 
-const streetNameEl = document.getElementById("streetName");  // NEW FIX
+    if (Math.abs(ny) > 0.2) currentDir = ny < 0 ? 1 : -1;
+    else currentDir = 0;
 
-streetNameEl.onclick = () => {
-  const name = streetNameEl.textContent;
-  const st = STREETS.find(s => s.name === name);
+    if (Math.abs(nx) > 0.2) strafe = nx > 0 ? 1 : -1;
+    else strafe = 0;
 
-  if (!st) return;
+    if (currentDir === 1) {
+      playForward();
+      if (prevDir === 0) onWalkStart();
+    } else if (currentDir === -1) {
+      playReverse();
+    } else {
+      reversePlaying = false;
+      video.pause();
+    }
+    setAvatarState();
+    updateFootsteps();
+  }
 
-  popupTitle.textContent = st.name;
-  popupCity.textContent = `📍 ${st.city || ""}${st.country ? ", " + st.country : ""}`;
-  popupCategory.textContent = st.category ? `🏷 Category: ${st.category}` : "🏷 No category";
-  popupDescription.textContent = st.description || "No description added.";
+  joystickBase.addEventListener("pointerdown", e => {
+    joyActive = true;
+    joystickBase.setPointerCapture(e.pointerId);
+    joyMove(e);
+  });
+  joystickBase.addEventListener("pointermove", e => {
+    if (joyActive) joyMove(e);
+  });
+  function resetJoystick() {
+    joyActive = false;
+    joystickKnob.style.transform = "translate(0,0)";
+    currentDir = 0;
+    strafe = 0;
+    reversePlaying = false;
+    video.pause();
+    setAvatarState();
+    updateFootsteps();
+  }
+  joystickBase.addEventListener("pointerup", resetJoystick);
+  joystickBase.addEventListener("pointercancel", resetJoystick);
 
-  popup.style.display = "flex";
-};
+  settingsBtn.addEventListener("click", () => {
+    settingsPanel.classList.toggle("open");
+  });
 
-popupClose.onclick = () => popup.style.display = "none";
+  setVideoMuted.addEventListener("change", () => {
+    video.muted = setVideoMuted.checked;
+  });
+  setVideoSlow.addEventListener("change", () => {
+    if (!video.paused && !reversePlaying) {
+      video.playbackRate = setVideoSlow.checked ? 0.5 : 1;
+    }
+  });
 
-// close popup if clicking outside card
-popup.onclick = e => {
-  if (e.target === popup) popup.style.display = "none";
-};
+  function applyAvatarVisibility() {
+    const hide = setHideAvatar.checked || setWalkNoAvatar.checked;
+    avatar.style.display = hide ? "none" : "block";
+    shadowEl.style.display = hide ? "none" : "block";
+  }
+  setHideAvatar.addEventListener("change", () => {
+    if (setHideAvatar.checked) setWalkNoAvatar.checked = false;
+    applyAvatarVisibility();
+  });
+  setWalkNoAvatar.addEventListener("change", () => {
+    if (setWalkNoAvatar.checked) setHideAvatar.checked = false;
+    applyAvatarVisibility();
+  });
 
+  setNightMode.addEventListener("change", () => {
+    nightOverlay.style.opacity = setNightMode.checked ? "1" : "0";
+  });
 
+  video.muted = true;
+
+  function tick() {
+    yawCurrent += (yawTarget - yawCurrent) * 0.18;
+    avatar.orientation = "0deg 0deg " + yawCurrent + "deg";
+
+    if (currentDir !== 0) {
+      headBob += bobDirection * 0.25;
+      if (headBob > 2 || headBob < -2) bobDirection *= -1;
+    } else {
+      headBob *= 0.85;
+    }
+
+    if (strafe !== 0) {
+      strafeOffset += strafe * 4;
+      if (strafeOffset > STRAFE_MAX)  strafeOffset = STRAFE_MAX;
+      if (strafeOffset < -STRAFE_MAX) strafeOffset = -STRAFE_MAX;
+    } else {
+      strafeOffset *= 0.9;
+    }
+
+    video.style.transform  = "translateY(" + headBob + "px)";
+    avatar.style.transform = "translate(calc(-50% + " + strafeOffset + "px), -15px)";
+
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  function updateMapMarkerHighlight() {
+    markerEls.forEach(({ el, index }) => {
+      if (index === currentIndex) {
+        el.classList.add("map-marker-selected");
+      } else {
+        el.classList.remove("map-marker-selected");
+      }
+    });
+  }
+
+  function loadMap() {
+    if (fullMapReady) return;
+
+    fullMap = new maplibregl.Map({
+      container: "fullMapContainer",
+      style: "https://api.maptiler.com/maps/streets/style.json?key=PqdU3M5vnOQK0dDQnkIq",
+      center: [0, 20],
+      zoom: 2,
+      pitch: 45,
+      bearing: -20
+    });
+
+    fullMap.addControl(new maplibregl.NavigationControl());
+
+    STREETS.forEach((s, i) => {
+      if (!s.lat || !s.lng) return;
+
+      const el = document.createElement("div");
+      el.style.width = "18px";
+      el.style.height = "18px";
+      el.style.borderRadius = "50%";
+      el.style.background = "#3b82f6";
+      el.style.border = "2px solid white";
+      el.style.cursor = "pointer";
+
+      const popup = new maplibregl.Popup({ offset: 16 }).setHTML(
+        `<div style="font-size:12px;color:#0f172a;">
+          <strong>${s.name || "Street"}</strong><br/>
+          <span>${s.city || ""}${s.country ? ", " + s.country : ""}</span>
+        </div>`
+      );
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([parseFloat(s.lng), parseFloat(s.lat)])
+        .setPopup(popup)
+        .addTo(fullMap);
+
+      markerEls.push({ index: i, el, marker });
+
+      el.addEventListener("click", () => {
+        currentIndex = i;
+        loadStreetByIndex(i);
+        updateMapMarkerHighlight();
+
+        const coords = marker.getLngLat();
+        fullMap.flyTo({
+          center: [coords.lng, coords.lat],
+          zoom: 13,
+          speed: 0.9
+        });
+
+        marker.togglePopup();
+        document.getElementById("fullMapOverlay").style.display = "none";
+      });
+    });
+
+    if (currentIndex !== -1 && STREETS[currentIndex]) {
+      const st = STREETS[currentIndex];
+      fullMap.flyTo({
+        center: [parseFloat(st.lng), parseFloat(st.lat)],
+        zoom: 8,
+        speed: 0.9
+      });
+    }
+
+    fullMapReady = true;
+  }
+
+  document.getElementById("miniMap").onclick = () => {
+    document.getElementById("fullMapOverlay").style.display = "flex";
+    loadMap();
+  };
+  document.getElementById("closeMapBtn").onclick = () => {
+    document.getElementById("fullMapOverlay").style.display = "none";
+  };
+
+  if (SELECTED) {
+    const idx = STREETS.findIndex(s => s._id === SELECTED._id);
+    loadStreetByIndex(idx !== -1 ? idx : 0);
+  } else if (Array.isArray(STREETS) && STREETS.length > 0) {
+    loadStreetByIndex(0);
+  }
+
+  const popupCard = document.getElementById("streetPopup");
+  const popupTitle = document.getElementById("popupTitle");
+  const popupCity = document.getElementById("popupCity");
+  const popupCategory = document.getElementById("popupCategory");
+  const popupDescription = document.getElementById("popupDescription");
+  const popupClose = document.getElementById("popupClose");
+  const streetNameEl = document.getElementById("streetName");
+
+  streetNameEl.onclick = () => {
+    const name = streetNameEl.textContent;
+    const st = STREETS.find(s => s.name === name);
+    if (!st) return;
+
+    popupTitle.textContent = st.name;
+    popupCity.textContent = `📍 ${st.city || ""}${st.country ? ", " + st.country : ""}`;
+    popupCategory.textContent = st.category ? `🏷 Category: ${st.category}` : "🏷 No category";
+    popupDescription.textContent = st.description || "No description added.";
+
+    popupCard.style.display = "flex";
+  };
+
+  popupClose.onclick = () => popupCard.style.display = "none";
+  popupCard.onclick = e => {
+    if (e.target === popupCard) popupCard.style.display = "none";
+  };
 </script>
 </body>
 </html>
