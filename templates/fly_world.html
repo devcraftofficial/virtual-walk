@@ -5,9 +5,14 @@
   <title>Fly Mode – Virtual Flight</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- MAPLIBRE for maps -->
-  <link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+  <!-- MAPLIBRE -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/maplibre-gl.css') }}">
+<script src="{{ url_for('static', filename='js/maplibre-gl.js') }}"></script>
+
+
+  <!-- MODEL-VIEWER (for drone) -->
+  <script type="module" src="{{ url_for('static', filename='js/model-viewer.min.js') }}"></script>
+
 
   <style>
     :root {
@@ -17,7 +22,9 @@
       --accent: #a855f7;
       --radius-lg: 18px;
     }
+
     *, *::before, *::after { box-sizing: border-box; }
+
     body {
       margin: 0;
       background: radial-gradient(circle at top, #020617, #000 80%);
@@ -25,6 +32,7 @@
       color: var(--text-main);
       overflow: hidden;
     }
+
     .viewer-panel {
       position: relative;
       width: 100%;
@@ -33,6 +41,7 @@
       justify-content: center;
       align-items: center;
     }
+
     .viewer-canvas {
       position: relative;
       width: 100%;
@@ -40,6 +49,8 @@
       background: black;
       overflow: hidden;
     }
+
+    /* Mini map circle */
     .mini-map {
       position: absolute;
       top: 16px;
@@ -55,6 +66,8 @@
       cursor: pointer;
     }
     .mini-map canvas { border-radius: 999px; }
+
+    /* Full map overlay */
     #fullMapOverlay {
       position: fixed;
       inset: 0;
@@ -90,6 +103,8 @@
       backdrop-filter: blur(4px);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
     }
+
+    /* Street info HUD */
     .street-info {
       position: absolute;
       top: 20px;
@@ -114,6 +129,8 @@
       color: #cbd5e1;
       line-height: 1.2;
     }
+
+    /* Video (flight view) */
     #streetVideo {
       position: absolute;
       inset: 0;
@@ -129,6 +146,21 @@
       transform: translateZ(0);
       backface-visibility: hidden;
     }
+
+    /* Drone model viewer */
+    #droneMV {
+      position: absolute;
+      top: 60%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 240px;
+      height: 260px;
+      pointer-events: none;
+      z-index: 5;
+      filter: drop-shadow(0 16px 40px rgba(0, 0, 0, 0.85));
+    }
+
+    /* Joystick */
     #joystickBase {
       position: absolute;
       bottom: 20px;
@@ -155,6 +187,8 @@
       touch-action: none;
       user-select: none;
     }
+
+    /* Fade layer */
     #fadeLayer {
       position: absolute;
       inset: 0;
@@ -165,6 +199,7 @@
       z-index: 110;
       user-select: none;
     }
+
     @media (max-width: 900px) {
       #joystickBase {
         bottom: calc(26px + env(safe-area-inset-bottom, 0px)) !important;
@@ -182,6 +217,21 @@
         top: 14px !important;
         left: 14px !important;
       }
+    }
+
+    .map-marker {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #2563eb;
+      border: 2px solid #fff;
+      box-shadow: 0 0 8px rgba(37, 99, 235, 0.7);
+    }
+    .map-marker-selected {
+      width: 22px !important;
+      height: 22px !important;
+      background: #38bdf8 !important;
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.9);
     }
   </style>
 </head>
@@ -214,6 +264,18 @@
       <source id="videoSource" src="">
     </video>
 
+    <model-viewer
+      id="droneMV"
+      src="/static/avatars/drone/drone.glb"
+      autoplay
+      shadow-intensity="0.9"
+      exposure="1.1"
+      disable-zoom
+      disable-pan
+      camera-controls="false"
+      camera-orbit="0deg 70deg 3m">
+    </model-viewer>
+
     <div id="joystickBase" aria-label="Movement joystick" role="application" tabindex="0">
       <div id="joystickKnob"></div>
     </div>
@@ -230,293 +292,376 @@
 </script>
 
 <script type="module">
-  const STREETS = JSON.parse(
-    document.getElementById('streets-data').textContent
-  );
-  const SELECTED_STREET = JSON.parse(
-    document.getElementById('selected-street-data').textContent
-  );
+const STREETS = JSON.parse(document.getElementById('streets-data').textContent || "[]");
+const SELECTED_STREET = JSON.parse(document.getElementById('selected-street-data').textContent || "null");
 
-  let miniMap, miniMarker;
-  let fullMap, fullMapReady = false;
+const miniMapEl       = document.getElementById("miniMap");
+const fullMapOverlay  = document.getElementById("fullMapOverlay");
+const fullMapContainer = document.getElementById("fullMapContainer");
+const closeMapBtn     = document.getElementById("closeMapBtn");
 
-  function initMiniMap() {
-    miniMap = new maplibregl.Map({
-      container: "miniMap",
-      style: "https://demotiles.maplibre.org/style.json",
-      center: [0, 20],
-      zoom: 1.5,
-      interactive: false,
-      attributionControl: false,
-    });
+const streetNameEl    = document.getElementById("streetName");
+const streetLocationEl = document.getElementById("streetLocation");
+
+const video           = document.getElementById("streetVideo");
+const vsrc            = document.getElementById("videoSource");
+
+const joystickBase    = document.getElementById("joystickBase");
+const joystickKnob    = document.getElementById("joystickKnob");
+
+const droneMV         = document.getElementById("droneMV");
+
+const droneAudio = new Audio("/static/audio/drone_loop.mp3");
+droneAudio.loop = true;
+droneAudio.volume = 0.6;
+
+let miniMap, miniMarker;
+let fullMap, fullMapReady = false;
+let fullMarkers = [];
+
+let currentStreetIndex = -1;
+let walkSpeed = 1;
+
+let yawCurrent = 0;
+let yawTarget  = 0;
+let headBob    = 0;
+let bobDirection = 1;
+
+let keyDir = 0;
+let joyDir = 0;
+let autoDir = 0;
+let currentDir = 0;
+let reversePlaying = false;
+let joyActive = false;
+
+let currentVideos     = [];
+let currentVideoIndex = 0;
+
+function safePlay() {
+  if (!video || !video.paused) return;
+  video.play().catch(() => {});
+}
+function safePause() {
+  if (!video || video.paused) return;
+  video.pause();
+}
+
+function updateDroneAudio() {
+  if (!droneAudio) return;
+  if (currentDir !== 0) {
+    if (droneAudio.paused) droneAudio.play().catch(() => {});
+  } else {
+    droneAudio.pause();
+    droneAudio.currentTime = 0;
   }
+}
 
-  function ensureFullMap() {
-    if (fullMapReady) return;
+/* Mini map & full map unchanged (omitted for brevity in logic) */
 
-    fullMap = new maplibregl.Map({
-      container: "fullMapContainer",
-      style: "https://demotiles.maplibre.org/style.json",
-      center: [0, 20],
-      zoom: 2.5,
-    });
-    fullMap.addControl(new maplibregl.NavigationControl());
-
-    STREETS.forEach((st, index) => {
-      const lat = parseFloat(st.lat);
-      const lng = parseFloat(st.lng);
-      if (Number.isNaN(lat) || Number.isNaN(lng)) return;
-
-      const marker = new maplibregl.Marker().setLngLat([lng, lat]).addTo(fullMap);
-      marker.getElement().addEventListener("click", () => {
-        loadStreetByIndex(index);
-        hideFullMap();
-      });
-    });
-
-    fullMapReady = true;
-  }
-
-  function updateMiniMapForStreet(street) {
-    if (!miniMap) return;
-    const lat = parseFloat(street.lat);
-    const lng = parseFloat(street.lng);
-    if (Number.isNaN(lat) || Number.isNaN(lng)) return;
-
-    miniMap.jumpTo({ center: [lng, lat], zoom: 14 });
-
-    if (!miniMarker) {
-      miniMarker = new maplibregl.Marker({ color: "#ef4444", scale: 0.9 })
-        .setLngLat([lng, lat])
-        .addTo(miniMap);
-    } else {
-      miniMarker.setLngLat([lng, lat]);
-    }
-  }
-
-  const miniMapEl = document.getElementById("miniMap");
-  const fullMapOverlay = document.getElementById("fullMapOverlay");
-  const closeMapBtn = document.getElementById("closeMapBtn");
-
-  function showFullMap() {
-    fullMapOverlay.style.display = "flex";
-    ensureFullMap();
-  }
-
-  function hideFullMap() {
-    fullMapOverlay.style.display = "none";
-  }
-
-  miniMapEl.addEventListener("click", showFullMap);
-  miniMapEl.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") showFullMap();
+function initMiniMap() {
+  miniMap = new maplibregl.Map({
+    container: "miniMap",
+    style: "https://api.maptiler.com/maps/streets-v2/style.json?key=PqdU3M5vnOQK0dDQnkIq",
+    center: [0, 20],
+    zoom: 1.5,
+    interactive: false,
+    attributionControl: false
   });
-  closeMapBtn.addEventListener("click", hideFullMap);
+}
 
-  initMiniMap();
+function updateMiniMapForStreet(street) {
+  if (!miniMap) return;
+  const lat = Number(street.lat);
+  const lng = Number(street.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
-  const video = document.getElementById("streetVideo");
-  const vsrc = document.getElementById("videoSource");
-  const fadeLayer = document.getElementById("fadeLayer");
-  const joystickBase = document.getElementById("joystickBase");
-  const joystickKnob = document.getElementById("joystickKnob");
+  miniMap.jumpTo({ center: [lng, lat], zoom: 14 });
 
-  let currentStreetIndex = -1;
-  let walkSpeed = 1;
-  let yawCurrent = 0;
-  let yawTarget = 0;
-  let headBob = 0;
-  let bobDirection = 1;
-  let keyDir = 0;
-  let joyDir = 0;
-  let autoDir = 0;
-  let currentDir = 0;
-  let reversePlaying = false;
-  let joyActive = false;
-
-  let currentVideos = [];
-  let currentVideoIndex = 0;
-
-  function safePlay() {
-    if (!video || !video.paused) return;
-    video.play().catch(() => {});
+  if (!miniMarker) {
+    miniMarker = new maplibregl.Marker({ color: "#a855f7", scale: 0.9 })
+      .setLngLat([lng, lat])
+      .addTo(miniMap);
+  } else {
+    miniMarker.setLngLat([lng, lat]);
   }
-  function safePause() {
-    if (!video || video.paused) return;
-    video.pause();
+}
+
+function ensureFullMap() {
+  if (fullMapReady) { highlightSelectedMarker(); return; }
+  fullMap = new maplibregl.Map({
+    container: "fullMapContainer",
+    style: "https://api.maptiler.com/maps/streets-v2/style.json?key=PqdU3M5vnOQK0dDQnkIq",
+    center: [0, 20],
+    zoom: 2.5,
+    renderWorldCopies: false
+  });
+  fullMap.addControl(new maplibregl.NavigationControl());
+
+  STREETS.forEach((st, index) => {
+    const lat = Number(st.lat);
+    const lng = Number(st.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+    const el = document.createElement("div");
+    el.className = "map-marker";
+
+    const marker = new maplibregl.Marker({ element: el })
+      .setLngLat([lng, lat])
+      .addTo(fullMap);
+
+    el.addEventListener("click", () => {
+      loadStreetByIndex(index);
+      highlightSelectedMarker();
+      hideFullMap();
+    });
+
+    fullMarkers.push({ element: el, index });
+  });
+
+  fullMapReady = true;
+  setTimeout(() => highlightSelectedMarker(), 300);
+}
+
+function highlightSelectedMarker() {
+  if (!fullMapReady) return;
+  if (currentStreetIndex < 0 || !STREETS[currentStreetIndex]) return;
+
+  const st = STREETS[currentStreetIndex];
+  const lat = Number(st.lat);
+  const lng = Number(st.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+  fullMarkers.forEach(m => {
+    m.element.classList.toggle("map-marker-selected", m.index === currentStreetIndex);
+  });
+
+  fullMap.flyTo({ center: [lng, lat], zoom: 10, speed: 0.9 });
+}
+
+function showFullMap() {
+  fullMapOverlay.style.display = "flex";
+  ensureFullMap();
+}
+function hideFullMap() {
+  fullMapOverlay.style.display = "none";
+}
+
+miniMapEl.addEventListener("click", showFullMap);
+miniMapEl.addEventListener("keydown", e => {
+  if (e.key === "Enter" || e.key === " ") showFullMap();
+});
+closeMapBtn.addEventListener("click", hideFullMap);
+
+/* Street / video load */
+
+function loadStreet(street) {
+  streetNameEl.textContent = street.name || "Flight";
+  streetLocationEl.textContent =
+    `${street.city || ""}${street.city && street.country ? ", " : ""}${street.country || ""}`;
+
+  currentVideos = [];
+  currentVideoIndex = 0;
+
+  if (street.videos && Array.isArray(street.videos) && street.videos.length > 0) {
+    currentVideos = street.videos.map(v => v.url).filter(Boolean);
+  } else if (street.videoUrl) {
+    currentVideos = [street.videoUrl];
   }
 
-  function loadStreet(street) {
-    document.getElementById("streetName").textContent = street.name || "Flight";
-    document.getElementById("streetLocation").textContent =
-      `${street.city || ""}${street.city && street.country ? ", " : ""}${street.country || ""}`;
+  const videoUrl = currentVideos[0] || "";
+  if (vsrc) vsrc.src = videoUrl;
+  video.load();
+  video.currentTime = 0;
+  safePause();
+  reversePlaying = false;
 
-    currentVideos = [];
-    currentVideoIndex = 0;
-    if (street.videos && Array.isArray(street.videos) && street.videos.length > 0) {
-      currentVideos = street.videos.map(v => v.url).filter(Boolean);
+  updateMiniMapForStreet(street);
+}
+
+function loadStreetByIndex(index) {
+  if (!STREETS.length) return;
+  if (index < 0 || index >= STREETS.length) index = 0;
+  currentStreetIndex = index;
+  loadStreet(STREETS[index]);
+}
+
+/* Forward / reverse */
+
+function playForward() {
+  reversePlaying = false;
+  if (!video) return;
+  video.playbackRate = walkSpeed;
+  safePlay();
+}
+
+function playReverse() {
+  if (!video) return;
+  reversePlaying = true;
+  safePause();
+
+  function stepReverse() {
+    if (!reversePlaying) return;
+    if (video.currentTime <= 0.02) {
+      video.currentTime = video.duration || 0;
+    } else {
+      video.currentTime = Math.max(0, video.currentTime - (0.016 * walkSpeed));
     }
-
-    const videoUrl = currentVideos[0] || "";
-    if (vsrc) vsrc.src = videoUrl;
-    video.load();
-    video.currentTime = 0;
-    safePause();
-
-    updateMiniMapForStreet(street);
-  }
-
-  function loadStreetByIndex(index) {
-    if (index < 0 || index >= STREETS.length) return;
-    currentStreetIndex = index;
-    loadStreet(STREETS[index]);
-  }
-
-  function playForward() {
-    reversePlaying = false;
-    if (!video) return;
-    video.playbackRate = walkSpeed;
-    safePlay();
-  }
-
-  function playReverse() {
-    if (!video) return;
-    reversePlaying = true;
-    safePause();
-
-    function stepReverse() {
-      if (!reversePlaying) return;
-
-      if (video.currentTime <= 0.02) {
-        video.currentTime = video.duration;
-      } else {
-        video.currentTime = Math.max(
-          0,
-          video.currentTime - (0.016 * walkSpeed)
-        );
-      }
-      requestAnimationFrame(stepReverse);
-    }
-
     requestAnimationFrame(stepReverse);
   }
+  requestAnimationFrame(stepReverse);
+}
 
-  function recomputeDirection() {
-    const newDir = keyDir || joyDir || autoDir;
-    if (newDir === currentDir) return;
-    currentDir = newDir;
+function recomputeDirection() {
+  const newDir = keyDir || joyDir || autoDir;
+  if (newDir === currentDir) return;
+  currentDir = newDir;
 
-    if (currentDir === 1) playForward();
-    else if (currentDir === -1) playReverse();
-    else {
-      safePause();
-      reversePlaying = false;
-    }
-  }
-
-  video.addEventListener("ended", () => {
-    if (currentVideos.length > 1 && currentVideoIndex < currentVideos.length - 1) {
-      currentVideoIndex += 1;
-      const nextUrl = currentVideos[currentVideoIndex];
-      if (vsrc) vsrc.src = nextUrl;
-      video.load();
-      video.currentTime = 0;
-
-      const isMoving = (autoDir === 1 || keyDir === 1 || joyDir === 1);
-      if (isMoving) {
-        playForward();
-      }
-      return;
-    }
+  if (currentDir === 1) playForward();
+  else if (currentDir === -1) playReverse();
+  else {
     safePause();
-  });
+    reversePlaying = false;
+  }
+  updateDroneAudio();
+}
 
-  window.addEventListener("keydown", e => {
-    const k = e.key.toLowerCase();
-    if (k === "arrowleft" || k === "a") yawTarget -= 10;
-    else if (k === "arrowright" || k === "d") yawTarget += 10;
-    else if (k === "arrowup" || k === "w") { keyDir = 1; recomputeDirection(); }
-    else if (k === "arrowdown" || k === "s") { keyDir = -1; recomputeDirection(); }
-  });
-  window.addEventListener("keyup", e => {
-    const k = e.key.toLowerCase();
-    if (["arrowup", "w", "arrowdown", "s"].includes(k)) {
-      keyDir = 0;
-      recomputeDirection();
-    }
-  });
+video.addEventListener("ended", () => {
+  if (currentVideos.length > 1 && currentVideoIndex < currentVideos.length - 1) {
+    currentVideoIndex += 1;
+    const nextUrl = currentVideos[currentVideoIndex];
+    if (vsrc) vsrc.src = nextUrl;
+    video.load();
+    video.currentTime = 0;
+    const isMoving = (autoDir === 1 || keyDir === 1 || joyDir === 1);
+    if (isMoving) playForward();
+    return;
+  }
+  safePause();
+  reversePlaying = false;
+  updateDroneAudio();
+});
 
-  function setJoystickFromEvent(ev) {
-    const rect = joystickBase.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const dx = ev.clientX - cx;
-    const dy = ev.clientY - cy;
-    const r = rect.width / 2;
-    const nx = Math.max(-1, Math.min(1, dx / r));
-    const ny = Math.max(-1, Math.min(1, dy / r));
-    joystickKnob.style.transform = `translate(${nx * (r * 0.45)}px, ${ny * (r * 0.45)}px)`;
+/* Keyboard */
 
-    const move = -ny;
-    if (Math.abs(move) > 0.15) {
-      joyDir = move > 0 ? 1 : -1;
-    } else {
-      joyDir = 0;
-    }
-
+window.addEventListener("keydown", e => {
+  const k = e.key.toLowerCase();
+  if (k === "arrowleft" || k === "a") {
+    yawTarget -= 10;
+  } else if (k === "arrowright" || k === "d") {
+    yawTarget += 10;
+  } else if (k === "arrowup" || k === "w") {
+    keyDir = 1;
+    recomputeDirection();
+  } else if (k === "arrowdown" || k === "s") {
+    keyDir = -1;
     recomputeDirection();
   }
-  function resetJoystick() {
+});
+window.addEventListener("keyup", e => {
+  const k = e.key.toLowerCase();
+  if (["arrowup", "w", "arrowdown", "s"].includes(k)) {
+    keyDir = 0;
+    recomputeDirection();
+  }
+});
+
+/* Joystick */
+
+function setJoystickFromEvent(ev) {
+  const rect = joystickBase.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const dx = ev.clientX - cx;
+  const dy = ev.clientY - cy;
+  const r  = rect.width / 2;
+
+  const nx = Math.max(-1, Math.min(1, dx / r));
+  const ny = Math.max(-1, Math.min(1, dy / r));
+
+  joystickKnob.style.transform =
+    `translate(${nx * (r * 0.45)}px, ${ny * (r * 0.45)}px)`;
+
+  const move = -ny;
+  if (Math.abs(move) > 0.15) {
+    joyDir = move > 0 ? 1 : -1;
+  } else {
     joyDir = 0;
-    joystickKnob.style.transform = "translate(0,0)";
-    recomputeDirection();
   }
-  joystickBase.addEventListener("pointerdown", e => {
-    joystickBase.setPointerCapture(e.pointerId);
-    joyActive = true;
-    setJoystickFromEvent(e);
-  });
-  joystickBase.addEventListener("pointermove", e => {
-    if (!joyActive) return;
-    setJoystickFromEvent(e);
-  });
-  joystickBase.addEventListener("pointerup", () => {
-    joyActive = false;
-    resetJoystick();
-  });
-  joystickBase.addEventListener("pointercancel", () => {
-    joyActive = false;
-    resetJoystick();
-  });
 
-  function tick() {
-    yawCurrent += (yawTarget - yawCurrent) * 0.18;
+  // also yaw from horizontal joystick to move drone left/right
+  yawTarget += nx * 2;
 
-    if (currentDir !== 0) {
-      headBob += bobDirection * 0.25 * walkSpeed;
-      if (headBob > 2 || headBob < -2) bobDirection *= -1;
-    } else {
-      headBob *= 0.85;
-    }
-    const bobY = headBob;
+  recomputeDirection();
+}
 
-    video.style.transform = `translate3d(0, ${bobY}px, 0)`;
+function resetJoystick() {
+  joyDir = 0;
+  joystickKnob.style.transform = "translate(0,0)";
+  recomputeDirection();
+}
 
-    requestAnimationFrame(tick);
+joystickBase.addEventListener("pointerdown", e => {
+  joystickBase.setPointerCapture(e.pointerId);
+  joyActive = true;
+  setJoystickFromEvent(e);
+});
+joystickBase.addEventListener("pointermove", e => {
+  if (!joyActive) return;
+  setJoystickFromEvent(e);
+});
+joystickBase.addEventListener("pointerup", () => {
+  joyActive = false;
+  resetJoystick();
+});
+joystickBase.addEventListener("pointercancel", () => {
+  joyActive = false;
+  resetJoystick();
+});
+
+/* TICK – HEAD BOB + DRONE MOVEMENT */
+
+function tick() {
+  yawCurrent += (yawTarget - yawCurrent) * 0.18;
+
+  if (currentDir !== 0) {
+    headBob += bobDirection * 0.25 * walkSpeed;
+    if (headBob > 2 || headBob < -2) bobDirection *= -1;
+  } else {
+    headBob *= 0.85;
+  }
+
+  const bobY = headBob;
+
+  video.style.transform = `translate3d(0, ${bobY}px, 0)`;
+
+  if (droneMV) {
+    const roll  = (yawTarget - yawCurrent) * 0.5;   // tilt
+    const drift = (yawTarget - yawCurrent) * 1.2;   // left/right
+    const lift  = -bobY * 2;                        // bob
+
+    droneMV.style.transform =
+      `translate(calc(-50% + ${drift}px), calc(-50% + ${lift}px)) rotateZ(${roll}deg)`;
   }
 
   requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+/* INIT */
+
+document.addEventListener("DOMContentLoaded", () => {
+  initMiniMap();
+  if (!STREETS.length) return;
 
   if (SELECTED_STREET) {
     const idx = STREETS.findIndex(s => s._id === SELECTED_STREET._id);
-    if (idx !== -1) {
-      loadStreetByIndex(idx);
-    } else if (Array.isArray(STREETS) && STREETS.length > 0) {
-      loadStreetByIndex(0);
-    }
-  } else if (Array.isArray(STREETS) && STREETS.length > 0) {
+    loadStreetByIndex(idx !== -1 ? idx : 0);
+  } else {
     loadStreetByIndex(0);
   }
+
+  updateDroneAudio();
+});
 </script>
 
 </body>
