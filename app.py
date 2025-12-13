@@ -26,8 +26,8 @@ CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
 CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
 CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 
-SUPABASE_URL = "https://cepabjmlengczyiezdqd.supabase.co"
-SUPABASE_BUCKET = "streetwalk"
+SUPABASE_URL = os.getenv("SUPABASE_URL") or "https://cepabjmlengczyiezdqd.supabase.co"
+SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET") or "streetwalk"
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
 # --------------------------------------------------------
@@ -45,7 +45,8 @@ cloudinary.config(
 # Flask App
 # --------------------------------------------------------
 app = Flask(__name__)
-app.secret_key = "super-secret-key"
+app.config["MAX_CONTENT_LENGTH"] = int(os.getenv("MAX_CONTENT_LENGTH", str(1024*1024*1024)))  # 1GB default
+app.secret_key = os.getenv("FLASK_SECRET_KEY") or os.urandom(24)
 
 # --------------------------------------------------------
 # MongoDB Setup
@@ -396,8 +397,16 @@ def upload():
         name = request.form.get("name")
         city = request.form.get("city")
         country = request.form.get("country")
-        lat = float(request.form.get("lat"))
-        lng = float(request.form.get("lng"))
+        try:
+            lat = float(request.form.get("lat"))
+            lng = float(request.form.get("lng"))
+        except Exception:
+            flash("Invalid latitude/longitude", "error")
+            return redirect(url_for("upload"))
+
+        if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+            flash("Latitude/longitude out of range", "error")
+            return redirect(url_for("upload"))
 
         # category (for video streets)
         category = request.form.get("category", "").strip() or None
@@ -546,11 +555,6 @@ def like_street(street_id):
     )
     return {"likes": street.get("likes", 0)}
 
-
-# --------------------------------------------------------
-# Start Server
-# --------------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
     app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
-
