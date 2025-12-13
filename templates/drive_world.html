@@ -5,8 +5,10 @@
 <title>Drive Mode – Virtual Street Drive (MapTiler HD)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
-<script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/maplibre-gl.css') }}">
+<script src="{{ url_for('static', filename='js/maplibre-gl.js') }}"></script>
+
+
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
@@ -230,6 +232,8 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
 
   </div>
 </div>
+
+
 
 <script id="streets-data" type="application/json">{{ streets | tojson | safe }}</script>
 <script id="selected-street-data" type="application/json">{{ selected_street | tojson | safe if selected_street else 'null' }}</script>
