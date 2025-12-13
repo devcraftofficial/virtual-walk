@@ -7,12 +7,10 @@
 
   <!-- MAPLIBRE -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/maplibre-gl.css') }}">
-<script src="{{ url_for('static', filename='js/maplibre-gl.js') }}"></script>
-
+  <script src="{{ url_for('static', filename='js/maplibre-gl.js') }}"></script>
 
   <!-- MODEL-VIEWER (for drone) -->
   <script type="module" src="{{ url_for('static', filename='js/model-viewer.min.js') }}"></script>
-
 
   <style>
     :root {
@@ -21,6 +19,8 @@
       --text-muted: #9ca3af;
       --accent: #a855f7;
       --radius-lg: 18px;
+      --panel-bg: rgba(15, 23, 42, 0.96);
+      --border-subtle: rgba(148, 163, 184, 0.5);
     }
 
     *, *::before, *::after { box-sizing: border-box; }
@@ -48,6 +48,7 @@
       height: 100%;
       background: black;
       overflow: hidden;
+      cursor: default;
     }
 
     /* Mini map circle */
@@ -65,7 +66,129 @@
       z-index: 50;
       cursor: pointer;
     }
-    .mini-map canvas { border-radius: 999px; }
+    .mini-map canvas {
+      border-radius: 999px;
+      pointer-events: none;
+    }
+
+    /* Settings icon button (below mini map) */
+    #settingsButton {
+      position: absolute;
+      top: 130px;
+      left: 32px;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(15, 23, 42, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 55;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
+      transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    #settingsButton:hover {
+      background: rgba(30, 64, 175, 0.9);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.9);
+    }
+    #settingsButton:active {
+      transform: translateY(0);
+      box-shadow: 0 5px 16px rgba(15, 23, 42, 0.8);
+    }
+    #settingsButtonIcon {
+      width: 16px;
+      height: 16px;
+      color: var(--text-main);
+    }
+
+    /* Settings panel */
+    #settingsPanel {
+      position: absolute;
+      top: 180px;
+      left: 20px;
+      width: 260px;
+      max-height: 340px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.9);
+      z-index: 60;
+      font-size: 12px;
+      display: none;
+      overflow-y: auto;
+    }
+    #settingsPanel h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .settings-group {
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(30, 64, 175, 0.4);
+    }
+    .settings-group:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 4px 0;
+    }
+    .settings-label {
+      flex: 1;
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+    .settings-value {
+      min-width: 40px;
+      text-align: right;
+      font-size: 11px;
+      color: #cbd5e1;
+    }
+    .settings-range {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+    .settings-toggle {
+      appearance: none;
+      width: 30px;
+      height: 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      background: rgba(15, 23, 42, 0.9);
+      position: relative;
+      cursor: pointer;
+      outline: none;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .settings-toggle::before {
+      content: "";
+      position: absolute;
+      top: 1px;
+      left: 1px;
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      transition: transform 0.15s ease;
+    }
+    .settings-toggle:checked {
+      background: #22c55e;
+      border-color: #22c55e;
+    }
+    .settings-toggle:checked::before {
+      transform: translateX(12px);
+    }
 
     /* Full map overlay */
     #fullMapOverlay {
@@ -130,6 +253,52 @@
       line-height: 1.2;
     }
 
+    /* Altitude HUD */
+    #altitudeHud {
+      position: absolute;
+      top: 140px;
+      right: 20px;
+      width: 80px;
+      height: 120px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.6);
+      background: radial-gradient(circle at top, rgba(15,23,42,0.95), rgba(15,23,42,0.6));
+      box-shadow: 0 14px 30px rgba(0,0,0,0.9);
+      z-index: 52;
+      padding: 8px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 10px;
+    }
+    #altitudeLabel {
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      font-size: 10px;
+    }
+    #altitudeValue {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    #altitudeBarWrap {
+      position: relative;
+      width: 16px;
+      flex: 1;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.8);
+      overflow: hidden;
+      border: 1px solid rgba(148,163,184,0.5);
+    }
+    #altitudeBarFill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 10%;
+      background: linear-gradient(to top, #22c55e, #38bdf8);
+    }
+
     /* Video (flight view) */
     #streetVideo {
       position: absolute;
@@ -145,19 +314,20 @@
       will-change: transform;
       transform: translateZ(0);
       backface-visibility: hidden;
+      cursor: default;
     }
 
     /* Drone model viewer */
     #droneMV {
       position: absolute;
-      top: 60%;
+      top: 76%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 240px;
-      height: 260px;
+      width: 180px;
+      height: 200px;
       pointer-events: none;
       z-index: 5;
-      filter: drop-shadow(0 16px 40px rgba(0, 0, 0, 0.85));
+      filter: drop-shadow(0 14px 32px rgba(0, 0, 0, 0.8));
     }
 
     /* Joystick */
@@ -217,6 +387,21 @@
         top: 14px !important;
         left: 14px !important;
       }
+      #settingsButton {
+        top: 112px;
+        left: 26px;
+      }
+      #settingsPanel {
+        top: 155px;
+        left: 14px;
+        width: 230px;
+      }
+      #altitudeHud {
+        top: 130px;
+        right: 14px;
+        width: 72px;
+        height: 110px;
+      }
     }
 
     .map-marker {
@@ -233,6 +418,12 @@
       background: #38bdf8 !important;
       box-shadow: 0 0 18px rgba(56, 189, 248, 0.9);
     }
+
+    model-viewer::part(interaction-prompt),
+    model-viewer::part(default-progress-bar),
+    model-viewer::part(default-ar-button) {
+      display: none !important;
+    }
   </style>
 </head>
 
@@ -247,6 +438,167 @@
   <div class="viewer-canvas" id="viewerCanvas">
 
     <div id="miniMap" class="mini-map" aria-label="Mini map preview" role="button" tabindex="0"></div>
+
+    <!-- Settings icon button -->
+    <button
+      id="settingsButton"
+      type="button"
+      aria-label="Drone settings"
+    >
+      <svg id="settingsButtonIcon" viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          fill="currentColor"
+          d="M12 9.5A2.5 2.5 0 1 0 14.5 12 2.5 2.5 0 0 0 12 9.5Zm8.94 2.26-1.61-.93a7 7 0 0 0-.19-1.12l1.02-1.62a.6.6 0 0 0-.08-.73l-1.33-1.33a.6.6 0 0 0-.73-.08l-1.62 1.02a7 7 0 0 0-1.12-.19l-.93-1.61a.6.6 0 0 0-.54-.33h-1.88a.6.6 0 0 0-.54.33L9.66 7.57a7 7 0 0 0-1.12.19L6.92 6.74a.6.6 0 0 0-.73.08L4.86 8.15a.6.6 0 0 0-.08.73l1.02 1.62a7 7 0 0 0-.19 1.12l-1.61.93a.6.6 0 0 0-.33.54v1.88a.6.6 0 0 0 .33.54l1.61.93a7 7 0 0 0 .19 1.12l-1.02 1.62a.6.6 0 0 0 .08.73l1.33 1.33a.6.6 0 0 0 .73.08l1.62-1.02a7 7 0 0 0 1.12.19l.93 1.61a.6.6 0 0 0 .54.33h1.88a.6.6 0 0 0 .54-.33l.93-1.61a7 7 0 0 0 1.12-.19l1.62 1.02a.6.6 0 0 0 .73-.08l1.33-1.33a.6.6 0 0 0 .08-.73l-1.02-1.62a7 7 0 0 0 .19-1.12l1.61-.93a.6.6 0 0 0 .33-.54v-1.88a.6.6 0 0 0-.33-.54Z"
+        />
+      </svg>
+    </button>
+
+    <!-- Settings panel -->
+    <div id="settingsPanel" role="dialog" aria-label="Drone and flight settings">
+      <h3>Drone Settings</h3>
+
+      <div class="settings-group">
+        <div class="settings-row">
+          <div class="settings-label">Flight speed</div>
+          <div class="settings-value" id="speedValue">1.0x</div>
+        </div>
+        <input
+          id="speedSlider"
+          class="settings-range"
+          type="range"
+          min="0.4"
+          max="2.5"
+          step="0.1"
+          value="1.0"
+          aria-label="Flight speed"
+        >
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-row">
+          <div class="settings-label">Head bob</div>
+          <div class="settings-value" id="bobValue">1.0</div>
+        </div>
+        <input
+          id="bobSlider"
+          class="settings-range"
+          type="range"
+          min="0"
+          max="2"
+          step="0.1"
+          value="1.0"
+          aria-label="Head bob intensity"
+        >
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-row">
+          <div class="settings-label">Tilt & sway</div>
+          <div class="settings-value" id="tiltValue">1.0</div>
+        </div>
+        <input
+          id="tiltSlider"
+          class="settings-range"
+          type="range"
+          min="0.4"
+          max="2"
+          step="0.1"
+          value="1.0"
+          aria-label="Drone tilt amount"
+        >
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-row">
+          <div class="settings-label">Cinematic camera</div>
+          <select id="cameraModeSelect" style="flex:1;background:#020617;border-radius:999px;border:1px solid var(--border-subtle);color:var(--text-main);padding:2px 8px;font-size:11px;">
+            <option value="normal">Normal</option>
+            <option value="smooth">Smooth</option>
+            <option value="drift">Drift</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-row">
+          <div class="settings-label">Drone sound</div>
+          <input
+            id="audioToggle"
+            class="settings-toggle"
+            type="checkbox"
+            checked
+            aria-label="Toggle drone sound"
+          >
+        </div>
+        <div class="settings-row">
+          <div class="settings-label">Gyro steering</div>
+          <input
+            id="gyroToggle"
+            class="settings-toggle"
+            type="checkbox"
+            aria-label="Phone tilt control"
+          >
+        </div>
+        <div class="settings-row">
+          <div class="settings-label">Auto‑pilot follow road</div>
+          <input
+            id="autoPilotToggle"
+            class="settings-toggle"
+            type="checkbox"
+            aria-label="Auto-pilot"
+          >
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-row">
+          <div class="settings-label">GPS auto‑route</div>
+          <input
+            id="gpsToggle"
+            class="settings-toggle"
+            type="checkbox"
+            aria-label="GPS based auto route"
+          >
+        </div>
+        <div class="settings-row">
+          <div class="settings-label">Wind zones (per street)</div>
+          <div class="settings-value" id="windLabel">Calm</div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-row">
+          <div class="settings-label">Animation FPS cap</div>
+          <div class="settings-value" id="fpsValue">60</div>
+        </div>
+        <input
+          id="fpsSlider"
+          class="settings-range"
+          type="range"
+          min="30"
+          max="90"
+          step="5"
+          value="60"
+          aria-label="Max animation FPS"
+        >
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-row">
+          <div class="settings-label">AI road detection</div>
+          <div class="settings-value" id="aiStatus">planned</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Altitude HUD -->
+    <div id="altitudeHud" aria-label="Altitude meter">
+      <div id="altitudeLabel">ALTITUDE</div>
+      <div id="altitudeValue">0 m</div>
+      <div id="altitudeBarWrap">
+        <div id="altitudeBarFill"></div>
+      </div>
+    </div>
 
     <div class="street-info" aria-live="polite" aria-atomic="true">
       <h2 id="streetName">Select a Flight</h2>
@@ -265,16 +617,23 @@
     </video>
 
     <model-viewer
-      id="droneMV"
-      src="/static/avatars/drone/drone.glb"
-      autoplay
-      shadow-intensity="0.9"
-      exposure="1.1"
-      disable-zoom
-      disable-pan
-      camera-controls="false"
-      camera-orbit="0deg 70deg 3m">
-    </model-viewer>
+  id="droneMV"
+  src="/static/avatars/drone/drone.glb"
+  autoplay
+  shadow-intensity="0.9"
+  exposure="1.1"
+  interaction-prompt="none"
+  interaction-prompt-threshold="0"
+  disable-zoom
+  disable-pan
+  disable-tap
+  camera-controls="false"
+  style="pointer-events: none;"
+  camera-orbit="180deg 70deg 3m"
+  orientation="0deg 0deg 0deg">
+</model-viewer>
+
+
 
     <div id="joystickBase" aria-label="Movement joystick" role="application" tabindex="0">
       <div id="joystickKnob"></div>
@@ -295,51 +654,111 @@
 const STREETS = JSON.parse(document.getElementById('streets-data').textContent || "[]");
 const SELECTED_STREET = JSON.parse(document.getElementById('selected-street-data').textContent || "null");
 
-const miniMapEl       = document.getElementById("miniMap");
-const fullMapOverlay  = document.getElementById("fullMapOverlay");
+const miniMapEl        = document.getElementById("miniMap");
+const fullMapOverlay   = document.getElementById("fullMapOverlay");
 const fullMapContainer = document.getElementById("fullMapContainer");
-const closeMapBtn     = document.getElementById("closeMapBtn");
+const closeMapBtn      = document.getElementById("closeMapBtn");
 
-const streetNameEl    = document.getElementById("streetName");
+const streetNameEl     = document.getElementById("streetName");
 const streetLocationEl = document.getElementById("streetLocation");
 
-const video           = document.getElementById("streetVideo");
-const vsrc            = document.getElementById("videoSource");
+const video            = document.getElementById("streetVideo");
+const vsrc             = document.getElementById("videoSource");
 
-const joystickBase    = document.getElementById("joystickBase");
-const joystickKnob    = document.getElementById("joystickKnob");
+const joystickBase     = document.getElementById("joystickBase");
+const joystickKnob     = document.getElementById("joystickKnob");
 
-const droneMV         = document.getElementById("droneMV");
+const droneMV          = document.getElementById("droneMV");
 
+/* HUD elements */
+const altitudeValueEl  = document.getElementById("altitudeValue");
+const altitudeBarFill  = document.getElementById("altitudeBarFill");
+
+/* Settings UI elements */
+const settingsButton   = document.getElementById("settingsButton");
+const settingsPanel    = document.getElementById("settingsPanel");
+const speedSlider      = document.getElementById("speedSlider");
+const bobSlider        = document.getElementById("bobSlider");
+const tiltSlider       = document.getElementById("tiltSlider");
+const cameraModeSelect = document.getElementById("cameraModeSelect");
+const audioToggle      = document.getElementById("audioToggle");
+const gyroToggle       = document.getElementById("gyroToggle");
+const autoPilotToggle  = document.getElementById("autoPilotToggle");
+const gpsToggle        = document.getElementById("gpsToggle");
+const fpsSlider        = document.getElementById("fpsSlider");
+
+const speedValueLabel  = document.getElementById("speedValue");
+const bobValueLabel    = document.getElementById("bobValue");
+const tiltValueLabel   = document.getElementById("tiltValue");
+const fpsValueLabel    = document.getElementById("fpsValue");
+const windLabel        = document.getElementById("windLabel");
+
+/* Drone audio */
 const droneAudio = new Audio("/static/audio/drone_loop.mp3");
 droneAudio.loop = true;
 droneAudio.volume = 0.6;
 
+/* CONFIGURABLE SETTINGS */
+const SETTINGS = {
+  flightSpeed: 1.0,
+  bobIntensity: 1.0,
+  tiltIntensity: 1.0,
+  audioEnabled: true,
+  maxFPS: 60,
+  cameraMode: "normal",   // normal | smooth | drift
+  gyroEnabled: false,
+  autoPilot: false,
+  gpsRouteEnabled: false
+};
+
+/* STATE */
 let miniMap, miniMarker;
 let fullMap, fullMapReady = false;
 let fullMarkers = [];
 
 let currentStreetIndex = -1;
-let walkSpeed = 1;
+let walkSpeed = SETTINGS.flightSpeed;
 
 let yawCurrent = 0;
 let yawTarget  = 0;
 let headBob    = 0;
 let bobDirection = 1;
 
+/* DRONE SIDE MOVEMENT + WIND */
+let droneX = 0;
+let droneXTarget = 0;
+const DRONE_MAX_X = 120;
+let windOffset = 0;       // per-street side push
+let windStrength = 0;     // label only for now
+
+/* Direction + control */
 let keyDir = 0;
 let joyDir = 0;
 let autoDir = 0;
+let gpsDir = 0;
 let currentDir = 0;
 let reversePlaying = false;
 let joyActive = false;
 
+/* Gyro */
+let gyroActive = false;
+
+/* GPS */
+let userGeoPos = null;
+
+/* Videos */
 let currentVideos     = [];
 let currentVideoIndex = 0;
 
+/* rAF */
+let lastFrameTime = performance.now();
+let frameAccumulator = 0;
+
+/* Helpers */
 function safePlay() {
   if (!video || !video.paused) return;
-  video.play().catch(() => {});
+  const p = video.play();
+  if (p && typeof p.catch === "function") p.catch(() => {});
 }
 function safePause() {
   if (!video || video.paused) return;
@@ -348,6 +767,11 @@ function safePause() {
 
 function updateDroneAudio() {
   if (!droneAudio) return;
+  if (!SETTINGS.audioEnabled) {
+    droneAudio.pause();
+    droneAudio.currentTime = 0;
+    return;
+  }
   if (currentDir !== 0) {
     if (droneAudio.paused) droneAudio.play().catch(() => {});
   } else {
@@ -356,8 +780,7 @@ function updateDroneAudio() {
   }
 }
 
-/* Mini map & full map unchanged (omitted for brevity in logic) */
-
+/* Mini map & full map */
 function initMiniMap() {
   miniMap = new maplibregl.Map({
     container: "miniMap",
@@ -452,7 +875,28 @@ miniMapEl.addEventListener("keydown", e => {
 });
 closeMapBtn.addEventListener("click", hideFullMap);
 
-/* Street / video load */
+/* Street / video load + wind */
+function applyWindForStreet(street) {
+  // simple placeholder: use street.wind value if present, else calm
+  const w = street.wind || "calm";
+  if (w === "left") {
+    windOffset = -0.4;
+    windStrength = 1;
+    windLabel.textContent = "Left breeze";
+  } else if (w === "right") {
+    windOffset = 0.4;
+    windStrength = 1;
+    windLabel.textContent = "Right breeze";
+  } else if (w === "gusty") {
+    windOffset = 0.6;
+    windStrength = 1.6;
+    windLabel.textContent = "Gusty";
+  } else {
+    windOffset = 0;
+    windStrength = 0;
+    windLabel.textContent = "Calm";
+  }
+}
 
 function loadStreet(street) {
   streetNameEl.textContent = street.name || "Flight";
@@ -475,18 +919,19 @@ function loadStreet(street) {
   safePause();
   reversePlaying = false;
 
+  applyWindForStreet(street);
   updateMiniMapForStreet(street);
 }
 
 function loadStreetByIndex(index) {
   if (!STREETS.length) return;
-  if (index < 0 || index >= STREETS.length) index = 0;
+  if (index < 0) index = 0;
+  if (index >= STREETS.length) index = 0; // auto jump cycles
   currentStreetIndex = index;
   loadStreet(STREETS[index]);
 }
 
 /* Forward / reverse */
-
 function playForward() {
   reversePlaying = false;
   if (!video) return;
@@ -498,7 +943,6 @@ function playReverse() {
   if (!video) return;
   reversePlaying = true;
   safePause();
-
   function stepReverse() {
     if (!reversePlaying) return;
     if (video.currentTime <= 0.02) {
@@ -511,8 +955,9 @@ function playReverse() {
   requestAnimationFrame(stepReverse);
 }
 
+/* Direction */
 function recomputeDirection() {
-  const newDir = keyDir || joyDir || autoDir;
+  const newDir = keyDir || joyDir || autoDir || gpsDir;
   if (newDir === currentDir) return;
   currentDir = newDir;
 
@@ -525,6 +970,7 @@ function recomputeDirection() {
   updateDroneAudio();
 }
 
+/* Auto jump to next street when all videos finished */
 video.addEventListener("ended", () => {
   if (currentVideos.length > 1 && currentVideoIndex < currentVideos.length - 1) {
     currentVideoIndex += 1;
@@ -532,17 +978,23 @@ video.addEventListener("ended", () => {
     if (vsrc) vsrc.src = nextUrl;
     video.load();
     video.currentTime = 0;
-    const isMoving = (autoDir === 1 || keyDir === 1 || joyDir === 1);
+    const isMoving = (autoDir === 1 || keyDir === 1 || joyDir === 1 || gpsDir === 1);
     if (isMoving) playForward();
     return;
   }
-  safePause();
-  reversePlaying = false;
-  updateDroneAudio();
+  // move to next street automatically
+  if (STREETS.length > 1) {
+    loadStreetByIndex(currentStreetIndex + 1);
+    const isMoving = (autoDir === 1 || keyDir === 1 || joyDir === 1 || gpsDir === 1);
+    if (isMoving) playForward();
+  } else {
+    safePause();
+    reversePlaying = false;
+    updateDroneAudio();
+  }
 });
 
 /* Keyboard */
-
 window.addEventListener("keydown", e => {
   const k = e.key.toLowerCase();
   if (k === "arrowleft" || k === "a") {
@@ -566,7 +1018,6 @@ window.addEventListener("keyup", e => {
 });
 
 /* Joystick */
-
 function setJoystickFromEvent(ev) {
   const rect = joystickBase.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
@@ -588,9 +1039,7 @@ function setJoystickFromEvent(ev) {
     joyDir = 0;
   }
 
-  // also yaw from horizontal joystick to move drone left/right
   yawTarget += nx * 2;
-
   recomputeDirection();
 }
 
@@ -618,37 +1067,193 @@ joystickBase.addEventListener("pointercancel", () => {
   resetJoystick();
 });
 
-/* TICK – HEAD BOB + DRONE MOVEMENT */
+/* SETTINGS UI LOGIC */
+function toggleSettingsPanel() {
+  const isVisible = settingsPanel.style.display === "block";
+  settingsPanel.style.display = isVisible ? "none" : "block";
+}
+settingsButton.addEventListener("click", toggleSettingsPanel);
+settingsButton.addEventListener("keydown", e => {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    toggleSettingsPanel();
+  }
+});
 
-function tick() {
-  yawCurrent += (yawTarget - yawCurrent) * 0.18;
+/* Sliders / toggles */
+speedSlider.addEventListener("input", () => {
+  SETTINGS.flightSpeed = parseFloat(speedSlider.value);
+  walkSpeed = SETTINGS.flightSpeed;
+  speedValueLabel.textContent = SETTINGS.flightSpeed.toFixed(1) + "x";
+});
+bobSlider.addEventListener("input", () => {
+  SETTINGS.bobIntensity = parseFloat(bobSlider.value);
+  bobValueLabel.textContent = SETTINGS.bobIntensity.toFixed(1);
+});
+tiltSlider.addEventListener("input", () => {
+  SETTINGS.tiltIntensity = parseFloat(tiltSlider.value);
+  tiltValueLabel.textContent = SETTINGS.tiltIntensity.toFixed(1);
+});
+cameraModeSelect.addEventListener("change", () => {
+  SETTINGS.cameraMode = cameraModeSelect.value;
+});
+audioToggle.addEventListener("change", () => {
+  SETTINGS.audioEnabled = audioToggle.checked;
+  updateDroneAudio();
+});
+fpsSlider.addEventListener("input", () => {
+  SETTINGS.maxFPS = parseInt(fpsSlider.value, 10);
+  fpsValueLabel.textContent = SETTINGS.maxFPS.toString();
+});
 
-  if (currentDir !== 0) {
-    headBob += bobDirection * 0.25 * walkSpeed;
-    if (headBob > 2 || headBob < -2) bobDirection *= -1;
+/* Gyro (phone tilt) */
+async function enableGyro() {
+  if (typeof DeviceOrientationEvent !== "undefined" &&
+      typeof DeviceOrientationEvent.requestPermission === "function") {
+    try {
+      const res = await DeviceOrientationEvent.requestPermission();
+      if (res !== "granted") return;
+    } catch {
+      return;
+    }
+  }
+  window.addEventListener("deviceorientation", gyroHandler, true);
+  gyroActive = true;
+}
+function gyroHandler(e) {
+  if (!SETTINGS.gyroEnabled || !gyroActive) return;
+  const gamma = e.gamma || 0; // left / right
+  const beta  = e.beta  || 0; // forward / back
+
+  const clampedGamma = Math.max(-30, Math.min(30, gamma));
+  yawTarget += clampedGamma * 0.05;
+
+  if (beta < -10) autoDir = 1;
+  else if (beta > 15) autoDir = -1;
+  else autoDir = 0;
+  recomputeDirection();
+}
+gyroToggle.addEventListener("change", () => {
+  SETTINGS.gyroEnabled = gyroToggle.checked;
+  if (SETTINGS.gyroEnabled) enableGyro();
+  else {
+    autoDir = 0;
+    recomputeDirection();
+  }
+});
+
+/* Auto‑pilot (follow road – simple) */
+autoPilotToggle.addEventListener("change", () => {
+  SETTINGS.autoPilot = autoPilotToggle.checked;
+  autoDir = SETTINGS.autoPilot ? 1 : 0;
+  recomputeDirection();
+});
+
+/* GPS based auto‑route – very lightweight */
+function beginGeoWatch() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.watchPosition(
+    pos => {
+      userGeoPos = pos.coords;
+      if (!SETTINGS.gpsRouteEnabled || !STREETS[currentStreetIndex]) return;
+      const st = STREETS[currentStreetIndex];
+      const targetLat = Number(st.lat);
+      const targetLng = Number(st.lng);
+      if (!Number.isFinite(targetLat) || !Number.isFinite(targetLng)) return;
+      const dLat = targetLat - userGeoPos.latitude;
+      const dLng = targetLng - userGeoPos.longitude;
+      const dist = Math.sqrt(dLat*dLat + dLng*dLng);
+      gpsDir = dist > 0.0005 ? 1 : 0; // simple "move if far" rule
+      recomputeDirection();
+    },
+    () => {},
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+  );
+}
+gpsToggle.addEventListener("change", () => {
+  SETTINGS.gpsRouteEnabled = gpsToggle.checked;
+  if (SETTINGS.gpsRouteEnabled) {
+    beginGeoWatch();
   } else {
-    headBob *= 0.85;
+    gpsDir = 0;
+    recomputeDirection();
+  }
+});
+
+/* TICK – HEAD BOB + DRONE MOVEMENT + ALTITUDE */
+function tick(timestamp) {
+  const dt = timestamp - lastFrameTime;
+  lastFrameTime = timestamp;
+
+  const frameDuration = 1000 / SETTINGS.maxFPS;
+  frameAccumulator += dt;
+  if (frameAccumulator < frameDuration) {
+    requestAnimationFrame(tick);
+    return;
+  }
+  frameAccumulator = 0;
+
+  const delta = Math.min(dt, 50) / 16.67;
+
+  // camera mode modifiers
+  let yawSmoothFactor = 0.18;
+  let bobFactor = 0.25;
+  let tiltFactor = 0.6;
+  if (SETTINGS.cameraMode === "smooth") {
+    yawSmoothFactor = 0.1;
+    bobFactor = 0.15;
+    tiltFactor = 0.4;
+  } else if (SETTINGS.cameraMode === "drift") {
+    yawSmoothFactor = 0.06;
+    bobFactor = 0.12;
+    tiltFactor = 0.3;
+    yawTarget += Math.sin(timestamp * 0.0004) * 0.2;
   }
 
+  // yaw smoothing
+  yawCurrent += (yawTarget - yawCurrent) * yawSmoothFactor * delta;
+
+  // head bob
+  const speedFactor = SETTINGS.flightSpeed;
+  if (currentDir !== 0 && SETTINGS.bobIntensity > 0) {
+    headBob += bobDirection * bobFactor * speedFactor * SETTINGS.bobIntensity * delta;
+    if (headBob > 2 || headBob < -2) bobDirection *= -1;
+  } else {
+    headBob *= 0.85 * delta;
+  }
   const bobY = headBob;
 
+  // apply to video
   video.style.transform = `translate3d(0, ${bobY}px, 0)`;
 
+  // drone movement + tilt + wind
   if (droneMV) {
-    const roll  = (yawTarget - yawCurrent) * 0.5;   // tilt
-    const drift = (yawTarget - yawCurrent) * 1.2;   // left/right
-    const lift  = -bobY * 2;                        // bob
+    const yawDiff = yawTarget - yawCurrent;
+    const roll = yawDiff * tiltFactor * SETTINGS.tiltIntensity;
 
+    droneXTarget += (yawDiff * 0.8 * SETTINGS.tiltIntensity) + windOffset * (windStrength || 0);
+    droneXTarget = Math.max(-DRONE_MAX_X, Math.min(DRONE_MAX_X, droneXTarget));
+    droneX += (droneXTarget - droneX) * 0.12 * delta;
+
+    const lift = -bobY * 1.2 * SETTINGS.bobIntensity;
     droneMV.style.transform =
-      `translate(calc(-50% + ${drift}px), calc(-50% + ${lift}px)) rotateZ(${roll}deg)`;
+  `translate(calc(-50% + ${droneX}px), calc(-50% + ${lift}px))
+   rotateZ(${roll}deg)`;
+
+  }
+
+  // altitude HUD – map video progress (0–100) to 0–120 m
+  if (video && isFinite(video.duration) && video.duration > 0) {
+    const t = video.currentTime / video.duration;
+    const alt = Math.round(t * 120);
+    altitudeValueEl.textContent = alt + " m";
+    altitudeBarFill.style.height = Math.max(4, t * 100) + "%";
   }
 
   requestAnimationFrame(tick);
 }
-requestAnimationFrame(tick);
 
 /* INIT */
-
 document.addEventListener("DOMContentLoaded", () => {
   initMiniMap();
   if (!STREETS.length) return;
@@ -660,7 +1265,13 @@ document.addEventListener("DOMContentLoaded", () => {
     loadStreetByIndex(0);
   }
 
+  speedValueLabel.textContent = SETTINGS.flightSpeed.toFixed(1) + "x";
+  bobValueLabel.textContent   = SETTINGS.bobIntensity.toFixed(1);
+  tiltValueLabel.textContent  = SETTINGS.tiltIntensity.toFixed(1);
+  fpsValueLabel.textContent   = SETTINGS.maxFPS.toString();
+
   updateDroneAudio();
+  requestAnimationFrame(tick);
 });
 </script>
 
