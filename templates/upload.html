@@ -8,11 +8,18 @@
   <meta name="description" content="Add new virtual street walks with video or 3D GLB models">
 
   <!-- MAPLIBRE -->
-  <link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/maplibre-gl.css') }}">
+<script src="{{ url_for('static', filename='js/maplibre-gl.js') }}"></script>
 
   <!-- ICONS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- remove your local all.min.css line and use this instead -->
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  referrerpolicy="no-referrer"
+>
+
+
 
   <!-- INTER FONT -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -590,6 +597,27 @@
           <div class="note">Choose viewing perspective for avatar synchronization</div>
         </div>
 
+        <!-- CATEGORY FIELD -->
+<div class="field">
+  <label><i class="fas fa-folder"></i> Category *</label>
+
+  <select id="categorySelect" required>
+    <!-- Options will be dynamically inserted -->
+  </select>
+
+  <input type="hidden" name="category" id="categoryHidden">
+
+  <div class="note">Category changes automatically based on mode</div>
+</div>
+
+<label>Description (optional)</label>
+<textarea name="description" rows="4"
+          placeholder="Describe this street, what makes it special…"
+          style="width:100%; border-radius:12px; padding:10px; background:#0f172a; color:#fff; border:1px solid #334155;">
+</textarea>
+
+
+
         <div class="field">
           <label><i class="fas fa-upload"></i> Upload Videos (MP4/WEBM)</label>
           <div class="file-input-wrapper">
@@ -746,17 +774,55 @@ Paste multiple URLs (one per line)" rows="3"></textarea>
     });
 
     /* ===============================
-       VIDEO MODE SELECTION
-    =============================== */
-    document.querySelectorAll('.mode-option').forEach(option => {
-      option.addEventListener('click', () => {
-        document.querySelectorAll('.mode-option').forEach(opt =>
-          opt.classList.remove('active')
-        );
-        option.classList.add('active');
-        document.getElementById('videoMode').value = option.dataset.mode;
-      });
-    });
+   VIDEO MODE + CATEGORY SELECTOR
+=============================== */
+
+const modeButtons = document.querySelectorAll('.mode-option');
+const categorySelect = document.getElementById("categorySelect");
+const categoryHidden = document.getElementById("categoryHidden");
+
+/* CATEGORY LISTS */
+const CATEGORY_MAP = {
+  walk: ["City Walk", "Airport Terminal", "Highway Footpath", "Beach Walk", "Park Walk", "Market Walk"],
+  drive: ["City Drive", "Highway Drive", "Night Drive", "Rain Drive", "Bridge Drive", "Village Roads"],
+  fly: ["Drone Panorama", "Drone Over Beach", "Drone City Flyover", "Mountain Flyover"],
+  sit: ["Coffee Shop", "Balcony View", "Sunset View", "Indoor Room", "Street Side Bench"]
+};
+
+/* Update category dropdown */
+function updateCategories(mode) {
+  categorySelect.innerHTML = "";
+
+  CATEGORY_MAP[mode].forEach(cat => {
+    const opt = document.createElement("option");
+    opt.value = cat;
+    opt.textContent = cat;
+    categorySelect.appendChild(opt);
+  });
+
+  categoryHidden.value = CATEGORY_MAP[mode][0];
+}
+
+/* When mode clicked */
+modeButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    modeButtons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    const mode = btn.dataset.mode;
+    document.getElementById("videoMode").value = mode;
+
+    updateCategories(mode);
+  });
+});
+
+/* When category changed */
+categorySelect.addEventListener("change", () => {
+  categoryHidden.value = categorySelect.value;
+});
+
+/* default mode = walk */
+updateCategories("walk");
 
     /* ===============================
        SHOW SELECTED FILE NAMES
@@ -879,3 +945,4 @@ Paste multiple URLs (one per line)" rows="3"></textarea>
   </script>
 </body>
 </html>
+
