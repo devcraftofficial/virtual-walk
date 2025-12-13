@@ -7,160 +7,413 @@
 
   <style>
     :root {
-      --bg: radial-gradient(circle at top, #020617, #000 80%);
-      --card-bg: rgba(15, 23, 42, 0.9);
-      --border: rgba(148, 163, 184, 0.45);
+      --bg-page: #020617;
+      --bg-surface: #020617;
+      --card-bg: #0b1220;
+      --card-border: #1e293b;
+      --card-hover-border: #a855f7;
       --accent: #a855f7;
+      --accent-soft: rgba(168, 85, 247, 0.12);
       --text-main: #e5e7eb;
       --text-muted: #9ca3af;
-      --radius: 18px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --focus-ring: rgba(168,85,247,0.9);
     }
+
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
       min-height: 100vh;
-      background: var(--bg);
-      font-family: system-ui, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--text-main);
+      background:
+        radial-gradient(circle at top left, #0f172a, transparent 55%),
+        radial-gradient(circle at bottom right, #020617, #000 70%);
       display: flex;
       justify-content: center;
-      padding: 24px 12px;
+      padding: 20px 12px;
     }
+
     .shell {
       width: 100%;
-      max-width: 960px;
+      max-width: 1200px;
+      background: var(--bg-surface);
+      border-radius: 20px;
+      border: 1px solid #1e293b;
+      padding: 18px 20px 22px;
     }
+
     header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 18px;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
     }
+
     h1 {
-      margin: 0;
+      margin: 0 0 4px;
       font-size: 22px;
-      font-weight: 600;
     }
+
     .subtitle {
+      margin: 0;
       font-size: 13px;
       color: var(--text-muted);
     }
-    a.back-link {
+
+    .back-link {
+      font-size: 13px;
       color: var(--accent);
       text-decoration: none;
-      font-size: 13px;
+      white-space: nowrap;
     }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 14px;
-    }
-    .card {
-      background: var(--card-bg);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      padding: 14px 14px 12px;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.5);
-    }
-    .name {
-      font-size: 15px;
-      font-weight: 600;
-      margin: 0 0 4px;
-    }
-    .meta {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-    .badges {
+    .back-link:hover { text-decoration: underline; }
+
+    /* Mode pills */
+    .mode-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 10px;
+      gap: 8px;
+      margin-bottom: 14px;
     }
-    .badge {
-      font-size: 11px;
-      padding: 3px 8px;
+
+    .mode-pill {
+      padding: 5px 11px;
       border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.55);
-      color: var(--text-muted);
-    }
-    .badge.fly {
-      border-color: rgba(168,85,247,0.8);
-      color: #f3e8ff;
-    }
-    .footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      border: 1px solid #1e293b;
+      background: #020617;
       font-size: 12px;
-      margin-top: 6px;
-    }
-    .likes {
       color: var(--text-muted);
-    }
-    .btn {
+      text-decoration: none;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 6px 14px;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      background: linear-gradient(135deg, #a855f7, #7c3aed);
-      color: #1e1234;
-      font-size: 12px;
-      font-weight: 600;
-      text-decoration: none;
-      box-shadow: 0 10px 26px rgba(168,85,247,0.4);
     }
-    .empty {
-      margin-top: 30px;
+
+    .mode-pill.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Search */
+    .search-row {
+      margin-bottom: 16px;
+    }
+
+    .search-input-wrap {
+      position: relative;
+      max-width: 380px;
+    }
+
+    .search-input-wrap input {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      padding: 8px 34px 8px 30px;
+      background: #020617;
+      color: var(--text-main);
+      font-size: 13px;
+    }
+
+    .search-input-wrap input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .search-input-wrap input:focus {
+      outline: none;
+      border-color: var(--focus-ring);
+      box-shadow: 0 0 0 1px var(--focus-ring);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
       font-size: 13px;
       color: var(--text-muted);
+    }
+
+    .search-clear {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: none;
+    }
+
+    /* Grid + cards */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      border-color: var(--card-hover-border);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.6);
+    }
+
+    .card:focus-visible {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    .thumb {
+      height: 150px;
+      background: #000;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .thumb img,
+    .thumb video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.2s ease-out;
+    }
+
+    .card:hover .thumb img,
+    .card:hover .thumb video {
+      transform: scale(1.03);
+    }
+
+    .thumb-label {
+      position: absolute;
+      left: 8px;
+      bottom: 8px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.85);
+      border: 1px solid #4b5563;
+      font-size: 10px;
+      color: var(--text-main);
+    }
+
+    .card-body {
+      padding: 10px 12px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .name {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .meta {
+      margin: 0;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .tags-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+      font-size: 10px;
+    }
+
+    .tag {
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid #334155;
+      color: var(--text-muted);
+    }
+
+    .bottom-row {
+      margin-top: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    .likes {
+      color: var(--text-muted);
+    }
+
+    .primary-link {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      text-decoration: none;
+      background: #a855f7;
+      color: #1b102f;
+    }
+
+    .primary-link:hover {
+      filter: brightness(1.05);
+    }
+
+    .empty-state {
+      margin-top: 40px;
       text-align: center;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 14px 10px;
+      }
+      .shell {
+        padding: 14px 14px 18px;
+        border-radius: 16px;
+      }
+      header {
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
+
 <body>
 <div class="shell">
+
   <header>
     <div>
-      <h1>Fly Routes</h1>
-      <p class="subtitle">Pick an aerial route to fly over the city.</p>
+      <h1>Fly routes</h1>
+      <p class="subtitle">Browse aerial routes and start a city flyover.</p>
     </div>
     <a class="back-link" href="{{ url_for('index') }}">← Back home</a>
   </header>
 
+  <div class="mode-row">
+    <a href="{{ url_for('walk') }}" class="mode-pill">🚶 Walk</a>
+    <a href="{{ url_for('drive') }}" class="mode-pill">🚗 Drive</a>
+    <a href="{{ url_for('fly') }}" class="mode-pill active">🪂 Fly</a>
+    <a href="{{ url_for('sit') }}" class="mode-pill">🪑 Sit</a>
+  </div>
+
+  <div class="search-row">
+    <div class="search-input-wrap">
+      <span class="search-icon">🔍</span>
+      <input id="searchInput" type="search" placeholder="Search by name, city or country…">
+      <span id="searchClear" class="search-clear">✕</span>
+    </div>
+  </div>
+
   {% if streets and streets|length > 0 %}
-    <div class="grid">
-      {% for st in streets %}
-        <div class="card">
+  <div class="grid" id="cardsGrid">
+    {% for st in streets %}
+      <div class="card"
+           tabindex="0"
+           data-name="{{ st.name|lower }}"
+           data-city="{{ (st.city or '')|lower }}"
+           data-country="{{ (st.country or '')|lower }}"
+           data-href="{{ url_for('world_fly', street_id=st._id) }}">
+
+        <div class="thumb">
+          {% if st.videos and st.videos[0].url %}
+            <video src="{{ st.videos[0].url }}#t=0.1"
+                   preload="metadata"
+                   muted
+                   playsinline></video>
+          {% else %}
+            <img src="https://dummyimage.com/640x360/020617/64748b&text=Fly+Route" alt="">
+          {% endif %}
+          <span class="thumb-label">Fly mode</span>
+        </div>
+
+        <div class="card-body">
           <p class="name">{{ st.name }}</p>
-          <p class="meta">
-            {{ st.city }}, {{ st.country }} ·
-            {{ st.lat }}, {{ st.lng }}
-          </p>
-          <div class="badges">
-            <span class="badge fly">Fly</span>
+          <p class="meta">{{ st.city }}, {{ st.country }}</p>
+
+          <div class="tags-row">
             {% if st.videos %}
-              <span class="badge">{{ st.videos|length }} part(s)</span>
+              <span class="tag">{{ st.videos|length }} part(s)</span>
+            {% endif %}
+            {% if st.country %}
+              <span class="tag">{{ st.country }}</span>
             {% endif %}
           </div>
-          <div class="footer">
+
+          <div class="bottom-row">
             <span class="likes">♥ {{ st.likes or 0 }}</span>
-            <a
-              class="btn"
-              href="{{ url_for('world_fly', street_id=st._id) }}"
-            >
-              <span>Start flight</span>
-            </a>
+            <a class="primary-link" href="{{ url_for('world_fly', street_id=st._id) }}">Start flight</a>
           </div>
         </div>
-      {% endfor %}
-    </div>
+      </div>
+    {% endfor %}
+  </div>
   {% else %}
-    <p class="empty">No fly routes yet. Add one from the Upload page.</p>
+    <div class="empty-state">
+      No fly routes yet. Add one from the Upload page to get started.
+    </div>
   {% endif %}
+
 </div>
+
+<script>
+  const searchInput = document.getElementById('searchInput');
+  const clearBtn = document.getElementById('searchClear');
+  const cards = Array.from(document.querySelectorAll('#cardsGrid .card') || []);
+
+  function applyFilter() {
+    const q = (searchInput.value || '').toLowerCase().trim();
+    if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
+
+    cards.forEach(card => {
+      const match =
+        (card.dataset.name || '').includes(q) ||
+        (card.dataset.city || '').includes(q) ||
+        (card.dataset.country || '').includes(q);
+      card.style.display = match ? '' : 'none';
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', applyFilter);
+  }
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      applyFilter();
+      searchInput.focus();
+    });
+  }
+
+  // Card click + keyboard
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      const href = card.dataset.href;
+      if (href) window.location.href = href;
+    });
+    card.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const href = card.dataset.href;
+        if (href) window.location.href = href;
+      }
+    });
+  });
+</script>
+
 </body>
 </html>
