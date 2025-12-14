@@ -313,9 +313,9 @@
     #droneWrapper {
       position: absolute;
       left: 50%;
-      bottom: 14%;
-      width: 200px;
-      height: 220px;
+      bottom: 5%;
+      width: 700px;
+      height: 700px;
       transform-style: preserve-3d;
       perspective: 1200px;
       transform-origin: center center;
@@ -398,6 +398,11 @@
         right: 14px;
         width: 72px;
         height: 110px;
+      }
+      #droneWrapper {
+        width: 500px;
+        height: 500px;
+        bottom: 15%;
       }
     }
 
@@ -573,6 +578,8 @@
         disable-zoom
         disable-pan
         disable-tap
+        min-camera-orbit="180deg 70deg 3m"
+        max-camera-orbit="180deg 70deg 3m"
         style="pointer-events: none;">
       </model-viewer>
     </div>
@@ -593,13 +600,14 @@
 </script>
 
 <script type="module">
+const IS_PRODUCTION = true;
 const IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 const STREETS = JSON.parse(document.getElementById('streets-data').textContent || "[]");
 const SELECTED_STREET = JSON.parse(document.getElementById('selected-street-data').textContent || "null");
 
-/* Config: inject your map style URL from backend to avoid hardcoding keys */
-const MAP_STYLE_URL = "{{ map_style_url }}"; // e.g. provided by Flask config [web:251]
+/* Config: map style URL from backend (Flask) */
+const MAP_STYLE_URL = "{{ map_style_url }}";
 
 /* Elements */
 const miniMapEl        = document.getElementById("miniMap");
@@ -658,6 +666,11 @@ const SETTINGS = {
   gpsRouteEnabled: false
 };
 
+/* Disable gyro on desktop */
+if (!IS_MOBILE) {
+  SETTINGS.gyroEnabled = false;
+}
+
 /* State */
 let miniMap, miniMarker;
 let fullMap, fullMapReady = false;
@@ -696,6 +709,12 @@ let pendingJoyEvent = null;
 
 const BASE_YAW = 180;
 let idlePhase = 0;
+let lastOrbitYaw = null;
+
+/* Protect against missing drone model */
+if (!droneMV && !IS_PRODUCTION) {
+  console.warn("Drone model not loaded");
+}
 
 /* Helpers */
 function safePlay() {
@@ -924,6 +943,12 @@ video.addEventListener("error", () => {
   streetLocationEl.textContent = "Video failed to load. Tap map to choose another flight.";
 });
 
+/* Fail-safe if video stalls */
+video.addEventListener("stalled", () => {
+  safePause();
+  updateDroneAudio();
+});
+
 /* Pause when tab hidden to save battery/data */
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
@@ -1083,12 +1108,15 @@ function tick(timestamp) {
 
   video.style.transform = "translate3d(0, 0, 0)";
 
-  // true 3D yaw via model-viewer camera orbit [web:187]
+  // true 3D yaw via model-viewer camera orbit
   if (droneMV) {
     const orbitYaw   = BASE_YAW + yawCurrent;
     const orbitPitch = 70;
     const orbitRadius = 3;
-    droneMV.cameraOrbit = `${orbitYaw}deg ${orbitPitch}deg ${orbitRadius}m`;
+    if (lastOrbitYaw !== orbitYaw) {
+      droneMV.cameraOrbit = `${orbitYaw}deg ${orbitPitch}deg ${orbitRadius}m`;
+      lastOrbitYaw = orbitYaw;
+    }
   }
 
   if (droneWrapper) {
@@ -1117,13 +1145,15 @@ function tick(timestamp) {
       roll += idleRoll;
     }
 
+    const DRONE_BASE_Y = 220;
+
     droneWrapper.style.transform =
       `translateX(-50%)
        translateX(${droneX}px)
-       translateY(${lift}px)
+       translateY(${DRONE_BASE_Y + lift}px)
        translateZ(10px)
        rotateZ(${roll}deg)
-       scale3d(1.02, 1.02, 1.02)`;
+       scale3d(1.4, 1.4, 1.4)`;
   }
 
   if (video && isFinite(video.duration) && video.duration > 0) {
@@ -1206,6 +1236,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   if (gyroToggle) {
+    gyroToggle.checked = SETTINGS.gyroEnabled;
     gyroToggle.addEventListener("change", () => {
       SETTINGS.gyroEnabled = gyroToggle.checked;
       if (SETTINGS.gyroEnabled) enableGyro();
