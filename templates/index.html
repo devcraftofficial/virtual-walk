@@ -7,7 +7,6 @@
 
   <!-- MapLibre -->
   <link rel="stylesheet" href="./static/css/maplibre-gl.css" >
-  
 
   <style>
     :root {
@@ -227,9 +226,7 @@
       font-weight: 500;
     }
 
-    .mode-btn span {
-      font-size: 12px;
-    }
+    .mode-btn span { font-size: 12px; }
 
     .mode-btn:hover {
       transform: translateY(-1px);
@@ -477,9 +474,7 @@
       -webkit-overflow-scrolling: touch;
     }
 
-    .category-bar::-webkit-scrollbar {
-      height: 4px;
-    }
+    .category-bar::-webkit-scrollbar { height: 4px; }
 
     .category-bar::-webkit-scrollbar-thumb {
       background: rgba(148,163,184,0.5);
@@ -559,9 +554,7 @@
       border-color: rgba(56,189,248,0.85);
     }
 
-    .card:hover::before {
-      opacity: 1;
-    }
+    .card:hover::before { opacity: 1; }
 
     .thumb img {
       width: 100%;
@@ -572,9 +565,7 @@
       transition: transform 0.3s ease;
     }
 
-    .card:hover .thumb img {
-      transform: scale(1.05);
-    }
+    .card:hover .thumb img { transform: scale(1.05); }
 
     .card-info {
       padding: 11px 11px 10px;
@@ -620,7 +611,7 @@
     .mode-walk { border-color:#22c55e; color:#bbf7d0; }
     .mode-drive { border-color:#38bdf8; color:#e0f2fe; }
     .mode-fly { border-color:#a855f7; color:#f3e8ff; }
-    .mode-sit { border-color:#f97316; color:#ffedd5; }
+    .mode-sit  { border-color:#f97316; color:#ffedd5; }
 
     .like-btn {
       border: none;
@@ -654,9 +645,7 @@
       body { padding: 8px 0; }
       .shell { padding: 14px 14px 18px; border-radius: 18px; }
 
-      .container {
-        grid-template-columns: 1fr;
-      }
+      .container { grid-template-columns: 1fr; }
 
       #map { height: 260px; }
 
@@ -713,7 +702,7 @@
 
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(20px) scale(0.96); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .card {
@@ -882,12 +871,13 @@
       </div>
     </div>
   </div>
+
 <script src="./static/js/maplibre-gl.js"></script>
 <script>
   /* ============================================
      MAPTILER KEY
   ============================================ */
-  const MAPTILER_KEY = "PqdU3M5vnOQK0dDQnkIq";   // ← replace with your key
+  const MAPTILER_KEY = "PqdU3M5vnOQK0dDQnkIq";
 
   /* ============================================
      DATA FROM BACKEND
@@ -908,11 +898,9 @@
   map.addControl(new maplibregl.NavigationControl(), "top-right");
 
   map.on("load", () => {
-    // Fix half-render map issue
     setTimeout(() => map.resize(), 200);
     setTimeout(() => map.resize(), 800);
   });
-
 
   /* ============================================
      MARKERS
@@ -935,7 +923,10 @@
       marker.getElement().style.transition = "all 0.2s ease";
 
       marker.getElement().addEventListener("click", () => {
+        // highlight card and fly map
         focusCardByIndex(index);
+        // then open the street page
+        openStreetByIndex(index);
       });
 
       markers.push(marker);
@@ -944,14 +935,12 @@
 
   map.on("load", addMarkers);
 
-
   /* ============================================
      TOP RATED & RECENT LISTS
   ============================================ */
   const topRatedList = document.getElementById("topRatedList");
   const recentList = document.getElementById("recentList");
 
-  /* ---- Top liked ---- */
   const sortedByLikes = [...STREETS]
     .sort((a, b) => (b.likes || 0) - (a.likes || 0))
     .slice(0, 5);
@@ -965,7 +954,6 @@
     topRatedList.appendChild(li);
   });
 
-  /* ---- Recent ---- */
   const sortedByTime = [...STREETS]
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
     .slice(0, 5);
@@ -979,7 +967,6 @@
     recentList.appendChild(li);
   });
 
-
   /* ============================================
      FOCUS CARD + FLY TO STREET
   ============================================ */
@@ -987,13 +974,11 @@
     const card = document.querySelector(`.card[data-id="${id}"]`);
     if (!card) return;
 
-    // UI highlight
     card.scrollIntoView({ behavior: "smooth", block: "center" });
     card.focus();
     card.style.transform = "scale(1.02)";
     setTimeout(() => (card.style.transform = ""), 260);
 
-    // map jump
     const st = STREETS.find(s => s._id === id);
     if (st && st.lat != null && st.lng != null) {
       map.flyTo({
@@ -1010,6 +995,16 @@
     if (st) focusCardById(st._id);
   }
 
+  // Helper: open street page for a card index
+  function openStreetByIndex(i) {
+    const cardsNodeList = document.querySelectorAll(".card");
+    const card = cardsNodeList[i];
+    if (!card) return;
+    const href = card.dataset.href ? card.dataset.href.trim() : "";
+    if (href) {
+      window.location.href = href;
+    }
+  }
 
   /* ============================================
      CARD CLICK
@@ -1034,7 +1029,6 @@
   });
 
   document.getElementById("streetsGrid").classList.remove("loading");
-
 
   /* ============================================
      LIKE BUTTON
@@ -1069,7 +1063,6 @@
     });
   });
 
-
   /* ============================================
      SEARCH + CATEGORY FILTER
   ============================================ */
@@ -1078,9 +1071,8 @@
   const searchResultsCount = document.getElementById("searchResultsCount");
   const categoryBar = document.getElementById("categoryBar");
 
-  let currentCategory = "all"; // default: show everything
+  let currentCategory = "all";
 
-  // Build category chips from STREETS data
   if (categoryBar) {
     const catSet = new Set();
     STREETS.forEach(st => {
@@ -1097,7 +1089,6 @@
       btn.dataset.cat = value;
 
       btn.addEventListener("click", () => {
-        // update active state
         document.querySelectorAll(".cat-chip").forEach(c => c.classList.remove("active"));
         btn.classList.add("active");
 
@@ -1108,10 +1099,8 @@
       categoryBar.appendChild(btn);
     }
 
-    // "All" chip first
     createChip("All categories", "all", true);
 
-    // Actual categories (sorted for nicer UX)
     Array.from(catSet).sort().forEach(cat => {
       createChip(cat, cat, false);
     });
@@ -1157,7 +1146,6 @@
   if (searchInput) {
     searchInput.addEventListener("input", applyHomeFilter);
   }
-
 
   /* ============================================
      KEYBOARD NAVIGATION
