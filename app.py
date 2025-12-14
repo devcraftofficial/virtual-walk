@@ -5,7 +5,7 @@ import os
 os.environ["HTTPX_DISABLE_HTTP2"] = "1"
 
 import uuid
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, current_app
 from pymongo import MongoClient
 from datetime import datetime
 from dotenv import load_dotenv
@@ -30,6 +30,14 @@ SUPABASE_URL = os.getenv("SUPABASE_URL") or "https://cepabjmlengczyiezdqd.supaba
 SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET") or "streetwalk"
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
+# ---------------- MapTiler config ----------------
+MAPTILER_KEY = os.getenv("MAPTILER_KEY")  # put this in your .env
+MAP_STYLE_URL = (
+    f"https://api.maptiler.com/maps/streets-v2/style.json?key={MAPTILER_KEY}"
+    if MAPTILER_KEY
+    else ""
+)
+
 # --------------------------------------------------------
 # Cloudinary Config
 # --------------------------------------------------------
@@ -38,15 +46,20 @@ cloudinary.config(
     api_key=CLOUDINARY_API_KEY,
     api_secret=CLOUDINARY_API_SECRET,
     secure=True,
-    timeout=180
+    timeout=180,
 )
 
 # --------------------------------------------------------
 # Flask App
 # --------------------------------------------------------
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = int(os.getenv("MAX_CONTENT_LENGTH", str(1024*1024*1024)))  # 1GB default
+app.config["MAX_CONTENT_LENGTH"] = int(
+    os.getenv("MAX_CONTENT_LENGTH", str(1024 * 1024 * 1024))
+)  # 1GB default
 app.secret_key = os.getenv("FLASK_SECRET_KEY") or os.urandom(24)
+
+# expose map style to templates
+app.config["MAP_STYLE_URL"] = MAP_STYLE_URL
 
 # --------------------------------------------------------
 # MongoDB Setup
@@ -113,9 +126,8 @@ def distinct_categories_for_mode(mode: str):
     """
     cats = streets_collection.distinct(
         "category",
-        {"type": "video", "mode": mode}
+        {"type": "video", "mode": mode},
     )
-    # filter out None / empty
     cats = [c for c in cats if c]
     return sorted(cats)
 
@@ -131,11 +143,9 @@ def index():
 
 # --------------------------------------------------------
 # Generic World Page (avatar WALK + 3D only)
-# Optional street_id to load specific street
 # --------------------------------------------------------
 @app.route("/world")
 def world():
-    # all streets so you can test everything here if you want
     streets = list_with_str_id(streets_collection.find())
 
     center = {"lat": 25.2048, "lng": 55.2708}
@@ -146,15 +156,16 @@ def world():
     selected_street = get_street_by_id(street_id)
 
     return render_template(
-        "world.html",          # avatar version
+        "world.html",
         streets=streets,
         center=center,
         selected_street=selected_street,
+        map_style_url=current_app.config["MAP_STYLE_URL"],
     )
 
 
 # --------------------------------------------------------
-# WALK world (avatar, same world.html but filtered to walk videos + 3D)
+# WALK world (avatar, video walk + 3D)
 # --------------------------------------------------------
 @app.route("/world/walk")
 def world_walk():
@@ -176,10 +187,12 @@ def world_walk():
     street_id = request.args.get("street_id")
     selected_street = get_street_by_id(street_id)
 
-    # safety: only allow walk/3d here
     if selected_street and not (
         selected_street.get("type") == "3d"
-        or (selected_street.get("type") == "video" and selected_street.get("mode") == "walk")
+        or (
+            selected_street.get("type") == "video"
+            and selected_street.get("mode") == "walk"
+        )
     ):
         selected_street = None
 
@@ -188,11 +201,12 @@ def world_walk():
         streets=streets,
         center=center,
         selected_street=selected_street,
+        map_style_url=current_app.config["MAP_STYLE_URL"],
     )
 
 
 # --------------------------------------------------------
-# DRIVE world (no avatar) – uses drive_world.html
+# DRIVE world (no avatar) – drive_world.html
 # --------------------------------------------------------
 @app.route("/world/drive")
 def world_drive():
@@ -213,15 +227,16 @@ def world_drive():
         selected_street = None
 
     return render_template(
-        "drive_world.html",    # separate template without avatar
+        "drive_world.html",
         streets=streets,
         center=center,
         selected_street=selected_street,
+        map_style_url=current_app.config["MAP_STYLE_URL"],
     )
 
 
 # --------------------------------------------------------
-# FLY world (no avatar) – uses fly_world.html
+# FLY world (no avatar) – fly_world.html
 # --------------------------------------------------------
 @app.route("/world/fly")
 def world_fly():
@@ -246,11 +261,12 @@ def world_fly():
         streets=streets,
         center=center,
         selected_street=selected_street,
+        map_style_url=current_app.config["MAP_STYLE_URL"],
     )
 
 
 # --------------------------------------------------------
-# SIT world (no avatar) – uses sit_world.html
+# SIT world (no avatar) – sit_world.html
 # --------------------------------------------------------
 @app.route("/world/sit")
 def world_sit():
@@ -275,12 +291,12 @@ def world_sit():
         streets=streets,
         center=center,
         selected_street=selected_street,
+        map_style_url=current_app.config["MAP_STYLE_URL"],
     )
 
 
 # --------------------------------------------------------
-# LIST PAGES for each mode (selection before entering world)
-# Now support optional ?category= filter
+# LIST PAGES for each mode
 # --------------------------------------------------------
 @app.route("/walk")
 def walk():
@@ -359,7 +375,7 @@ def sit():
 
 
 # --------------------------------------------------------
-# (Optional legacy detail views – safe to delete later)
+# Optional legacy detail views
 # --------------------------------------------------------
 @app.route("/walk/<street_id>")
 def walk_view(street_id):
@@ -387,13 +403,12 @@ def drive_view(street_id):
 
 # --------------------------------------------------------
 # Upload Route - MULTIPLE VIDEOS SUPPORTED
-# Now includes 'mode' + 'category' for video streets
 # --------------------------------------------------------
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
     if request.method == "POST":
-        street_type = request.form.get("street_type")   # "video" or "3d"
-        mode = request.form.get("mode")                 # "walk" | "drive" | "fly" | "sit" (for video)
+        street_type = request.form.get("street_type")
+        mode = request.form.get("mode")
         name = request.form.get("name")
         city = request.form.get("city")
         country = request.form.get("country")
@@ -408,14 +423,11 @@ def upload():
             flash("Latitude/longitude out of range", "error")
             return redirect(url_for("upload"))
 
-        # category (for video streets)
         category = request.form.get("category", "").strip() or None
         description = request.form.get("description", "").strip() or None
 
-
         # ---------------- VIDEO STREET ----------------
         if street_type == "video":
-            # basic safety: default to "walk" if missing
             if mode not in ["walk", "drive", "fly", "sit"]:
                 mode = "walk"
 
@@ -447,14 +459,14 @@ def upload():
 
             street_doc = {
                 "type": "video",
-                "mode": mode,  # walk / drive / fly / sit
-                "category": category,  # e.g. "airport", "highway", "mall", ...
+                "mode": mode,
+                "category": category,
                 "name": name,
                 "city": city,
                 "country": country,
                 "lat": lat,
                 "lng": lng,
-                "description": description,   # ⭐ ADDED
+                "description": description,
                 "videos": [
                     {"url": url, "title": f"Part {i + 1}"}
                     for i, url in enumerate(video_urls)
@@ -485,7 +497,7 @@ def upload():
                 "name": name,
                 "city": city,
                 "country": country,
-                "description": description,   # ⭐ ADDED
+                "description": description,
                 "lat": lat,
                 "lng": lng,
                 "glbUrl": glb_url,
@@ -509,26 +521,31 @@ def upload():
 # --------------------------------------------------------
 @app.route("/dashboard")
 def dashboard():
-    # Get all streets (for map and stats)
     streets = list_with_str_id(streets_collection.find())
 
-    # Simple stats (you can improve later)
     total_streets = len(streets)
     total_likes = sum(s.get("likes", 0) for s in streets)
-    walk_count = sum(1 for s in streets if s.get("type") == "video" and s.get("mode") == "walk")
-    drive_count = sum(1 for s in streets if s.get("type") == "video" and s.get("mode") == "drive")
-    fly_count = sum(1 for s in streets if s.get("type") == "video" and s.get("mode") == "fly")
-    sit_count = sum(1 for s in streets if s.get("type") == "video" and s.get("mode") == "sit")
+    walk_count = sum(
+        1 for s in streets if s.get("type") == "video" and s.get("mode") == "walk"
+    )
+    drive_count = sum(
+        1 for s in streets if s.get("type") == "video" and s.get("mode") == "drive"
+    )
+    fly_count = sum(
+        1 for s in streets if s.get("type") == "video" and s.get("mode") == "fly"
+    )
+    sit_count = sum(
+        1 for s in streets if s.get("type") == "video" and s.get("mode") == "sit"
+    )
 
-    # sort by createdAt desc for recent list
     recent_streets = sorted(
         streets,
         key=lambda s: s.get("createdAt") or datetime.min,
-        reverse=True
+        reverse=True,
     )[:8]
 
     return render_template(
-        "dash.html",          # your dashboard template file
+        "dash.html",
         streets=streets,
         total_streets=total_streets,
         total_likes=total_likes,
@@ -555,6 +572,10 @@ def like_street(street_id):
     )
     return {"likes": street.get("likes", 0)}
 
+
+# --------------------------------------------------------
+# Start Server
+# --------------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
     app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
