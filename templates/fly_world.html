@@ -312,12 +312,24 @@
       user-select: none;
       -webkit-user-select: none;
       will-change: transform;
-      transform: translateZ(0);
+      transform: translate3d(0, 0, 0);
       backface-visibility: hidden;
       cursor: default;
     }
 
-    
+    /* Drone model viewer */
+    #droneMV {
+      position: absolute;
+      top: 76%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 180px;
+      height: 200px;
+      pointer-events: none;
+      z-index: 5;
+      filter: drop-shadow(0 14px 32px rgba(0, 0, 0, 0.8));
+    }
+
     /* Joystick */
     #joystickBase {
       position: absolute;
@@ -412,29 +424,6 @@
     model-viewer::part(default-ar-button) {
       display: none !important;
     }
-    #droneWrapper {
-  position: absolute;
-  left: 50%;
-  bottom: 22%;
-  width: 200px;
-  height: 220px;
-  transform-style: preserve-3d;
-  perspective: 900px;
-  pointer-events: none;
-  z-index: 5;
-}
-
-#droneMV {
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-  will-change: transform;
-}
-
-#droneWrapper {
-  transform-origin: center center;
-}
-
   </style>
 </head>
 
@@ -581,23 +570,22 @@
       <source id="videoSource" src="">
     </video>
 
-    <div id="droneWrapper">
-  <model-viewer
-    id="droneMV"
-    src="/static/avatars/drone/drone.glb"
-    autoplay
-    shadow-intensity="0.9"
-    exposure="1.1"
-    interaction-prompt="none"
-    disable-zoom
-    disable-pan
-    disable-tap
-    camera-controls="false"
-    camera-orbit="0deg 70deg 3m"
-    orientation="0deg 0deg 180deg">
-  </model-viewer>
-</div>
-
+    <model-viewer
+      id="droneMV"
+      src="/static/avatars/drone/drone.glb"
+      autoplay
+      shadow-intensity="0.9"
+      exposure="1.1"
+      interaction-prompt="none"
+      interaction-prompt-threshold="0"
+      disable-zoom
+      disable-pan
+      disable-tap
+      camera-controls="false"
+      style="pointer-events: none;"
+      camera-orbit="0deg 70deg 3m"
+      orientation="0deg 0deg 180deg">
+    </model-viewer>
 
     <div id="joystickBase" aria-label="Movement joystick" role="application" tabindex="0">
       <div id="joystickKnob"></div>
@@ -615,7 +603,8 @@
 </script>
 
 <script type="module">
-  const droneWrapper = document.getElementById("droneWrapper");
+// simple mobile detection
+const IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 const STREETS = JSON.parse(document.getElementById('streets-data').textContent || "[]");
 const SELECTED_STREET = JSON.parse(document.getElementById('selected-street-data').textContent || "null");
@@ -662,14 +651,14 @@ const droneAudio = new Audio("/static/audio/drone_loop.mp3");
 droneAudio.loop = true;
 droneAudio.volume = 0.6;
 
-/* Settings */
+/* Settings (lighter mobile profile) */
 const SETTINGS = {
   flightSpeed: 1.0,
-  bobIntensity: 1.0,
-  tiltIntensity: 1.0,
+  bobIntensity: IS_MOBILE ? 0.7 : 1.0,
+  tiltIntensity: IS_MOBILE ? 0.7 : 1.0,
   audioEnabled: true,
-  maxFPS: 60,
-  cameraMode: "normal",
+  maxFPS: IS_MOBILE ? 45 : 60,
+  cameraMode: "smooth",
   gyroEnabled: false,
   autoPilot: false,
   gpsRouteEnabled: false
@@ -710,6 +699,9 @@ let currentVideoIndex = 0;
 
 let lastFrameTime = performance.now();
 let frameAccumulator = 0;
+
+// joystick throttle
+let pendingJoyEvent = null;
 
 /* Helpers */
 function safePlay() {
@@ -876,18 +868,25 @@ function loadStreetByIndex(index) {
 function playForward() {
   reversePlaying = false;
   video.playbackRate = walkSpeed;
+  video.defaultPlaybackRate = walkSpeed;
   safePlay();
 }
 function playReverse() {
+  if (IS_MOBILE) {
+    reversePlaying = false;
+    safePause();
+    return;
+  }
   if (!video) return;
   reversePlaying = true;
   safePause();
   function stepReverse() {
     if (!reversePlaying) return;
-    if (video.currentTime <= 0.02) {
+    const dt = 0.008 * walkSpeed;
+    if (video.currentTime <= dt + 0.01) {
       video.currentTime = video.duration || 0;
     } else {
-      video.currentTime = Math.max(0, video.currentTime - (0.016 * walkSpeed));
+      video.currentTime = Math.max(0, video.currentTime - dt);
     }
     requestAnimationFrame(stepReverse);
   }
@@ -947,8 +946,15 @@ window.addEventListener("keyup", e => {
   }
 });
 
-/* Joystick */
-function setJoystickFromEvent(ev) {
+/* Joystick: throttle pointermove, process in tick */
+function queueJoystickEvent(ev) {
+  pendingJoyEvent = ev;
+}
+function processJoystick() {
+  if (!pendingJoyEvent) return;
+  const ev = pendingJoyEvent;
+  pendingJoyEvent = null;
+
   const rect = joystickBase.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
@@ -965,7 +971,9 @@ function setJoystickFromEvent(ev) {
   const move = -ny;
   joyDir = Math.abs(move) > 0.15 ? (move > 0 ? 1 : -1) : 0;
 
-  yawTarget += nx * 2;
+  if (Math.abs(nx) > 0.1) {
+    yawTarget += nx * 1.2;
+  }
   recomputeDirection();
 }
 function resetJoystick() {
@@ -976,11 +984,11 @@ function resetJoystick() {
 joystickBase.addEventListener("pointerdown", e => {
   joystickBase.setPointerCapture(e.pointerId);
   joyActive = true;
-  setJoystickFromEvent(e);
+  queueJoystickEvent(e);
 });
 joystickBase.addEventListener("pointermove", e => {
   if (!joyActive) return;
-  setJoystickFromEvent(e);
+  queueJoystickEvent(e);
 });
 joystickBase.addEventListener("pointerup", () => {
   joyActive = false;
@@ -1006,8 +1014,11 @@ settingsButton.addEventListener("keydown", e => {
 
 speedSlider.addEventListener("input", () => {
   SETTINGS.flightSpeed = parseFloat(speedSlider.value);
-  walkSpeed = SETTINGS.flightSpeed;
-  speedValueLabel.textContent = SETTINGS.flightSpeed.toFixed(1) + "x";
+  const capped = IS_MOBILE ? Math.min(1.7, SETTINGS.flightSpeed) : SETTINGS.flightSpeed;
+  walkSpeed = capped;
+  video.defaultPlaybackRate = capped;
+  video.playbackRate = capped;
+  speedValueLabel.textContent = capped.toFixed(1) + "x";
 });
 bobSlider.addEventListener("input", () => {
   SETTINGS.bobIntensity = parseFloat(bobSlider.value);
@@ -1107,6 +1118,9 @@ function tick(timestamp) {
 
   const delta = Math.min(dt, 50) / 16.67;
 
+  // process joystick once per frame
+  if (joyActive) processJoystick();
+
   let yawSmoothFactor = 0.18;
   let bobFactor = 0.25;
   let tiltFactor = 0.6;
@@ -1123,21 +1137,17 @@ function tick(timestamp) {
 
   yawCurrent += (yawTarget - yawCurrent) * yawSmoothFactor * delta;
 
-  // 🔒 Normalize yaw to avoid overflow (mobile stability)
-yawCurrent = ((yawCurrent % 360) + 360) % 360;
-yawTarget  = ((yawTarget % 360) + 360) % 360;
-
-
   const speedFactor = SETTINGS.flightSpeed;
   if (currentDir !== 0 && SETTINGS.bobIntensity > 0) {
     headBob += bobDirection * bobFactor * speedFactor * SETTINGS.bobIntensity * delta;
-    if (headBob > 2 || headBob < -2) bobDirection *= -1;
+    if (headBob > 1 || headBob < -1) bobDirection *= -1; // tighter range
   } else {
     headBob *= 0.85 * delta;
   }
   const bobY = headBob;
 
-  video.style.transform = `translate3d(0, ${bobY}px, 0)`;
+  // keep video fixed vertically
+  video.style.transform = "translate3d(0, 0, 0)";
 
   if (droneMV) {
     const yawDiff = yawTarget - yawCurrent;
@@ -1147,17 +1157,12 @@ yawTarget  = ((yawTarget % 360) + 360) % 360;
     droneXTarget = Math.max(-DRONE_MAX_X, Math.min(DRONE_MAX_X, droneXTarget));
     droneX += (droneXTarget - droneX) * 0.12 * delta;
 
-    const lift = -bobY * 1.2 * SETTINGS.bobIntensity;
+    // small lift so drone moves but stays near horizon
+    const lift = -bobY * 0.6 * SETTINGS.bobIntensity;
 
-    const BASE_YAW = 180;
-
-droneWrapper.style.transform =
-  `translateX(-50%)
-   translateX(${droneX}px)
-   translateY(${lift}px)
-   rotateY(${BASE_YAW + yawCurrent}deg)
-   rotateZ(${roll}deg)`;
-
+    droneMV.style.transform =
+      `translate(calc(-50% + ${droneX}px), calc(-50% + ${lift}px))
+       rotateZ(${roll}deg)`;
   }
 
   if (video && isFinite(video.duration) && video.duration > 0) {
