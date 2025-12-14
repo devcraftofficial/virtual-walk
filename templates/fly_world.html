@@ -372,7 +372,8 @@
 
     @media (max-width: 900px) {
       #joystickBase {
-        bottom: calc(26px + env(safe-area-inset-bottom, 0px)) !important;
+        /* raised higher on mobile so it does not get cut off */
+        bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
         right: 18px !important;
         width: 88px !important;
         height: 88px !important;
@@ -424,6 +425,7 @@
     model-viewer::part(default-ar-button) {
       display: none !important;
     }
+    
   </style>
 </head>
 
