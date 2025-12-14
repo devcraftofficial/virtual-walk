@@ -481,7 +481,7 @@
           <select id="cameraModeSelect"
                   style="flex:1;background:#020617;border-radius:999px;border:1px solid var(--border-subtle);color:var(--text-main);padding:2px 8px;font-size:11px;">
             <option value="normal">Normal</option>
-            <option value="smooth">Smooth</option>
+            <option value="smooth" selected>Smooth</option>
             <option value="drift">Drift</option>
           </select>
         </div>
@@ -550,12 +550,11 @@
 
     <video
       id="streetVideo"
-      preload="auto"
+      preload="metadata"
       muted
       playsinline
       disablepictureinpicture
-      controlslist="nodownload nofullscreen no
-      playbackrate"
+      controlslist="nodownload nofullscreen noplaybackrate"
       aria-label="Flight view video">
       <source id="videoSource" src="">
     </video>
@@ -567,6 +566,7 @@
         autoplay
         shadow-intensity="0.9"
         exposure="1.1"
+        reveal="auto"
         interaction-prompt="none"
         interaction-prompt-threshold="0"
         camera-controls="false"
@@ -597,6 +597,9 @@ const IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 const STREETS = JSON.parse(document.getElementById('streets-data').textContent || "[]");
 const SELECTED_STREET = JSON.parse(document.getElementById('selected-street-data').textContent || "null");
+
+/* Config: inject your map style URL from backend to avoid hardcoding keys */
+const MAP_STYLE_URL = "{{ map_style_url }}"; // e.g. provided by Flask config [web:251]
 
 /* Elements */
 const miniMapEl        = document.getElementById("miniMap");
@@ -723,7 +726,7 @@ function updateDroneAudio() {
 function initMiniMap() {
   miniMap = new maplibregl.Map({
     container: "miniMap",
-    style: "https://api.maptiler.com/maps/streets-v2/style.json?key=PqdU3M5vnOQK0dDQnkIq",
+    style: MAP_STYLE_URL || "https://api.maptiler.com/maps/streets-v2/style.json?key=",
     center: [0, 20],
     zoom: 1.5,
     interactive: false,
@@ -750,7 +753,7 @@ function ensureFullMap() {
   if (fullMapReady) { highlightSelectedMarker(); return; }
   fullMap = new maplibregl.Map({
     container: "fullMapContainer",
-    style: "https://api.maptiler.com/maps/streets-v2/style.json?key=PqdU3M5vnOQK0dDQnkIq",
+    style: MAP_STYLE_URL || "https://api.maptiler.com/maps/streets-v2/style.json?key=",
     center: [0, 20],
     zoom: 2.5,
     renderWorldCopies: false
@@ -916,6 +919,22 @@ video.addEventListener("ended", () => {
   }
 });
 
+/* Basic video error handling */
+video.addEventListener("error", () => {
+  streetLocationEl.textContent = "Video failed to load. Tap map to choose another flight.";
+});
+
+/* Pause when tab hidden to save battery/data */
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    safePause();
+    reversePlaying = false;
+    updateDroneAudio();
+  } else if (currentDir === 1) {
+    playForward();
+  }
+});
+
 /* Keyboard */
 window.addEventListener("keydown", e => {
   const k = e.key.toLowerCase();
@@ -1064,24 +1083,23 @@ function tick(timestamp) {
 
   video.style.transform = "translate3d(0, 0, 0)";
 
-  // true 3D yaw via model-viewer camera orbit
+  // true 3D yaw via model-viewer camera orbit [web:187]
   if (droneMV) {
-    const orbitYaw   = BASE_YAW + yawCurrent; // around vertical axis
-    const orbitPitch = 70;                    // angle from above
-    const orbitRadius = 3;                    // distance
+    const orbitYaw   = BASE_YAW + yawCurrent;
+    const orbitPitch = 70;
+    const orbitRadius = 3;
     droneMV.cameraOrbit = `${orbitYaw}deg ${orbitPitch}deg ${orbitRadius}m`;
   }
 
   if (droneWrapper) {
-    // small roll as wrapper rotation so it banks but yaw is handled in cameraOrbit
     let yawDiff = yawTarget - yawCurrent;
     if (yawDiff > 180) yawDiff -= 360;
     if (yawDiff < -180) yawDiff += 360;
     if (yawDiff > 45) yawDiff = 45;
     if (yawDiff < -45) yawDiff = -45;
 
-    const tiltFactor = 0.6;
-    let roll = yawDiff * tiltFactor * SETTINGS.tiltIntensity;
+    const tiltFactorLocal = 0.6;
+    let roll = yawDiff * tiltFactorLocal * SETTINGS.tiltIntensity;
 
     droneXTarget += (yawDiff * 0.8 * SETTINGS.tiltIntensity) + windOffset * (windStrength || 0);
     droneXTarget = Math.max(-DRONE_MAX_X, Math.min(DRONE_MAX_X, droneXTarget));
@@ -1169,6 +1187,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   if (cameraModeSelect) {
+    cameraModeSelect.value = SETTINGS.cameraMode;
     cameraModeSelect.addEventListener("change", () => {
       SETTINGS.cameraMode = cameraModeSelect.value;
     });
@@ -1180,6 +1199,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   if (fpsSlider) {
+    fpsSlider.value = SETTINGS.maxFPS.toString();
     fpsSlider.addEventListener("input", () => {
       SETTINGS.maxFPS = parseInt(fpsSlider.value, 10);
       fpsValueLabel.textContent = SETTINGS.maxFPS.toString();
