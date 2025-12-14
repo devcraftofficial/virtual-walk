@@ -1140,7 +1140,9 @@ function tick(timestamp) {
   const speedFactor = SETTINGS.flightSpeed;
   if (currentDir !== 0 && SETTINGS.bobIntensity > 0) {
     headBob += bobDirection * bobFactor * speedFactor * SETTINGS.bobIntensity * delta;
-    if (headBob > 1 || headBob < -1) bobDirection *= -1; // tighter range
+    // clamp bob to very small range to avoid drift
+    if (headBob > 0.6)  headBob = 0.6;
+    if (headBob < -0.6) headBob = -0.6;
   } else {
     headBob *= 0.85 * delta;
   }
@@ -1157,8 +1159,10 @@ function tick(timestamp) {
     droneXTarget = Math.max(-DRONE_MAX_X, Math.min(DRONE_MAX_X, droneXTarget));
     droneX += (droneXTarget - droneX) * 0.12 * delta;
 
-    // small lift so drone moves but stays near horizon
-    const lift = -bobY * 0.6 * SETTINGS.bobIntensity;
+    // very small lift, clamped, so drone stays near center
+    let lift = -bobY * 0.25 * SETTINGS.bobIntensity;
+    if (lift > 10)  lift = 10;
+    if (lift < -10) lift = -10;
 
     droneMV.style.transform =
       `translate(calc(-50% + ${droneX}px), calc(-50% + ${lift}px))
