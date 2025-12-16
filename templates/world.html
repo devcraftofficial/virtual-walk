@@ -260,7 +260,7 @@
 
     #settingsBtn {
       position: absolute;
-      top: 190px;
+      top: 130px;
       left: 16px;
       width: 40px;
       height: 40px;
@@ -452,6 +452,15 @@
 
       <div id="settingsPanel" aria-label="View settings">
         <h3 style="margin:0 0 6px 0;font-size:13px;">View settings</h3>
+
+        <div class="settings-section">
+          <strong style="font-size:11px;">Experience</strong>
+          <div class="settings-row">
+            <label for="setAutoStart">Auto‑start walking</label>
+            <input type="checkbox" id="setAutoStart">
+          </div>
+        </div>
+
         <div class="settings-section">
           <strong style="font-size:11px;">Video</strong>
           <div class="settings-row">
@@ -495,13 +504,33 @@
         </div>
       </div>
 
-      <!-- New start hint -->
+      <!-- Modern start hint -->
       <div id="startHint"
-           style="position:absolute;inset:auto 0 90px 0;display:flex;justify-content:center;pointer-events:none;z-index:15;">
-        <div style="background:rgba(15,23,42,0.9);border:1px solid rgba(148,163,184,0.6);
-                    padding:8px 16px;border-radius:999px;font-size:12px;color:#e5e7eb;
-                    box-shadow:0 18px 45px rgba(0,0,0,0.8);">
-          Tap joystick or press ↑ / W to start walking
+           style="position:absolute;inset:auto 0 82px 0;display:flex;justify-content:center;z-index:15;transition:opacity 0.25s ease-out;">
+        <div style="display:flex;align-items:center;gap:10px;
+                    background:rgba(15,23,42,0.92);
+                    border-radius:999px;
+                    padding:8px 14px;
+                    border:1px solid rgba(148,163,184,0.55);
+                    box-shadow:0 18px 45px rgba(0,0,0,0.85);
+                    font-size:11px;
+                    color:#e5e7eb;
+                    backdrop-filter:blur(12px);">
+          <span style="display:inline-flex;align-items:center;justify-content:center;
+                       width:20px;height:20px;border-radius:999px;
+                       background:rgba(56,189,248,0.16);
+                       border:1px solid rgba(56,189,248,0.7);
+                       font-size:11px;color:#7dd3fc;">
+            ↑
+          </span>
+          <span style="opacity:0.9;">
+            Press <strong>W / ↑</strong> or drag the joystick to start walking
+          </span>
+          <button id="startHintSkip"
+                  style="margin-left:4px;border:none;background:transparent;
+                         color:#9ca3af;font-size:11px;cursor:pointer;padding:0 2px;">
+            Skip
+          </button>
         </div>
       </div>
 
@@ -556,11 +585,13 @@
     const setHideAvatar = document.getElementById("setHideAvatar");
     const setWalkNoAvatar = document.getElementById("setWalkNoAvatar");
     const setNightMode = document.getElementById("setNightMode");
+    const setAutoStart = document.getElementById("setAutoStart");
 
     const joystickBase = document.getElementById("joystickBase");
     const joystickKnob = document.getElementById("joystickKnob");
 
     const startHint = document.getElementById("startHint");
+    const startHintSkip = document.getElementById("startHintSkip");
     let hasStartedWalking = false;
 
     /* STATE */
@@ -595,7 +626,15 @@
     function hideStartHint() {
       if (hasStartedWalking) return;
       hasStartedWalking = true;
-      if (startHint) startHint.style.display = "none";
+      if (startHint) {
+        startHint.style.opacity = "0";
+        startHint.style.pointerEvents = "none";
+        setTimeout(() => { startHint.style.display = "none"; }, 220);
+      }
+    }
+
+    if (startHintSkip) {
+      startHintSkip.addEventListener("click", hideStartHint);
     }
 
     /* ========================================
@@ -608,6 +647,16 @@
       video.currentTime = 0;
     }
 
+    function maybeAutoStart() {
+      if (!setAutoStart || !setAutoStart.checked) return;
+      if (currentDir !== 0) return;
+      currentDir = 1;
+      playForward();
+      setAvatarState();
+      updateFootsteps();
+      onWalkStart();
+    }
+
     function unlockAudio() {
       if (audioUnlocked) return;
       [footstepAudio, voiceAudio].forEach(audio => {
@@ -618,6 +667,7 @@
         }).catch(() => {});
       });
       audioUnlocked = true;
+      maybeAutoStart();
     }
 
     /* DIALOGUES & AUDIO */
