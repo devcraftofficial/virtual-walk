@@ -3,7 +3,8 @@ os.environ["HTTPX_DISABLE_HTTP2"] = "1"  # Cloudinary upload fix on Windows
 
 import uuid
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
+
 
 from flask import (
     Flask,
@@ -203,6 +204,12 @@ def distinct_categories_for_mode(mode: str):
     cats = [c for c in cats if c]
     return sorted(cats)
 
+def format_date(dt):
+    if not dt:
+        return ""
+    if isinstance(dt, datetime):
+        return dt.astimezone(timezone.utc).strftime("%d %b %Y")
+    return ""
 
 # --------------------------------------------------------
 # Home Page - show all published, not deleted streets
@@ -614,6 +621,9 @@ def upload():
 def dashboard():
     streets = list_with_str_id(streets_collection.find())
 
+    for s in streets:
+        s["createdAtFmt"] = format_date(s.get("createdAt"))
+
     total_streets = len(streets)
     total_likes = sum(s.get("likes", 0) for s in streets)
     walk_count = sum(
@@ -645,7 +655,9 @@ def dashboard():
         fly_count=fly_count,
         sit_count=sit_count,
         recent_streets=recent_streets,
+        map_style_url=current_app.config["MAP_STYLE_URL"],
     )
+
 
 
 # --------------------------------------------------------
