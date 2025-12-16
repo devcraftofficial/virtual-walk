@@ -393,6 +393,67 @@
       animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+#autoWalkBtn {
+  position: absolute;
+  right: 140px;          /* desktop offset */
+  bottom: 28px;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,0.7);
+  background:
+    radial-gradient(circle at 30% 30%, #38bdf8, #0f172a);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.8);
+  color: #e5e7eb;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 72;
+  outline: none;
+  transition:
+    transform 0.15s ease-out,
+    box-shadow 0.15s ease-out,
+    background 0.2s ease-out,
+    opacity 0.2s ease-out;
+}
+
+#autoWalkBtn:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.9);
+}
+
+#autoWalkBtn:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.75);
+}
+
+#autoWalkBtn.auto-on {
+  background:
+    radial-gradient(circle at 30% 30%, #22c55e, #022c22);
+}
+
+/* Mobile/tablet: tuck closer to joystick, bottom-right corner */
+@media (max-width: 768px) {
+  #autoWalkBtn {
+    right: 118px;
+    bottom: 100px;   /* above joystick which moves up on mobile */
+    width: 42px;
+    height: 42px;
+    font-size: 17px;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 480px) {
+  #autoWalkBtn {
+    right: 20px;
+    bottom: 200px;
+  }
+}
+
+    
   </style>
 </head>
 
@@ -450,16 +511,14 @@
         <div id="joystickKnob"></div>
       </div>
 
+      <!-- Auto walk floating button -->
+      <button id="autoWalkBtn" aria-label="Toggle auto walk">
+  ▶
+</button>
+
+
       <div id="settingsPanel" aria-label="View settings">
         <h3 style="margin:0 0 6px 0;font-size:13px;">View settings</h3>
-
-        <div class="settings-section">
-          <strong style="font-size:11px;">Experience</strong>
-          <div class="settings-row">
-            <label for="setAutoStart">Auto‑start walking</label>
-            <input type="checkbox" id="setAutoStart">
-          </div>
-        </div>
 
         <div class="settings-section">
           <strong style="font-size:11px;">Video</strong>
@@ -552,15 +611,11 @@
   <script type="module">
     const DEBUG = false;
 
-    /* ========================================
-       PRODUCTION SAFETY - CRITICAL FIXES
-    ======================================== */
     let audioUnlocked = false;
     let lastFrameTime = 0;
     let isVideoLoading = false;
     let markerEls = [];
 
-    /* ELEMENTS */
     const STREETS = JSON.parse(document.getElementById("streets-data").textContent);
     const SELECTED = JSON.parse(document.getElementById("selected-street-data").textContent);
 
@@ -585,16 +640,16 @@
     const setHideAvatar = document.getElementById("setHideAvatar");
     const setWalkNoAvatar = document.getElementById("setWalkNoAvatar");
     const setNightMode = document.getElementById("setNightMode");
-    const setAutoStart = document.getElementById("setAutoStart");
 
     const joystickBase = document.getElementById("joystickBase");
     const joystickKnob = document.getElementById("joystickKnob");
 
     const startHint = document.getElementById("startHint");
     const startHintSkip = document.getElementById("startHintSkip");
+    const autoWalkBtn = document.getElementById("autoWalkBtn");
+
     let hasStartedWalking = false;
 
-    /* STATE */
     let currentIndex = -1;
     let currentVideos = [];
     let currentVideoIndex = 0;
@@ -617,6 +672,7 @@
     let streetSpeechTimeout = null;
     const GREETING_COOLDOWN = 6000;
     let lastGreetingAt = 0;
+    let autoWalkEnabled = false;
 
     const avatarSources = {
       male: { idle: "/static/avatars/male/idle.glb", walk: "/static/avatars/male/walk.glb" },
@@ -637,24 +693,11 @@
       startHintSkip.addEventListener("click", hideStartHint);
     }
 
-    /* ========================================
-       PRODUCTION SAFETY FUNCTIONS
-    ======================================== */
     function hardResetVideo() {
       video.pause();
       video.removeAttribute("src");
       video.load();
       video.currentTime = 0;
-    }
-
-    function maybeAutoStart() {
-      if (!setAutoStart || !setAutoStart.checked) return;
-      if (currentDir !== 0) return;
-      currentDir = 1;
-      playForward();
-      setAvatarState();
-      updateFootsteps();
-      onWalkStart();
     }
 
     function unlockAudio() {
@@ -667,10 +710,8 @@
         }).catch(() => {});
       });
       audioUnlocked = true;
-      maybeAutoStart();
     }
 
-    /* DIALOGUES & AUDIO */
     const dialogues = {
       male: [
         { q: "Good morning!", a: "Good morning! Have a nice day!", qFile: "/static/audio/greetings/male/male_greet_1.mp3", aFile: "/static/audio/street/reply_1.mp3" },
@@ -780,7 +821,6 @@
       return vids;
     }
 
-    /* 🔧 PRODUCTION-SAFE STREET LOADING */
     function loadStreet(street) {
       if (!street || !street.name) {
         DEBUG && console.warn("Invalid street data:", street);
@@ -926,7 +966,6 @@
         }
       });
 
-      // Cap max distance to 0.8km
       if (bestDist > 0.8) {
         DEBUG && console.log("No nearby street within 0.8km, bestDist=", bestDist);
         return -1;
@@ -951,7 +990,6 @@
       fadeLayer.style.opacity = "0";
     }
 
-    /* EVENT HANDLERS */
     video.addEventListener("ended", () => {
       if (currentVideos.length > 1 && currentVideoIndex < currentVideos.length - 1) {
         currentVideoIndex++;
@@ -971,7 +1009,6 @@
       teleportNearest();
     });
 
-    /* 🔧 PRODUCTION-SAFE TICK LOOP (60FPS + BATTERY) */
     function tick(currentTime = 0) {
       if (currentTime - lastFrameTime < 16) return requestAnimationFrame(tick);
       lastFrameTime = currentTime;
@@ -1019,7 +1056,6 @@
       requestAnimationFrame(tick);
     }
 
-    /* 🔧 PRODUCTION SAFETY LISTENERS */
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         video.pause();
@@ -1033,7 +1069,6 @@
     window.addEventListener("pointerdown", unlockAudio, { once: true });
     window.addEventListener("keydown", unlockAudio, { once: true });
 
-    /* INPUT HANDLERS */
     window.addEventListener("keydown", e => {
       const k = e.key.toLowerCase();
       if (k === "arrowleft" || k === "a") yawTarget -= 10;
@@ -1128,7 +1163,42 @@
     joystickBase.addEventListener("pointerup", resetJoystick);
     joystickBase.addEventListener("pointercancel", resetJoystick);
 
-    /* SETTINGS */
+    function setAutoWalk(on) {
+  autoWalkEnabled = on;
+
+  if (autoWalkEnabled) {
+    currentDir = 1;
+    playForward();
+    setAvatarState();
+    updateFootsteps();
+    onWalkStart();
+
+    if (autoWalkBtn) {
+      autoWalkBtn.textContent = "⏸";
+      autoWalkBtn.classList.add("auto-on");
+    }
+  } else {
+    currentDir = 0;
+    motionMomentum = 0.8;
+    reversePlaying = false;
+    video.pause();
+    setAvatarState();
+    updateFootsteps();
+
+    if (autoWalkBtn) {
+      autoWalkBtn.textContent = "▶";
+      autoWalkBtn.classList.remove("auto-on");
+    }
+  }
+}
+
+if (autoWalkBtn) {
+  autoWalkBtn.addEventListener("click", () => {
+    if (!audioUnlocked) unlockAudio();
+    setAutoWalk(!autoWalkEnabled);
+  });
+}
+
     settingsBtn.addEventListener("click", () => settingsPanel.classList.toggle("open"));
     setVideoMuted.addEventListener("change", () => video.muted = setVideoMuted.checked);
     setVideoSlow.addEventListener("change", () => {
@@ -1152,7 +1222,6 @@
       nightOverlay.style.opacity = setNightMode.checked ? "1" : "0";
     });
 
-    /* MAP */
     function updateMapMarkerHighlight() {
       markerEls.forEach(({ el, index }) => {
         el.classList.toggle("map-marker-selected", index === currentIndex);
@@ -1223,7 +1292,6 @@
       document.getElementById("fullMapOverlay").style.display = "none";
     };
 
-    /* POPUP */
     const popupCard = document.getElementById("streetPopup");
     const popupTitle = document.getElementById("popupTitle");
     const popupCity = document.getElementById("popupCity");
@@ -1248,7 +1316,6 @@
       if (e.target === popupCard) popupCard.style.display = "none";
     };
 
-    /* STARTUP */
     video.muted = true;
     requestAnimationFrame(tick);
 
