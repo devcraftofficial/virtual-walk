@@ -1,19 +1,33 @@
-# --------------------------------------------------------
-# Disable HTTP/2 for Windows (Cloudinary upload fix)
-# --------------------------------------------------------
 import os
-os.environ["HTTPX_DISABLE_HTTP2"] = "1"
+os.environ["HTTPX_DISABLE_HTTP2"] = "1"  # Cloudinary upload fix on Windows
 
 import uuid
-from flask import Flask, render_template, request, redirect, url_for, flash, current_app
-from pymongo import MongoClient
+import logging
 from datetime import datetime
+
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    current_app,
+    session,
+)
+from pymongo import MongoClient
+from bson.objectid import ObjectId
 from dotenv import load_dotenv
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 import requests
-from bson.objectid import ObjectId
+
+# --------------------------------------------------------
+# Logging
+# --------------------------------------------------------
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # --------------------------------------------------------
 # Load .env variables
@@ -31,7 +45,7 @@ SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET") or "streetwalk"
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
 # ---------------- MapTiler config ----------------
-MAPTILER_KEY = os.getenv("MAPTILER_KEY")  # put this in your .env
+MAPTILER_KEY = os.getenv("MAPTILER_KEY")
 MAP_STYLE_URL = (
     f"https://api.maptiler.com/maps/streets-v2/style.json?key={MAPTILER_KEY}"
     if MAPTILER_KEY
@@ -69,8 +83,26 @@ db = client["streetwalk"]
 streets_collection = db["streets"]
 
 # --------------------------------------------------------
+# MongoDB Indexes (run once)
+# --------------------------------------------------------
+streets_collection.create_index([("type", 1), ("mode", 1)])
+streets_collection.create_index([("createdAt", -1)])
+streets_collection.create_index([("likes", -1)])
+streets_collection.create_index([("lat", 1), ("lng", 1)])
+
+# --------------------------------------------------------
 # Helpers
 # --------------------------------------------------------
+MAX_VIDEO_SIZE = 100 * 1024 * 1024  # 100MB
+MAX_GLB_SIZE = 50 * 1024 * 1024     # 50MB
+
+
+def clean_text(value, max_len=200):
+    if not value:
+        return None
+    return value.strip()[:max_len]
+
+
 def upload_glb_supabase(file):
     filename = f"models/{uuid.uuid4()}.glb"
     upload_url = f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_BUCKET}/{filename}"
@@ -81,22 +113,31 @@ def upload_glb_supabase(file):
         "Content-Type": "model/gltf-binary",
     }
 
-    res = requests.post(upload_url, headers=headers, data=file.read())
+    try:
+        res = requests.post(upload_url, headers=headers, data=file.read())
+    except Exception:
+        logger.error("Supabase upload failed (network error)", exc_info=True)
+        raise
 
     if res.status_code in (200, 201):
         return f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/{filename}"
     else:
+        logger.error("Supabase upload failed: %s", res.text)
         raise Exception(f"Supabase Upload Failed: {res.text}")
 
 
 def upload_video_cloudinary(file):
-    upload = cloudinary.uploader.upload(
-        file,
-        folder="streetwalk_videos",
-        resource_type="video",
-        timeout=180,
-    )
-    return upload["secure_url"]
+    try:
+        upload = cloudinary.uploader.upload(
+            file,
+            folder="streetwalk_videos",
+            resource_type="video",
+            timeout=180,
+        )
+        return upload["secure_url"]
+    except Exception:
+        logger.error("Cloudinary video upload failed", exc_info=True)
+        raise
 
 
 def get_street_by_id(street_id):
@@ -126,18 +167,18 @@ def distinct_categories_for_mode(mode: str):
     """
     cats = streets_collection.distinct(
         "category",
-        {"type": "video", "mode": mode},
+        {"type": "video", "mode": mode, "status": "published"},
     )
     cats = [c for c in cats if c]
     return sorted(cats)
 
 
 # --------------------------------------------------------
-# Home Page - show all streets
+# Home Page - show all published streets
 # --------------------------------------------------------
 @app.route("/")
 def index():
-    streets = list_with_str_id(streets_collection.find())
+    streets = list_with_str_id(streets_collection.find({"status": "published"}))
     return render_template("index.html", streets=streets)
 
 
@@ -146,7 +187,7 @@ def index():
 # --------------------------------------------------------
 @app.route("/world")
 def world():
-    streets = list_with_str_id(streets_collection.find())
+    streets = list_with_str_id(streets_collection.find({"status": "published"}))
 
     center = {"lat": 25.2048, "lng": 55.2708}
     if streets:
@@ -154,6 +195,8 @@ def world():
 
     street_id = request.args.get("street_id")
     selected_street = get_street_by_id(street_id)
+    if selected_street and selected_street.get("status") != "published":
+        selected_street = None
 
     return render_template(
         "world.html",
@@ -172,10 +215,11 @@ def world_walk():
     streets = list_with_str_id(
         streets_collection.find(
             {
+                "status": "published",
                 "$or": [
                     {"type": "3d"},
                     {"type": "video", "mode": "walk"},
-                ]
+                ],
             }
         )
     )
@@ -188,10 +232,13 @@ def world_walk():
     selected_street = get_street_by_id(street_id)
 
     if selected_street and not (
-        selected_street.get("type") == "3d"
-        or (
-            selected_street.get("type") == "video"
-            and selected_street.get("mode") == "walk"
+        selected_street.get("status") == "published"
+        and (
+            selected_street.get("type") == "3d"
+            or (
+                selected_street.get("type") == "video"
+                and selected_street.get("mode") == "walk"
+            )
         )
     ):
         selected_street = None
@@ -211,7 +258,7 @@ def world_walk():
 @app.route("/world/drive")
 def world_drive():
     streets = list_with_str_id(
-        streets_collection.find({"type": "video", "mode": "drive"})
+        streets_collection.find({"type": "video", "mode": "drive", "status": "published"})
     )
 
     center = {"lat": 25.2048, "lng": 55.2708}
@@ -220,9 +267,10 @@ def world_drive():
 
     street_id = request.args.get("street_id")
     selected_street = get_street_by_id(street_id)
-    if selected_street and (
-        selected_street.get("type") != "video"
-        or selected_street.get("mode") != "drive"
+    if selected_street and not (
+        selected_street.get("status") == "published"
+        and selected_street.get("type") == "video"
+        and selected_street.get("mode") == "drive"
     ):
         selected_street = None
 
@@ -241,7 +289,7 @@ def world_drive():
 @app.route("/world/fly")
 def world_fly():
     streets = list_with_str_id(
-        streets_collection.find({"type": "video", "mode": "fly"})
+        streets_collection.find({"type": "video", "mode": "fly", "status": "published"})
     )
 
     center = {"lat": 25.2048, "lng": 55.2708}
@@ -250,9 +298,10 @@ def world_fly():
 
     street_id = request.args.get("street_id")
     selected_street = get_street_by_id(street_id)
-    if selected_street and (
-        selected_street.get("type") != "video"
-        or selected_street.get("mode") != "fly"
+    if selected_street and not (
+        selected_street.get("status") == "published"
+        and selected_street.get("type") == "video"
+        and selected_street.get("mode") == "fly"
     ):
         selected_street = None
 
@@ -271,7 +320,7 @@ def world_fly():
 @app.route("/world/sit")
 def world_sit():
     streets = list_with_str_id(
-        streets_collection.find({"type": "video", "mode": "sit"})
+        streets_collection.find({"type": "video", "mode": "sit", "status": "published"})
     )
 
     center = {"lat": 25.2048, "lng": 55.2708}
@@ -280,9 +329,10 @@ def world_sit():
 
     street_id = request.args.get("street_id")
     selected_street = get_street_by_id(street_id)
-    if selected_street and (
-        selected_street.get("type") != "video"
-        or selected_street.get("mode") != "sit"
+    if selected_street and not (
+        selected_street.get("status") == "published"
+        and selected_street.get("type") == "video"
+        and selected_street.get("mode") == "sit"
     ):
         selected_street = None
 
@@ -296,13 +346,13 @@ def world_sit():
 
 
 # --------------------------------------------------------
-# LIST PAGES for each mode
+# LIST PAGES for each mode (published only)
 # --------------------------------------------------------
 @app.route("/walk")
 def walk():
     category = request.args.get("category", "").strip() or None
 
-    query = {"type": "video", "mode": "walk"}
+    query = {"type": "video", "mode": "walk", "status": "published"}
     if category and category.lower() != "all":
         query["category"] = category
 
@@ -321,7 +371,7 @@ def walk():
 def drive():
     category = request.args.get("category", "").strip() or None
 
-    query = {"type": "video", "mode": "drive"}
+    query = {"type": "video", "mode": "drive", "status": "published"}
     if category and category.lower() != "all":
         query["category"] = category
 
@@ -340,7 +390,7 @@ def drive():
 def fly():
     category = request.args.get("category", "").strip() or None
 
-    query = {"type": "video", "mode": "fly"}
+    query = {"type": "video", "mode": "fly", "status": "published"}
     if category and category.lower() != "all":
         query["category"] = category
 
@@ -359,7 +409,7 @@ def fly():
 def sit():
     category = request.args.get("category", "").strip() or None
 
-    query = {"type": "video", "mode": "sit"}
+    query = {"type": "video", "mode": "sit", "status": "published"}
     if category and category.lower() != "all":
         query["category"] = category
 
@@ -375,7 +425,7 @@ def sit():
 
 
 # --------------------------------------------------------
-# Optional legacy detail views
+# Optional legacy detail views (no status filter on list yet)
 # --------------------------------------------------------
 @app.route("/walk/<street_id>")
 def walk_view(street_id):
@@ -384,7 +434,7 @@ def walk_view(street_id):
         return "Street not found", 404
 
     streets = list_with_str_id(
-        streets_collection.find({"type": "video", "mode": "walk"})
+        streets_collection.find({"type": "video", "mode": "walk", "status": "published"})
     )
     return render_template("walk.html", street=street, streets=streets)
 
@@ -396,7 +446,7 @@ def drive_view(street_id):
         return "Street not found", 404
 
     streets = list_with_str_id(
-        streets_collection.find({"type": "video", "mode": "drive"})
+        streets_collection.find({"type": "video", "mode": "drive", "status": "published"})
     )
     return render_template("drive.html", street=street, streets=streets)
 
@@ -408,10 +458,12 @@ def drive_view(street_id):
 def upload():
     if request.method == "POST":
         street_type = request.form.get("street_type")
+
         mode = request.form.get("mode")
-        name = request.form.get("name")
-        city = request.form.get("city")
-        country = request.form.get("country")
+        name = clean_text(request.form.get("name"), 100)
+        city = clean_text(request.form.get("city"), 50)
+        country = clean_text(request.form.get("country"), 50)
+
         try:
             lat = float(request.form.get("lat"))
             lng = float(request.form.get("lng"))
@@ -423,8 +475,8 @@ def upload():
             flash("Latitude/longitude out of range", "error")
             return redirect(url_for("upload"))
 
-        category = request.form.get("category", "").strip() or None
-        description = request.form.get("description", "").strip() or None
+        category = clean_text(request.form.get("category"), 80)
+        description = clean_text(request.form.get("description"), 500)
 
         # ---------------- VIDEO STREET ----------------
         if street_type == "video":
@@ -436,9 +488,18 @@ def upload():
 
             video_urls = []
 
+            # Size check + upload
             if files:
                 for file in files:
                     if file and file.filename:
+                        file.seek(0, os.SEEK_END)
+                        size = file.tell()
+                        file.seek(0)
+
+                        if size > MAX_VIDEO_SIZE:
+                            flash("Each video must be under 100MB", "error")
+                            return redirect(url_for("upload"))
+
                         try:
                             url = upload_video_cloudinary(file)
                             video_urls.append(url)
@@ -473,6 +534,7 @@ def upload():
                 ],
                 "likes": 0,
                 "createdAt": datetime.utcnow(),
+                "status": "published",  # ready for future draft support
             }
 
         # ---------------- 3D GLB STREET ----------------
@@ -480,11 +542,21 @@ def upload():
             file = request.files.get("model")
             link = request.form.get("model_link")
 
+            glb_url = None
+
             if file and file.filename:
+                file.seek(0, os.SEEK_END)
+                size = file.tell()
+                file.seek(0)
+
+                if size > MAX_GLB_SIZE:
+                    flash("GLB file must be under 50MB", "error")
+                    return redirect(url_for("upload"))
+
                 try:
                     glb_url = upload_glb_supabase(file)
                 except Exception as e:
-                    flash("GLB Upload failed: " + str(e), "error")
+                    flash("GLB upload failed: " + str(e), "error")
                     return redirect(url_for("upload"))
             elif link:
                 glb_url = link.strip()
@@ -503,6 +575,7 @@ def upload():
                 "glbUrl": glb_url,
                 "likes": 0,
                 "createdAt": datetime.utcnow(),
+                "status": "published",
             }
 
         else:
@@ -558,14 +631,25 @@ def dashboard():
 
 
 # --------------------------------------------------------
-# Like Endpoint
+# Like Endpoint with simple session spam guard
 # --------------------------------------------------------
 @app.post("/like/<street_id>")
 def like_street(street_id):
+    liked = set(session.get("liked", []))
+
+    if street_id in liked:
+        street = streets_collection.find_one(
+            {"_id": ObjectId(street_id)}, {"likes": 1}
+        )
+        return {"likes": street.get("likes", 0)}
+
     streets_collection.update_one(
         {"_id": ObjectId(street_id)},
         {"$inc": {"likes": 1}},
     )
+
+    liked.add(street_id)
+    session["liked"] = list(liked)
 
     street = streets_collection.find_one(
         {"_id": ObjectId(street_id)}, {"likes": 1}
