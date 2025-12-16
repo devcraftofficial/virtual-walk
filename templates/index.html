@@ -32,8 +32,8 @@
       margin: 0;
       min-height: 100vh;
       background:
-        radial-gradient(circle at top left, #0f172a, transparent 55%),
-        radial-gradient(circle at bottom right, #022c3a, #000 70%);
+        radial-gradient(circle at top left, #020617, #000 55%),
+        radial-gradient(circle at bottom right, #0b1120, #020617 70%);
       font-family: system-ui, -apple-system, sans-serif;
       color: var(--text-main);
       padding: 12px 0;
@@ -45,11 +45,15 @@
       width: 100%;
       max-width: 1440px;
       margin: 0 auto;
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.92));
+      background:
+        linear-gradient(135deg, rgba(15,23,42,0.96), rgba(15,23,42,0.9)),
+        radial-gradient(circle at top right, rgba(56,189,248,0.08), transparent 55%);
       padding: 18px 22px 22px;
-      box-shadow: var(--shadow-soft);
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      backdrop-filter: blur(18px);
+      box-shadow:
+        0 30px 80px rgba(0,0,0,0.9),
+        0 0 0 1px rgba(15,23,42,1);
+      border: 1px solid rgba(148,163,184,0.35);
+      backdrop-filter: blur(22px) saturate(130%);
       border-radius: 22px;
       display: flex;
       flex-direction: column;
@@ -59,19 +63,21 @@
     /* Top nav */
     .top-nav {
       width: 100%;
-      background: radial-gradient(circle at top left, rgba(15,23,42,0.95), rgba(15,23,42,0.9));
+      background:
+        linear-gradient(135deg, rgba(15,23,42,0.94), rgba(15,23,42,0.9));
       border-radius: 18px;
       border: 1px solid rgba(148, 163, 184, 0.35);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 20px;
+      padding: 10px 18px;
       margin-bottom: 8px;
       user-select: none;
       position: sticky;
       top: 0;
       z-index: 30;
-      backdrop-filter: blur(18px);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.7);
     }
 
     .top-nav-left,
@@ -156,8 +162,8 @@
 
     .title-block h1 {
       margin: 0 0 4px 0;
-      font-size: 26px;
-      background: linear-gradient(135deg, #38bdf8, #60a5fa);
+      font-size: 27px;
+      background: linear-gradient(135deg,#38bdf8,#60a5fa,#a855f7);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -203,10 +209,10 @@
       display: inline-flex;
       padding: 4px;
       border-radius: 999px;
-      background: rgba(15,23,42,0.95);
-      border: 1px solid rgba(148,163,184,0.4);
+      background: radial-gradient(circle at top left,#020617,#020617f5);
+      border: 1px solid rgba(148,163,184,0.5);
       gap: 4px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.8);
     }
 
     .mode-btn {
@@ -222,7 +228,11 @@
       gap: 6px;
       text-decoration: none;
       white-space: nowrap;
-      transition: all 0.2s ease;
+      transition:
+        background 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
       font-weight: 500;
     }
 
@@ -230,7 +240,8 @@
 
     .mode-btn:hover {
       transform: translateY(-1px);
-      background: rgba(15,23,42,0.9);
+      background: rgba(15,23,42,0.94);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.75);
     }
 
     .mode-btn.is-active.walk { background: linear-gradient(135deg,#22c55e,#16a34a); color:#0b1120; }
@@ -248,11 +259,13 @@
     }
 
     .map-panel {
-      background: radial-gradient(circle at top left, #020617, #020617ee);
+      background: radial-gradient(circle at top left,#020617,#020617f5);
       border-radius: 18px;
       padding: 14px 14px 12px;
-      border: 1px solid rgba(56, 189, 248, 0.5);
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.9);
+      border: 1px solid rgba(56, 189, 248, 0.55);
+      box-shadow:
+        0 24px 50px rgba(0,0,0,0.95),
+        0 0 40px rgba(56,189,248,0.2);
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -296,11 +309,11 @@
       height: 320px;
       border-radius: 14px;
       overflow: hidden;
-      border: 1px solid rgba(30, 64, 175, 0.85);
+      border: 1px solid rgba(30, 64, 175, 0.9);
       box-shadow:
-        0 0 0 1px rgba(15,23,42,0.9),
-        0 18px 40px rgba(0,0,0,0.9),
-        0 0 40px rgba(56, 189, 248, 0.35);
+        0 0 0 1px rgba(15,23,42,1),
+        0 20px 45px rgba(0,0,0,1),
+        0 0 46px rgba(37,99,235,0.5);
     }
 
     .map-footer {
@@ -384,13 +397,13 @@
     }
 
     .viewer-panel {
-      background: radial-gradient(circle at top left, #020617, #020617ee);
+      background: radial-gradient(circle at top,#020617,#020617f5);
       border-radius: 18px;
       padding: 16px 16px 18px;
-      border: 1px solid rgba(30, 64, 175, 0.7);
+      border: 1px solid rgba(30, 64, 175, 0.75);
       box-shadow:
-        0 18px 40px rgba(0, 0, 0, 0.95),
-        0 0 36px rgba(37,99,235,0.6);
+        0 24px 52px rgba(0, 0, 0, 1),
+        0 0 44px rgba(37,99,235,0.6);
       display: flex;
       flex-direction: column;
       min-width: 0;
@@ -483,20 +496,25 @@
 
     .cat-chip {
       border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.5);
-      background: rgba(15,23,42,0.95);
+      border: 1px solid rgba(148,163,184,0.55);
+      background: rgba(15,23,42,0.96);
       color: var(--text-muted);
       font-size: 11px;
-      padding: 4px 10px;
+      padding: 4px 11px;
       white-space: nowrap;
       cursor: pointer;
-      transition: all 0.18s ease;
+      transition:
+        background 0.18s ease,
+        color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.18s ease;
       flex-shrink: 0;
     }
 
     .cat-chip:hover {
-      background: rgba(15,23,42,1);
+      background: rgba(31,41,55,1);
       color: var(--text-main);
+      transform: translateY(-1px);
     }
 
     .cat-chip.active {
@@ -505,7 +523,7 @@
       border-color: var(--accent);
       box-shadow:
         0 0 0 1px rgba(15,23,42,1),
-        0 0 18px rgba(56,189,248,0.5);
+        0 0 22px rgba(56,189,248,0.55);
     }
 
     /* Grid + cards */
@@ -516,16 +534,22 @@
     }
 
     .card {
-      background: radial-gradient(circle at top left, #020617, #020617f5);
+      background: radial-gradient(circle at top left,#020617,#020617f2);
       border-radius: 14px;
       border: 1px solid rgba(148, 163, 184, 0.35);
       overflow: hidden;
       display: flex;
       flex-direction: column;
       cursor: pointer;
-      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+      transition:
+        transform 0.22s ease,
+        box-shadow 0.22s ease,
+        border-color 0.22s ease,
+        background 0.22s ease;
       min-height: 210px;
       position: relative;
+      animation: fadeInUp 0.45s ease forwards;
+      opacity: 0;
     }
 
     .card::before {
@@ -549,9 +573,10 @@
     }
 
     .card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 22px 40px rgba(0, 0, 0, 0.9);
+      transform: translateY(-6px) scale(1.01);
+      box-shadow: 0 22px 40px rgba(0, 0, 0, 0.98);
       border-color: rgba(56,189,248,0.85);
+      background: radial-gradient(circle at top left,#020617,#020617);
     }
 
     .card:hover::before { opacity: 1; }
@@ -703,11 +728,6 @@
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(20px) scale(0.96); }
       to   { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    .card {
-      animation: fadeInUp 0.45s ease forwards;
-      opacity: 0;
     }
   </style>
 </head>
@@ -874,19 +894,9 @@
 
 <script src="./static/js/maplibre-gl.js"></script>
 <script>
-  /* ============================================
-     MAPTILER KEY
-  ============================================ */
   const MAPTILER_KEY = "PqdU3M5vnOQK0dDQnkIq";
-
-  /* ============================================
-     DATA FROM BACKEND
-  ============================================ */
   const STREETS = {{ streets | tojson | safe }};
 
-  /* ============================================
-     MAPTILER MAP INITIALIZATION
-  ============================================ */
   const map = new maplibregl.Map({
     container: "map",
     style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`,
@@ -902,9 +912,6 @@
     setTimeout(() => map.resize(), 800);
   });
 
-  /* ============================================
-     MARKERS
-  ============================================ */
   let markers = [];
 
   function addMarkers() {
@@ -917,15 +924,12 @@
         .setLngLat([st.lng, st.lat])
         .addTo(map);
 
-      // Glow effect
       marker.getElement().style.filter =
         "drop-shadow(0 0 6px rgba(56,189,248,0.8))";
       marker.getElement().style.transition = "all 0.2s ease";
 
       marker.getElement().addEventListener("click", () => {
-        // highlight card and fly map
         focusCardByIndex(index);
-        // then open the street page
         openStreetByIndex(index);
       });
 
@@ -935,9 +939,6 @@
 
   map.on("load", addMarkers);
 
-  /* ============================================
-     TOP RATED & RECENT LISTS
-  ============================================ */
   const topRatedList = document.getElementById("topRatedList");
   const recentList = document.getElementById("recentList");
 
@@ -967,9 +968,6 @@
     recentList.appendChild(li);
   });
 
-  /* ============================================
-     FOCUS CARD + FLY TO STREET
-  ============================================ */
   function focusCardById(id) {
     const card = document.querySelector(`.card[data-id="${id}"]`);
     if (!card) return;
@@ -995,7 +993,6 @@
     if (st) focusCardById(st._id);
   }
 
-  // Helper: open street page for a card index
   function openStreetByIndex(i) {
     const cardsNodeList = document.querySelectorAll(".card");
     const card = cardsNodeList[i];
@@ -1006,9 +1003,6 @@
     }
   }
 
-  /* ============================================
-     CARD CLICK
-  ============================================ */
   document.querySelectorAll(".card").forEach((card, index) => {
     card.style.animationDelay = `${index * 0.04}s`;
 
@@ -1030,9 +1024,6 @@
 
   document.getElementById("streetsGrid").classList.remove("loading");
 
-  /* ============================================
-     LIKE BUTTON
-  ============================================ */
   document.querySelectorAll(".like-btn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
@@ -1063,9 +1054,6 @@
     });
   });
 
-  /* ============================================
-     SEARCH + CATEGORY FILTER
-  ============================================ */
   const searchInput = document.getElementById("homeSearchInput");
   const cards = Array.from(document.querySelectorAll("#streetsGrid .card"));
   const searchResultsCount = document.getElementById("searchResultsCount");
@@ -1147,9 +1135,6 @@
     searchInput.addEventListener("input", applyHomeFilter);
   }
 
-  /* ============================================
-     KEYBOARD NAVIGATION
-  ============================================ */
   document.addEventListener("keydown", (e) => {
     if (e.target.matches("#homeSearchInput")) return;
 
