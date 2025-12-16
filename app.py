@@ -17,6 +17,7 @@ from flask import (
 )
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from bson.errors import InvalidId
 from dotenv import load_dotenv
 import cloudinary
 import cloudinary.uploader
@@ -83,12 +84,31 @@ db = client["streetwalk"]
 streets_collection = db["streets"]
 
 # --------------------------------------------------------
-# MongoDB Indexes (run once)
+# MongoDB Indexes
 # --------------------------------------------------------
 streets_collection.create_index([("type", 1), ("mode", 1)])
 streets_collection.create_index([("createdAt", -1)])
 streets_collection.create_index([("likes", -1)])
 streets_collection.create_index([("lat", 1), ("lng", 1)])
+
+# --------------------------------------------------------
+# Simple admin protection for /upload
+# --------------------------------------------------------
+@app.before_request
+def protect_upload():
+    # Allow static and make-admin itself
+    if request.endpoint in (None, "static", "make_admin"):
+        return
+
+    if request.endpoint == "upload" and not session.get("is_admin"):
+        return redirect(url_for("index"))
+
+
+@app.route("/make-admin")
+def make_admin():
+    session["is_admin"] = True
+    return "Admin enabled"
+
 
 # --------------------------------------------------------
 # Helpers
@@ -144,7 +164,11 @@ def get_street_by_id(street_id):
     if not street_id:
         return None
     try:
-        doc = streets_collection.find_one({"_id": ObjectId(street_id)})
+        oid = ObjectId(street_id)
+    except InvalidId:
+        return None
+    try:
+        doc = streets_collection.find_one({"_id": oid})
     except Exception:
         return None
     if not doc:
@@ -160,6 +184,13 @@ def list_with_str_id(cursor):
     return items
 
 
+def published_not_deleted(extra=None):
+    base = {"status": "published", "deleted": False}
+    if extra:
+        base.update(extra)
+    return base
+
+
 def distinct_categories_for_mode(mode: str):
     """
     Return sorted unique category names for a given mode.
@@ -167,18 +198,18 @@ def distinct_categories_for_mode(mode: str):
     """
     cats = streets_collection.distinct(
         "category",
-        {"type": "video", "mode": mode, "status": "published"},
+        {"type": "video", "mode": mode, "status": "published", "deleted": False},
     )
     cats = [c for c in cats if c]
     return sorted(cats)
 
 
 # --------------------------------------------------------
-# Home Page - show all published streets
+# Home Page - show all published, not deleted streets
 # --------------------------------------------------------
 @app.route("/")
 def index():
-    streets = list_with_str_id(streets_collection.find({"status": "published"}))
+    streets = list_with_str_id(streets_collection.find(published_not_deleted()))
     return render_template("index.html", streets=streets)
 
 
@@ -187,7 +218,7 @@ def index():
 # --------------------------------------------------------
 @app.route("/world")
 def world():
-    streets = list_with_str_id(streets_collection.find({"status": "published"}))
+    streets = list_with_str_id(streets_collection.find(published_not_deleted()))
 
     center = {"lat": 25.2048, "lng": 55.2708}
     if streets:
@@ -195,7 +226,10 @@ def world():
 
     street_id = request.args.get("street_id")
     selected_street = get_street_by_id(street_id)
-    if selected_street and selected_street.get("status") != "published":
+    if selected_street and (
+        selected_street.get("status") != "published"
+        or selected_street.get("deleted", False)
+    ):
         selected_street = None
 
     return render_template(
@@ -214,13 +248,14 @@ def world():
 def world_walk():
     streets = list_with_str_id(
         streets_collection.find(
-            {
-                "status": "published",
-                "$or": [
-                    {"type": "3d"},
-                    {"type": "video", "mode": "walk"},
-                ],
-            }
+            published_not_deleted(
+                {
+                    "$or": [
+                        {"type": "3d"},
+                        {"type": "video", "mode": "walk"},
+                    ]
+                }
+            )
         )
     )
 
@@ -233,6 +268,7 @@ def world_walk():
 
     if selected_street and not (
         selected_street.get("status") == "published"
+        and not selected_street.get("deleted", False)
         and (
             selected_street.get("type") == "3d"
             or (
@@ -258,7 +294,9 @@ def world_walk():
 @app.route("/world/drive")
 def world_drive():
     streets = list_with_str_id(
-        streets_collection.find({"type": "video", "mode": "drive", "status": "published"})
+        streets_collection.find(
+            published_not_deleted({"type": "video", "mode": "drive"})
+        )
     )
 
     center = {"lat": 25.2048, "lng": 55.2708}
@@ -269,6 +307,7 @@ def world_drive():
     selected_street = get_street_by_id(street_id)
     if selected_street and not (
         selected_street.get("status") == "published"
+        and not selected_street.get("deleted", False)
         and selected_street.get("type") == "video"
         and selected_street.get("mode") == "drive"
     ):
@@ -289,7 +328,9 @@ def world_drive():
 @app.route("/world/fly")
 def world_fly():
     streets = list_with_str_id(
-        streets_collection.find({"type": "video", "mode": "fly", "status": "published"})
+        streets_collection.find(
+            published_not_deleted({"type": "video", "mode": "fly"})
+        )
     )
 
     center = {"lat": 25.2048, "lng": 55.2708}
@@ -300,6 +341,7 @@ def world_fly():
     selected_street = get_street_by_id(street_id)
     if selected_street and not (
         selected_street.get("status") == "published"
+        and not selected_street.get("deleted", False)
         and selected_street.get("type") == "video"
         and selected_street.get("mode") == "fly"
     ):
@@ -320,7 +362,9 @@ def world_fly():
 @app.route("/world/sit")
 def world_sit():
     streets = list_with_str_id(
-        streets_collection.find({"type": "video", "mode": "sit", "status": "published"})
+        streets_collection.find(
+            published_not_deleted({"type": "video", "mode": "sit"})
+        )
     )
 
     center = {"lat": 25.2048, "lng": 55.2708}
@@ -331,6 +375,7 @@ def world_sit():
     selected_street = get_street_by_id(street_id)
     if selected_street and not (
         selected_street.get("status") == "published"
+        and not selected_street.get("deleted", False)
         and selected_street.get("type") == "video"
         and selected_street.get("mode") == "sit"
     ):
@@ -346,13 +391,13 @@ def world_sit():
 
 
 # --------------------------------------------------------
-# LIST PAGES for each mode (published only)
+# LIST PAGES for each mode (published + not deleted)
 # --------------------------------------------------------
 @app.route("/walk")
 def walk():
     category = request.args.get("category", "").strip() or None
 
-    query = {"type": "video", "mode": "walk", "status": "published"}
+    query = published_not_deleted({"type": "video", "mode": "walk"})
     if category and category.lower() != "all":
         query["category"] = category
 
@@ -371,7 +416,7 @@ def walk():
 def drive():
     category = request.args.get("category", "").strip() or None
 
-    query = {"type": "video", "mode": "drive", "status": "published"}
+    query = published_not_deleted({"type": "video", "mode": "drive"})
     if category and category.lower() != "all":
         query["category"] = category
 
@@ -390,7 +435,7 @@ def drive():
 def fly():
     category = request.args.get("category", "").strip() or None
 
-    query = {"type": "video", "mode": "fly", "status": "published"}
+    query = published_not_deleted({"type": "video", "mode": "fly"})
     if category and category.lower() != "all":
         query["category"] = category
 
@@ -409,7 +454,7 @@ def fly():
 def sit():
     category = request.args.get("category", "").strip() or None
 
-    query = {"type": "video", "mode": "sit", "status": "published"}
+    query = published_not_deleted({"type": "video", "mode": "sit"})
     if category and category.lower() != "all":
         query["category"] = category
 
@@ -425,34 +470,8 @@ def sit():
 
 
 # --------------------------------------------------------
-# Optional legacy detail views (no status filter on list yet)
-# --------------------------------------------------------
-@app.route("/walk/<street_id>")
-def walk_view(street_id):
-    street = get_street_by_id(street_id)
-    if not street:
-        return "Street not found", 404
-
-    streets = list_with_str_id(
-        streets_collection.find({"type": "video", "mode": "walk", "status": "published"})
-    )
-    return render_template("walk.html", street=street, streets=streets)
-
-
-@app.route("/drive/<street_id>")
-def drive_view(street_id):
-    street = get_street_by_id(street_id)
-    if not street:
-        return "Street not found", 404
-
-    streets = list_with_str_id(
-        streets_collection.find({"type": "video", "mode": "drive", "status": "published"})
-    )
-    return render_template("drive.html", street=street, streets=streets)
-
-
-# --------------------------------------------------------
 # Upload Route - MULTIPLE VIDEOS SUPPORTED
+# (unchanged logic, but adds deleted=False)
 # --------------------------------------------------------
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
@@ -478,7 +497,6 @@ def upload():
         category = clean_text(request.form.get("category"), 80)
         description = clean_text(request.form.get("description"), 500)
 
-        # ---------------- VIDEO STREET ----------------
         if street_type == "video":
             if mode not in ["walk", "drive", "fly", "sit"]:
                 mode = "walk"
@@ -488,7 +506,6 @@ def upload():
 
             video_urls = []
 
-            # Size check + upload
             if files:
                 for file in files:
                     if file and file.filename:
@@ -534,10 +551,10 @@ def upload():
                 ],
                 "likes": 0,
                 "createdAt": datetime.utcnow(),
-                "status": "published",  # ready for future draft support
+                "status": "published",
+                "deleted": False,
             }
 
-        # ---------------- 3D GLB STREET ----------------
         elif street_type == "3d":
             file = request.files.get("model")
             link = request.form.get("model_link")
@@ -576,6 +593,7 @@ def upload():
                 "likes": 0,
                 "createdAt": datetime.utcnow(),
                 "status": "published",
+                "deleted": False,
             }
 
         else:
@@ -590,7 +608,7 @@ def upload():
 
 
 # --------------------------------------------------------
-# Dashboard Page
+# Dashboard Page (keeps all, including deleted/draft)
 # --------------------------------------------------------
 @app.route("/dashboard")
 def dashboard():
@@ -631,30 +649,27 @@ def dashboard():
 
 
 # --------------------------------------------------------
-# Like Endpoint with simple session spam guard
+# Like Endpoint with safer ObjectId + spam guard
 # --------------------------------------------------------
 @app.post("/like/<street_id>")
 def like_street(street_id):
+    try:
+        oid = ObjectId(street_id)
+    except InvalidId:
+        return {"error": "Invalid ID"}, 400
+
     liked = set(session.get("liked", []))
-
     if street_id in liked:
-        street = streets_collection.find_one(
-            {"_id": ObjectId(street_id)}, {"likes": 1}
-        )
-        return {"likes": street.get("likes", 0)}
+        street = streets_collection.find_one({"_id": oid}, {"likes": 1})
+        return {"likes": street.get("likes", 0) if street else 0}
 
-    streets_collection.update_one(
-        {"_id": ObjectId(street_id)},
-        {"$inc": {"likes": 1}},
-    )
+    streets_collection.update_one({"_id": oid}, {"$inc": {"likes": 1}})
 
     liked.add(street_id)
     session["liked"] = list(liked)
 
-    street = streets_collection.find_one(
-        {"_id": ObjectId(street_id)}, {"likes": 1}
-    )
-    return {"likes": street.get("likes", 0)}
+    street = streets_collection.find_one({"_id": oid}, {"likes": 1})
+    return {"likes": street.get("likes", 0) if street else 0}
 
 
 # --------------------------------------------------------
@@ -662,4 +677,3 @@ def like_street(street_id):
 # --------------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
-    app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
