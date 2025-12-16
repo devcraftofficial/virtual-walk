@@ -221,6 +221,7 @@
     #avatarSpeech.visible { opacity: 1; transform: translateX(-50%) translateY(-4px); }
     #streetSpeech.visible { opacity: 1; transform: translateY(-4px); }
 
+    /* Transparent glass joystick */
     #joystickBase {
       position: absolute;
       bottom: 20px;
@@ -228,25 +229,45 @@
       width: 96px;
       height: 96px;
       border-radius: 50%;
-      background: rgba(15,23,42,0.85);
-      border: 1px solid rgba(148,163,184,0.6);
+      background: radial-gradient(circle at center,
+                  rgba(15, 23, 42, 0.353) 0%,
+                  rgba(15, 23, 42, 0.249) 45%,
+                  transparent 70%);
+      border: 1px solid rgba(148, 163, 184, 0.555);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
       display: flex;
       justify-content: center;
       align-items: center;
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(6px);
       touch-action: none;
       z-index: 70;
+      opacity: 0.55;
+      transition: opacity 0.18s ease-out, transform 0.18s ease-out;
     }
+
+    #joystickBase.joy-active {
+      opacity: 0.9;
+      transform: scale(1.02);
+    }
+
     #joystickKnob {
-      width: 48px;
-      height: 48px;
-      background: #2563eb;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      box-shadow: 0 0 0 4px rgba(37,99,235,0.4);
+      background: radial-gradient(circle at 30% 30%,
+                  rgba(56,189,248,0.85),
+                  rgba(15,23,42,0.9));
+      box-shadow:
+        0 0 0 3px rgba(56,189,248,0.25),
+        0 8px 18px rgba(0,0,0,0.65);
       touch-action: none;
     }
 
-    @media (max-width: 768px) { #joystickBase { bottom: 90px; } }
+    @media (max-width: 768px) {
+      #joystickBase {
+        bottom: 90px;
+      }
+    }
 
     #fadeLayer {
       position: absolute;
@@ -393,67 +414,60 @@
       animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-#autoWalkBtn {
-  position: absolute;
-  right: 140px;          /* desktop offset */
-  bottom: 28px;
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
-  border: 1px solid rgba(148,163,184,0.7);
-  background:
-    radial-gradient(circle at 30% 30%, #38bdf8, #0f172a);
-  box-shadow: 0 14px 30px rgba(0,0,0,0.8);
-  color: #e5e7eb;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 72;
-  outline: none;
-  transition:
-    transform 0.15s ease-out,
-    box-shadow 0.15s ease-out,
-    background 0.2s ease-out,
-    opacity 0.2s ease-out;
-}
 
-#autoWalkBtn:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 18px 40px rgba(0,0,0,0.9);
-}
-
-#autoWalkBtn:active {
-  transform: translateY(0) scale(0.97);
-  box-shadow: 0 10px 22px rgba(0,0,0,0.75);
-}
-
-#autoWalkBtn.auto-on {
-  background:
-    radial-gradient(circle at 30% 30%, #22c55e, #022c22);
-}
-
-/* Mobile/tablet: tuck closer to joystick, bottom-right corner */
-@media (max-width: 768px) {
-  #autoWalkBtn {
-    right: 118px;
-    bottom: 100px;   /* above joystick which moves up on mobile */
-    width: 42px;
-    height: 42px;
-    font-size: 17px;
-  }
-}
-
-/* Very small phones */
-@media (max-width: 480px) {
-  #autoWalkBtn {
-    right: 20px;
-    bottom: 200px;
-  }
-}
-
-    
+    /* Auto-walk button */
+    #autoWalkBtn {
+      position: absolute;
+      right: 140px;
+      bottom: 28px;
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.7);
+      background:
+        radial-gradient(circle at 30% 30%, #38bdf8, #0f172a);
+      box-shadow: 0 14px 30px rgba(0,0,0,0.8);
+      color: #e5e7eb;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 72;
+      outline: none;
+      transition:
+        transform 0.15s ease-out,
+        box-shadow 0.15s ease-out,
+        background 0.2s ease-out,
+        opacity 0.2s ease-out;
+    }
+    #autoWalkBtn:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.9);
+    }
+    #autoWalkBtn:active {
+      transform: translateY(0) scale(0.97);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.75);
+    }
+    #autoWalkBtn.auto-on {
+      background:
+        radial-gradient(circle at 30% 30%, #22c55e, #022c22);
+    }
+    @media (max-width: 768px) {
+      #autoWalkBtn {
+        right: 118px;
+        bottom: 200px;
+        width: 42px;
+        height: 42px;
+        font-size: 17px;
+      }
+    }
+    @media (max-width: 480px) {
+      #autoWalkBtn {
+        right: 20px;
+        bottom: 200px;
+      }
+    }
   </style>
 </head>
 
@@ -512,10 +526,7 @@
       </div>
 
       <!-- Auto walk floating button -->
-      <button id="autoWalkBtn" aria-label="Toggle auto walk">
-  ▶
-</button>
-
+      <button id="autoWalkBtn" aria-label="Toggle auto walk">▶</button>
 
       <div id="settingsPanel" aria-label="View settings">
         <h3 style="margin:0 0 6px 0;font-size:13px;">View settings</h3>
@@ -1145,12 +1156,14 @@
 
     joystickBase.addEventListener("pointerdown", e => {
       joyActive = true;
+      joystickBase.classList.add("joy-active");
       joystickBase.setPointerCapture(e.pointerId);
       joyMove(e);
     });
     joystickBase.addEventListener("pointermove", e => joyActive && joyMove(e));
     function resetJoystick() {
       joyActive = false;
+      joystickBase.classList.remove("joy-active");
       joystickKnob.style.transform = "translate(0,0)";
       currentDir = 0;
       strafe = 0;
@@ -1164,40 +1177,38 @@
     joystickBase.addEventListener("pointercancel", resetJoystick);
 
     function setAutoWalk(on) {
-  autoWalkEnabled = on;
+      autoWalkEnabled = on;
 
-  if (autoWalkEnabled) {
-    currentDir = 1;
-    playForward();
-    setAvatarState();
-    updateFootsteps();
-    onWalkStart();
+      if (autoWalkEnabled) {
+        currentDir = 1;
+        playForward();
+        setAvatarState();
+        updateFootsteps();
+        onWalkStart();
+        if (autoWalkBtn) {
+          autoWalkBtn.textContent = "⏸";
+          autoWalkBtn.classList.add("auto-on");
+        }
+      } else {
+        currentDir = 0;
+        motionMomentum = 0.8;
+        reversePlaying = false;
+        video.pause();
+        setAvatarState();
+        updateFootsteps();
+        if (autoWalkBtn) {
+          autoWalkBtn.textContent = "▶";
+          autoWalkBtn.classList.remove("auto-on");
+        }
+      }
+    }
 
     if (autoWalkBtn) {
-      autoWalkBtn.textContent = "⏸";
-      autoWalkBtn.classList.add("auto-on");
+      autoWalkBtn.addEventListener("click", () => {
+        if (!audioUnlocked) unlockAudio();
+        setAutoWalk(!autoWalkEnabled);
+      });
     }
-  } else {
-    currentDir = 0;
-    motionMomentum = 0.8;
-    reversePlaying = false;
-    video.pause();
-    setAvatarState();
-    updateFootsteps();
-
-    if (autoWalkBtn) {
-      autoWalkBtn.textContent = "▶";
-      autoWalkBtn.classList.remove("auto-on");
-    }
-  }
-}
-
-if (autoWalkBtn) {
-  autoWalkBtn.addEventListener("click", () => {
-    if (!audioUnlocked) unlockAudio();
-    setAutoWalk(!autoWalkEnabled);
-  });
-}
 
     settingsBtn.addEventListener("click", () => settingsPanel.classList.toggle("open"));
     setVideoMuted.addEventListener("change", () => video.muted = setVideoMuted.checked);
