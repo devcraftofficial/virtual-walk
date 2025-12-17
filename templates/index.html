@@ -41,22 +41,31 @@
         }
 
         body {
-    margin: 0;
-    min-height: 100vh;
-    background: linear-gradient(
-                  to top,
-                  rgba(4,7,20,0.82),
-                  rgba(15,23,42,0.25)
-               ),
-               url("{{ url_for('static', filename='img/hero-skyline.jpg') }}")
-               center bottom / cover no-repeat; /* removed fixed */
-    font-family: system-ui, -apple-system, sans-serif;
-    color: var(--text-main);
-    padding: 12px 0;
-    scroll-behavior: smooth;
-    line-height: 1.5;
-}
+            margin: 0;
+            min-height: 100vh;
+            background-color: #020617;
+            background-image:
+                linear-gradient(
+                    to top,
+                    rgba(4,7,20,0.82),
+                    rgba(15,23,42,0.25)
+                ),
+                url("{{ url_for('static', filename='img/hero-skyline.jpg') }}");
+            background-position: center bottom;
+            background-size: cover;
+            background-repeat: no-repeat;
+            font-family: system-ui, -apple-system, sans-serif;
+            color: var(--text-main);
+            padding: 12px 0;
+            scroll-behavior: smooth;
+            line-height: 1.5;
+        }
 
+        @media (min-width: 960px) {
+            body {
+                background-attachment: fixed;
+            }
+        }
 
         .shell {
             width: 100%;
@@ -68,14 +77,19 @@
                                 rgba(15,23,42,0.10)),
                 rgba(15,23,42,0.35);
             padding: 24px 28px 26px;
-            box-shadow: 0 40px 110px rgba(0,0,0,0.9),
-                        0 0 0 1px rgba(15,23,42,0.18);
-            border: 1px solid rgba(148,163,184,0.28);
-            backdrop-filter: blur(26px) saturate(140%);
             border-radius: 26px;
             display: flex;
             flex-direction: column;
             gap: 22px;
+            border: 1px solid rgba(148,163,184,0.28);
+        }
+
+        @media (min-width: 960px) {
+            .shell {
+                box-shadow: 0 40px 110px rgba(0,0,0,0.9),
+                            0 0 0 1px rgba(15,23,42,0.18);
+                backdrop-filter: blur(26px) saturate(140%);
+            }
         }
 
         .top-nav {
@@ -1229,81 +1243,129 @@
             </div>
         </section>
 
-      <section class="destinations">
-    <div class="destinations-header">
-        <h2>Popular Destinations</h2>
-        <p>Trending Places to Explore</p>
-    </div>
-
-    <div class="destinations-grid">
-        <!-- Existing featured demo streets -->
-        
-
-        <!-- REAL STREETS FROM YOUR DB -->
-
-        <!-- Tsutenkaku Hondori, Osaka (walk) -->
-        <a class="dest-card"
-           href="{{ url_for('world_walk', street_id='69353fc9de46ad1121757e84') }}">
-            <div class="dest-thumb"
-                 style="background-image:url(../static/img/dest-osaka-market-walk.png);">
-                <div class="dest-overlay">
-                    <div class="dest-info">
-                        <h3>Tsutenkaku Hondori</h3>
-                        <p>Market walk in Osaka, Japan</p>
-                    </div>
-                </div>
+        <!-- POPULAR DESTINATIONS -->
+        <section class="destinations">
+            <div class="destinations-header">
+                <h2>Popular Destinations</h2>
+                <p>Trending Places to Explore</p>
             </div>
-        </a>
+            <div class="destinations-grid">
 
-        <!-- Historic Moorish Alleyway, Ronda (walk) -->
-        <a class="dest-card"
-           href="{{ url_for('world_walk', street_id='69354e0d8076ceab3f745e95') }}">
-            <div class="dest-thumb"
-                 style="background-image:url(../static/img/dest-ronda-alley.png);">
-                <div class="dest-overlay">
-                    <div class="dest-info">
-                        <h3>Historic Moorish Alleyway</h3>
-                        <p>Ronda, Spain • City walk</p>
+                <!-- Demo featured streets -->
+                <a class="dest-card"
+                   href="{{ url_for('world_walk', street_id='nyc_times_square_id') }}">
+                    <div class="dest-thumb"
+                         style="background-image:url('{{ url_for('static', filename='img/dest-nyc.jpg') }}');">
+                        <div class="dest-overlay">
+                            <div class="dest-info">
+                                <h3>New York City</h3>
+                                <p>Famous for Times Square</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </a>
+                </a>
 
-        <!-- Quiet Residential Street, Ho Chi Minh City (drive) -->
-        <a class="dest-card"
-           href="{{ url_for('world_drive', street_id='693557008076ceab3f745e98') }}">
-            <div class="dest-thumb"
-                 style="background-image:url(../static/img/dest-hcmc-drive.png);">
-                <div class="dest-overlay">
-                    <div class="dest-info">
-                        <h3>Quiet Residential Street</h3>
-                        <p>City drive in Ho Chi Minh City</p>
+                <a class="dest-card"
+                   href="{{ url_for('world_drive', street_id='paris_champs_id') }}">
+                    <div class="dest-thumb"
+                         style="background-image:url('{{ url_for('static', filename='img/dest-paris.png') }}');">
+                        <div class="dest-overlay">
+                            <div class="dest-info">
+                                <h3>Paris</h3>
+                                <p>Famous for Champs-Élysées</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </a>
+                </a>
 
-        <!-- Gay Street, Knoxville (fly) -->
-        <a class="dest-card"
-           href="{{ url_for('world_fly', street_id='693eaf742c420b8c9b5cc365') }}">
-            <div class="dest-thumb"
-                 style="background-image:url(../static/img/dest-gay-street-drone.png);">
-                <div class="dest-overlay">
-                    <div class="dest-info">
-                        <h3>Gay Street</h3>
-                        <p>Drone panorama over Knoxville, Tennessee</p>
+                <a class="dest-card"
+                   href="{{ url_for('world_walk', street_id='kyoto_gion_id') }}">
+                    <div class="dest-thumb"
+                         style="background-image:url('{{ url_for('static', filename='img/dest-kyoto.png') }}');">
+                        <div class="dest-overlay">
+                            <div class="dest-info">
+                                <h3>Kyoto</h3>
+                                <p>Famous for Gion’s Hanamikoji Street</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </a>
+
+                <a class="dest-card"
+                   href="{{ url_for('world_fly', street_id='dubai_sheikh_zayed_id') }}">
+                    <div class="dest-thumb"
+                         style="background-image:url('{{ url_for('static', filename='img/dest-dubai.jpg') }}');">
+                        <div class="dest-overlay">
+                            <div class="dest-info">
+                                <h3>Dubai</h3>
+                                <p>Famous for Sheikh Zayed Road</p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Your MongoDB streets -->
+                <a class="dest-card"
+                   href="{{ url_for('world_walk', street_id='69353fc9de46ad1121757e84') }}">
+                    <div class="dest-thumb"
+                         style="background-image:url('{{ url_for('static', filename='img/dest-osaka-market-walk.jpg') }}');">
+                        <div class="dest-overlay">
+                            <div class="dest-info">
+                                <h3>Tsutenkaku Hondori</h3>
+                                <p>Osaka, Japan • Market Walk</p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+
+                <a class="dest-card"
+                   href="{{ url_for('world_walk', street_id='69354e0d8076ceab3f745e95') }}">
+                    <div class="dest-thumb"
+                         style="background-image:url('{{ url_for('static', filename='img/dest-ronda-alley.jpg') }}');">
+                        <div class="dest-overlay">
+                            <div class="dest-info">
+                                <h3>Historic Moorish Alleyway</h3>
+                                <p>Ronda, Spain • City Walk</p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+
+                <a class="dest-card"
+                   href="{{ url_for('world_drive', street_id='693557008076ceab3f745e98') }}">
+                    <div class="dest-thumb"
+                         style="background-image:url('{{ url_for('static', filename='img/dest-hcmc-drive.jpg') }}');">
+                        <div class="dest-overlay">
+                            <div class="dest-info">
+                                <h3>Quiet Residential Street</h3>
+                                <p>Ho Chi Minh City, Vietnam • City Drive</p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+
+                <a class="dest-card"
+                   href="{{ url_for('world_fly', street_id='693eaf742c420b8c9b5cc365') }}">
+                    <div class="dest-thumb"
+                         style="background-image:url('{{ url_for('static', filename='img/dest-gay-street-drone.jpg') }}');">
+                        <div class="dest-overlay">
+                            <div class="dest-info">
+                                <h3>Gay Street</h3>
+                                <p>Knoxville, Tennessee • Drone Panorama</p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+
             </div>
-        </a>
-    </div>
 
-    <!-- keep your CTA row below if you want -->
-</section>
+            <div class="dest-cta-row">
+                <button type="button" class="dest-cta secondary">Featured Streets</button>
+                <button type="button" class="dest-cta primary">Start Exploring Now!</button>
+                <button type="button" class="dest-cta secondary">Upload Your Own Street</button>
+            </div>
+        </section>
 
-
-
-        <!-- EXISTING APP UI -->
         <div class="header-row">
             <div class="title-block">
                 <h1>Explore streets like a game</h1>
@@ -1667,9 +1729,9 @@
             });
         }
 
-        //document.getElementById('streetsGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Removed auto scroll on load to avoid mobile blinking
+        // document.getElementById('streetsGrid')
+        //   .scrollIntoView({ behavior: 'smooth', block: 'start' });
     </script>
 </body>
 </html>
-
-
