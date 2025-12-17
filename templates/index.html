@@ -1,1160 +1,1672 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Virtual Street Walk – Home</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- MapLibre -->
-  <link rel="stylesheet" href="./static/css/maplibre-gl.css" >
-
-  <style>
-    :root {
-      --bg-page: #020617;
-      --bg-panel: #020617cc;
-      --bg-card: #020617;
-      --accent: #38bdf8;
-      --accent-soft: rgba(56, 189, 248, 0.15);
-      --success: #22c55e;
-      --warning: #f97316;
-      --purple: #a855f7;
-      --text-main: #e5e7eb;
-      --text-muted: #9ca3af;
-      --radius-lg: 18px;
-      --radius-md: 12px;
-      --shadow-soft: 0 22px 45px rgba(0, 0, 0, 0.65);
-      --focus-ring-color: rgba(56, 189, 248, 0.85);
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background:
-        radial-gradient(circle at top left, #020617, #000 55%),
-        radial-gradient(circle at bottom right, #0b1120, #020617 70%);
-      font-family: system-ui, -apple-system, sans-serif;
-      color: var(--text-main);
-      padding: 12px 0;
-      scroll-behavior: smooth;
-      line-height: 1.5;
-    }
-
-    .shell {
-      width: 100%;
-      max-width: 1440px;
-      margin: 0 auto;
-      background:
-        linear-gradient(135deg, rgba(15,23,42,0.96), rgba(15,23,42,0.9)),
-        radial-gradient(circle at top right, rgba(56,189,248,0.08), transparent 55%);
-      padding: 18px 22px 22px;
-      box-shadow:
-        0 30px 80px rgba(0,0,0,0.9),
-        0 0 0 1px rgba(15,23,42,1);
-      border: 1px solid rgba(148,163,184,0.35);
-      backdrop-filter: blur(22px) saturate(130%);
-      border-radius: 22px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    /* Top nav */
-    .top-nav {
-      width: 100%;
-      background:
-        linear-gradient(135deg, rgba(15,23,42,0.94), rgba(15,23,42,0.9));
-      border-radius: 18px;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 18px;
-      margin-bottom: 8px;
-      user-select: none;
-      position: sticky;
-      top: 0;
-      z-index: 30;
-      backdrop-filter: blur(20px);
-      box-shadow: 0 18px 40px rgba(0,0,0,0.7);
-    }
-
-    .top-nav-left,
-    .top-nav-right {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-    }
-
-    .logo-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .logo-mark {
-      width: 26px;
-      height: 26px;
-      border-radius: 999px;
-      background: conic-gradient(from 180deg, #38bdf8, #22c55e, #a855f7, #38bdf8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 18px rgba(56, 189, 248, 0.5);
-      font-size: 14px;
-    }
-
-    .logo {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      background: linear-gradient(135deg, #e5f2ff, #9ae6ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .nav-link {
-      color: #e5e7eb;
-      text-decoration: none;
-      font-size: 14px;
-      opacity: 0.88;
-      transition: all 0.2s ease;
-      padding: 6px 10px;
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .nav-link:hover {
-      opacity: 1;
-      background: rgba(15,23,42,0.9);
-    }
-
-    .dashboard-btn {
-      background: linear-gradient(135deg, #f97316, #ea580c);
-      color: #0b1120 !important;
-      opacity: 1 !important;
-      font-weight: 600;
-      padding: 7px 14px;
-      border-radius: 999px;
-      box-shadow: 0 8px 22px rgba(249, 115, 22, 0.5);
-      border: 1px solid rgba(248, 250, 252, 0.2);
-    }
-
-    .dashboard-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 10px 26px rgba(249, 115, 22, 0.7);
-      background: linear-gradient(135deg, #fb923c, #f97316);
-    }
-
-    /* Header row */
-    .header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      gap: 14px;
-      padding: 6px 2px 4px;
-    }
-
-    .title-block h1 {
-      margin: 0 0 4px 0;
-      font-size: 27px;
-      background: linear-gradient(135deg,#38bdf8,#60a5fa,#a855f7);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .title-block p {
-      margin: 0;
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    .cta-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: flex-end;
-    }
-
-    .pill {
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-size: 12px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      color: var(--text-muted);
-      white-space: nowrap;
-      font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .pill-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: #22c55e;
-      box-shadow: 0 0 0 4px rgba(34,197,94,0.3);
-    }
-
-    .mode-switch {
-      display: inline-flex;
-      padding: 4px;
-      border-radius: 999px;
-      background: radial-gradient(circle at top left,#020617,#020617f5);
-      border: 1px solid rgba(148,163,184,0.5);
-      gap: 4px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.8);
-    }
-
-    .mode-btn {
-      border: none;
-      border-radius: 999px;
-      padding: 6px 14px;
-      font-size: 13px;
-      color: var(--text-muted);
-      background: transparent;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      text-decoration: none;
-      white-space: nowrap;
-      transition:
-        background 0.18s ease,
-        color 0.18s ease,
-        transform 0.18s ease,
-        box-shadow 0.18s ease;
-      font-weight: 500;
-    }
-
-    .mode-btn span { font-size: 12px; }
-
-    .mode-btn:hover {
-      transform: translateY(-1px);
-      background: rgba(15,23,42,0.94);
-      box-shadow: 0 10px 24px rgba(0,0,0,0.75);
-    }
-
-    .mode-btn.is-active.walk { background: linear-gradient(135deg,#22c55e,#16a34a); color:#0b1120; }
-    .mode-btn.is-active.drive { background: linear-gradient(135deg,#38bdf8,#0ea5e9); color:#0b1120; }
-    .mode-btn.is-active.fly { background: linear-gradient(135deg,#a855f7,#7c3aed); color:#fff; }
-    .mode-btn.is-active.sit { background: linear-gradient(135deg,#f97316,#ea580c); color:#fff; }
-
-    /* main layout */
-    .container {
-      display: grid;
-      grid-template-columns: 340px minmax(0, 1fr);
-      gap: 18px;
-      align-items: flex-start;
-      margin-top: 4px;
-    }
-
-    .map-panel {
-      background: radial-gradient(circle at top left,#020617,#020617f5);
-      border-radius: 18px;
-      padding: 14px 14px 12px;
-      border: 1px solid rgba(56, 189, 248, 0.55);
-      box-shadow:
-        0 24px 50px rgba(0,0,0,0.95),
-        0 0 40px rgba(56,189,248,0.2);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      min-width: 0;
-    }
-
-    .map-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    .map-header span:first-child {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .map-header span:first-child::before {
-      content: '';
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: #38bdf8;
-      box-shadow: 0 0 0 4px rgba(56,189,248,0.4);
-    }
-
-    .chip {
-      font-size: 11px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid rgba(148, 163, 184, 0.55);
-      color: var(--text-muted);
-    }
-
-    #map {
-      width: 100%;
-      height: 320px;
-      border-radius: 14px;
-      overflow: hidden;
-      border: 1px solid rgba(30, 64, 175, 0.9);
-      box-shadow:
-        0 0 0 1px rgba(15,23,42,1),
-        0 20px 45px rgba(0,0,0,1),
-        0 0 46px rgba(37,99,235,0.5);
-    }
-
-    .map-footer {
-      margin-top: 4px;
-      font-size: 12px;
-      color: var(--text-muted);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .map-footer a {
-      color: var(--accent);
-      font-size: 12px;
-      text-decoration: none;
-      font-weight: 600;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(56, 189, 248, 0.5);
-      background: rgba(15,23,42,0.9);
-      transition: all 0.2s ease;
-    }
-
-    .map-footer a:hover {
-      background: rgba(56, 189, 248, 0.18);
-      box-shadow: 0 0 20px rgba(56,189,248,0.5);
-    }
-
-    #topRatedBox,
-    #recentBox {
-      margin-top: 8px;
-      padding-top: 8px;
-      font-size: 12px;
-    }
-
-    #topRatedBox { border-top: 1px solid rgba(148,163,184,0.4); }
-    #recentBox { border-top: 1px dashed rgba(148,163,184,0.35); }
-
-    #topRatedTitle,
-    #recentTitle {
-      font-weight: 600;
-      margin-bottom: 4px;
-      color: #e5e7eb;
-    }
-
-    #topRatedList,
-    #recentList {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .top-rated-item,
-    .recent-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      padding: 6px 8px;
-      border-radius: 8px;
-      transition: all 0.2s ease;
-      color: var(--text-main);
-      font-size: 12px;
-    }
-
-    .top-rated-item span {
-      color: #f97316;
-      font-size: 11px;
-    }
-
-    .top-rated-item:hover,
-    .recent-item:hover {
-      background: rgba(15,23,42,0.95);
-      transform: translateX(4px);
-      box-shadow: 0 8px 18px rgba(0,0,0,0.7);
-    }
-
-    .viewer-panel {
-      background: radial-gradient(circle at top,#020617,#020617f5);
-      border-radius: 18px;
-      padding: 16px 16px 18px;
-      border: 1px solid rgba(30, 64, 175, 0.75);
-      box-shadow:
-        0 24px 52px rgba(0, 0, 0, 1),
-        0 0 44px rgba(37,99,235,0.6);
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-    }
-
-    .viewer-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
-    }
-
-    .viewer-header-main h2 {
-      margin: 0;
-      font-size: 20px;
-    }
-
-    .viewer-header-main p {
-      margin: 2px 0 0;
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    .viewer-meta {
-      font-size: 12px;
-      color: var(--text-muted);
-      white-space: nowrap;
-      font-weight: 500;
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.4);
-      background: rgba(15,23,42,0.9);
-    }
-
-    /* Search */
-    .search-container {
-      margin-bottom: 8px;
-      position: relative;
-    }
-
-    #homeSearchInput {
-      width: 100%;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.55);
-      padding: 9px 18px 9px 40px;
-      background: rgba(15,23,42,0.96);
-      color: #e5e7eb;
-      font-size: 13px;
-      transition: all 0.25s ease;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.5);
-    }
-
-    #homeSearchInput:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow:
-        0 0 0 1px rgba(15,23,42,1),
-        0 0 0 3px var(--focus-ring-color);
-      background: rgba(15,23,42,0.98);
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted);
-      font-size: 14px;
-    }
-
-    /* CATEGORY BAR */
-    .category-bar {
-      display: flex;
-      flex-wrap: nowrap;
-      gap: 8px;
-      margin: 6px 0 10px;
-      padding-bottom: 2px;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .category-bar::-webkit-scrollbar { height: 4px; }
-
-    .category-bar::-webkit-scrollbar-thumb {
-      background: rgba(148,163,184,0.5);
-      border-radius: 999px;
-    }
-
-    .cat-chip {
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.55);
-      background: rgba(15,23,42,0.96);
-      color: var(--text-muted);
-      font-size: 11px;
-      padding: 4px 11px;
-      white-space: nowrap;
-      cursor: pointer;
-      transition:
-        background 0.18s ease,
-        color 0.18s ease,
-        box-shadow 0.18s ease,
-        transform 0.18s ease;
-      flex-shrink: 0;
-    }
-
-    .cat-chip:hover {
-      background: rgba(31,41,55,1);
-      color: var(--text-main);
-      transform: translateY(-1px);
-    }
-
-    .cat-chip.active {
-      background: var(--accent-soft);
-      color: #e0f2fe;
-      border-color: var(--accent);
-      box-shadow:
-        0 0 0 1px rgba(15,23,42,1),
-        0 0 22px rgba(56,189,248,0.55);
-    }
-
-    /* Grid + cards */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 14px;
-    }
-
-    .card {
-      background: radial-gradient(circle at top left,#020617,#020617f2);
-      border-radius: 14px;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      cursor: pointer;
-      transition:
-        transform 0.22s ease,
-        box-shadow 0.22s ease,
-        border-color 0.22s ease,
-        background 0.22s ease;
-      min-height: 210px;
-      position: relative;
-      animation: fadeInUp 0.45s ease forwards;
-      opacity: 0;
-    }
-
-    .card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      border: 1px solid transparent;
-      background: linear-gradient(135deg, rgba(56,189,248,0.7), transparent) border-box;
-      mask:
-        linear-gradient(#000 0 0) padding-box,
-        linear-gradient(#000 0 0);
-      -webkit-mask:
-        linear-gradient(#000 0 0) padding-box,
-        linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.22s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-6px) scale(1.01);
-      box-shadow: 0 22px 40px rgba(0, 0, 0, 0.98);
-      border-color: rgba(56,189,248,0.85);
-      background: radial-gradient(circle at top left,#020617,#020617);
-    }
-
-    .card:hover::before { opacity: 1; }
-
-    .thumb img {
-      width: 100%;
-      height: 120px;
-      object-fit: cover;
-      display: block;
-      border-bottom: 1px solid rgba(15,23,42,1);
-      transition: transform 0.3s ease;
-    }
-
-    .card:hover .thumb img { transform: scale(1.05); }
-
-    .card-info {
-      padding: 11px 11px 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      flex: 1;
-    }
-
-    .card-info h4 {
-      margin: 0;
-      font-size: 14px;
-      font-weight: 600;
-      line-height: 1.35;
-    }
-
-    .card-info p {
-      margin: 0;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .card-meta-row {
-      margin-top: auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      font-size: 11px;
-    }
-
-    .mode-pill {
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.6);
-      color: var(--text-muted);
-      white-space: nowrap;
-      font-weight: 500;
-      background: rgba(15,23,42,0.95);
-    }
-
-    .mode-walk { border-color:#22c55e; color:#bbf7d0; }
-    .mode-drive { border-color:#38bdf8; color:#e0f2fe; }
-    .mode-fly { border-color:#a855f7; color:#f3e8ff; }
-    .mode-sit  { border-color:#f97316; color:#ffedd5; }
-
-    .like-btn {
-      border: none;
-      background: transparent;
-      color: var(--text-muted);
-      font-size: 11px;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 999px;
-      transition: all 0.18s ease;
-      white-space: nowrap;
-      font-weight: 500;
-    }
-
-    .like-btn:hover {
-      background: rgba(248, 250, 252, 0.08);
-      color: #f97316;
-      transform: scale(1.06);
-    }
-
-    .like-btn.liked {
-      color: #f97316;
-      background: rgba(249, 115, 22, 0.16);
-    }
-
-    /* Responsive */
-    @media (max-width: 960px) {
-      body { padding: 8px 0; }
-      .shell { padding: 14px 14px 18px; border-radius: 18px; }
-
-      .container { grid-template-columns: 1fr; }
-
-      #map { height: 260px; }
-
-      .top-nav {
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      .top-nav-right {
-        flex-wrap: wrap;
-        justify-content: flex-end;
-      }
-
-      .grid {
-        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-      }
-    }
-
-    @media (max-width: 640px) {
-      .shell { padding: 12px 10px 16px; border-radius: 0; border-left: none; border-right: none; }
-
-      .top-nav {
-        position: static;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-      }
-
-      .top-nav-left,
-      .top-nav-right {
-        justify-content: center;
-        flex-wrap: wrap;
-      }
-
-      .header-row {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .cta-row {
-        justify-content: flex-start;
-      }
-
-      .grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      }
-    }
-
-    /* Loading animation */
-    .grid.loading .card {
-      opacity: 0.6;
-      transform: scale(0.95);
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px) scale(0.96); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Virtual Street Walk - Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- MapLibre -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/maplibre-gl.css') }}">
+    <style>
+        :root {
+            --bg-page: #020617;
+            --bg-panel: #020617dd;
+            --bg-card: #020617;
+            --accent: #1d9bf0;
+            --accent-strong: #0b63d1;
+            --accent-soft: rgba(29,155,240,0.16);
+            --success: #22c55e;
+            --warning: #f97316;
+            --purple: #a855f7;
+            --text-main: #e5e7eb;
+            --text-muted: #9ca3af;
+            --radius-lg: 22px;
+            --radius-md: 14px;
+            --shadow-soft: 0 26px 70px rgba(0, 0, 0, 0.9);
+            --focus-ring-color: rgba(56, 189, 248, 0.85);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        a, a:visited, a:hover, a:active,
+        button {
+            text-decoration: none;
+        }
+
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(
+                          to top,
+                          rgba(4,7,20,0.82),
+                          rgba(15,23,42,0.25)
+                       ),
+                       url("{{ url_for('static', filename='img/hero-skyline.jpg') }}")
+                       center bottom / cover no-repeat fixed;
+            font-family: system-ui, -apple-system, sans-serif;
+            color: var(--text-main);
+            padding: 12px 0;
+            scroll-behavior: smooth;
+            line-height: 1.5;
+        }
+
+        .shell {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            background:
+                radial-gradient(circle at top right,
+                                rgba(15,23,42,0.45),
+                                rgba(15,23,42,0.10)),
+                rgba(15,23,42,0.35);
+            padding: 24px 28px 26px;
+            box-shadow: 0 40px 110px rgba(0,0,0,0.9),
+                        0 0 0 1px rgba(15,23,42,0.18);
+            border: 1px solid rgba(148,163,184,0.28);
+            backdrop-filter: blur(26px) saturate(140%);
+            border-radius: 26px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0 4px;
+        }
+
+        .top-nav-left, .top-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-mark {
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 25%, #facc15 0%, #fb923c 22%, #3b82f6 60%, #0f172a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 0 2px rgba(15,23,42,0.95), 0 0 20px rgba(56,189,248,0.7);
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            color: #f9fafb;
+        }
+
+        .logo span {
+            color: #60a5fa;
+        }
+
+        .nav-link {
+            color: #e5e7eb;
+            font-size: 14px;
+            opacity: 0.9;
+            transition: all 0.2s ease;
+            padding: 7px 16px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(148,163,184,0.6);
+            background: rgba(15,23,42,0.85);
+        }
+
+        .nav-link:hover {
+            opacity: 1;
+            box-shadow: 0 14px 34px rgba(0,0,0,0.9);
+            background: rgba(15,23,42,0.95);
+        }
+
+        .nav-link.primary {
+            background: linear-gradient(135deg, #1d9bf0, #0b63d1);
+            border-color: rgba(148,163,184,0.85);
+        }
+
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1d9bf0, #60a5fa);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-chip-compact {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 8px 4px 6px;
+            border-radius: 999px;
+            background: rgba(15,23,42,0.9);
+            border: 1px solid rgba(148,163,184,0.6);
+            box-shadow: 0 14px 34px rgba(0,0,0,0.9);
+        }
+
+        .user-chip-name {
+            font-size: 13px;
+            font-weight: 500;
+            max-width: 140px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .logout-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 2px;
+            font-size: 14px;
+            background: rgba(239,68,68,0.18);
+            border: 1px solid rgba(239,68,68,0.55);
+            color: #fecaca;
+            cursor: pointer;
+            transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .logout-icon:hover {
+            background: rgba(239,68,68,0.32);
+            box-shadow: 0 0 18px rgba(248,113,113,0.8);
+            transform: translateY(-1px);
+        }
+
+        .hero {
+            text-align: center;
+            padding: 28px 40px 10px;
+            color: #e5e7eb;
+        }
+
+        .hero-kicker {
+            font-size: 13px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #bfdbfe;
+            margin: 0 0 10px;
+        }
+
+        .hero h1 {
+            margin: 0 0 8px;
+            font-size: 40px;
+            line-height: 1.25;
+            font-weight: 800;
+            color: #e5e7eb;
+        }
+
+        .hero h1 span {
+            color: #60a5fa;
+            text-shadow: 0 0 26px rgba(37,99,235,0.85);
+        }
+
+        .hero-sub {
+            margin: 0 0 22px;
+            font-size: 14px;
+            color: #e5e7eb;
+            opacity: 0.9;
+        }
+
+        .hero-search {
+            margin: 0 auto 24px;
+            max-width: 580px;
+            position: relative;
+            display: flex;
+            align-items: stretch;
+            background: #f9fafb;
+            border-radius: 999px;
+            padding: 4px;
+            border: 1px solid rgba(148,163,184,0.7);
+            box-shadow: 0 26px 70px rgba(0,0,0,0.95);
+            width: 100%;
+        }
+
+        .hero-search::before {
+            content: '🔍';
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+            opacity: 0.65;
+            pointer-events: none;
+        }
+
+        .hero-search input {
+            flex: 1;
+            min-width: 0;
+            border: none;
+            background: transparent;
+            padding: 12px 14px 12px 40px;
+            font-size: 14px;
+            color: #111827;
+            outline: none;
+        }
+
+        .hero-search input::placeholder {
+            color: #9ca3af;
+        }
+
+        .hero-search button {
+            border: none;
+            border-radius: 999px;
+            padding: 0 24px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #1d9bf0, #0b63d1);
+            color: #f9fafb;
+            box-shadow: 0 18px 40px rgba(37,99,235,0.9);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .hero-search button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 24px 55px rgba(37,99,235,1);
+        }
+
+        .hero-modes {
+            display: grid;
+            grid-template-columns: repeat(3, 300px);
+            gap: 18px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        .hero-mode-card {
+            position: relative;
+            border-radius: 18px;
+            height: 190px;
+            overflow: hidden;
+            border: 1px solid rgba(15,23,42,0.9);
+            box-shadow: 0 26px 60px rgba(0,0,0,0.95);
+            cursor: pointer;
+            background: radial-gradient(circle at top left, #020617 23%, #020617 00%);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hero-mode-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 32px 70px rgba(0,0,0,0.98);
+        }
+
+        .hero-mode-bg {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            filter: brightness(0.9);
+            transform: scale(1.02);
+            transition: transform 0.35s ease;
+        }
+
+        .hero-walk .hero-mode-bg {
+            background-image: url('{{ url_for("static", filename="hero/walk.png") }}');
+        }
+
+        .hero-drive .hero-mode-bg {
+            background-image: url('{{ url_for("static", filename="hero/drive.png") }}');
+        }
+
+        .hero-fly .hero-mode-bg {
+            background-image: url('{{ url_for("static", filename="hero/fly.jpg") }}');
+        }
+
+        .hero-mode-card::after {
+            content: '';
+            position: absolute;
+            inset: auto 0 0 0;
+            height: 55px;
+            background: linear-gradient(to top, rgba(15,23,42,0.96), transparent);
+        }
+
+        .hero-mode-content {
+            position: relative;
+            z-index: 1;
+            padding: 16px 16px 14px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            color: #e5e7eb;
+            text-align: left;
+            height: 100%;
+        }
+
+        .hero-mode-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            box-shadow: 0 0 18px rgba(0,0,0,0.8);
+            flex-shrink: 0;
+            background: radial-gradient(circle at 30% 0%, #22c55e, #16a34a);
+        }
+
+        .hero-drive .hero-mode-icon {
+            background: radial-gradient(circle at 30% 0%, #fb923c, #f97316);
+        }
+
+        .hero-fly .hero-mode-icon {
+            background: radial-gradient(circle at 30% 0%, #38bdf8, #0ea5e9);
+        }
+
+        .hero-mode-content h3 {
+            margin: 0 0 2px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .hero-mode-content p {
+            margin: 0;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .hero-mode-card:hover .hero-mode-bg {
+            transform: scale(1.06);
+        }
+
+        /* POPULAR DESTINATIONS */
+        .destinations {
+            margin-top: 28px;
+            padding: 12px 8px 8px;
+            text-align: center;
+        }
+
+        .destinations-header h2 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+        }
+
+        .destinations-header p {
+            margin: 4px 0 16px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .destinations-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .dest-card {
+            position: relative;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid rgba(15,23,42,0.7);
+            box-shadow: 0 22px 40px rgba(0,0,0,0.9);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            background: transparent;
+        }
+
+        .dest-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 28px 50px rgba(0,0,0,0.95);
+        }
+
+        .dest-thumb {
+            position: relative;
+            height: 190px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .dest-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to top,
+                rgba(2,6,23,0.95) 0%,
+                rgba(2,6,23,0.0) 65%
+            );
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .dest-info {
+            width: 100%;
+            padding: 10px 12px 12px;
+        }
+
+        .dest-info h3 {
+            margin: 0 0 2px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+
+        .dest-info p {
+            margin: 0;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .dest-cta-row {
+            margin-top: 18px;
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .dest-cta {
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.6);
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            background: radial-gradient(circle at top left, #020617, #020617f6);
+            color: #e5e7eb;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.9);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+
+        .dest-cta.secondary {
+            min-width: 190px;
+        }
+
+        .dest-cta.primary {
+            min-width: 220px;
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            border-color: rgba(248,250,252,0.6);
+            color: #0b1120;
+            box-shadow: 0 22px 46px rgba(249,115,22,0.9);
+        }
+
+        .dest-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 22px 50px rgba(0,0,0,1);
+        }
+
+        .dest-cta.primary:hover {
+            background: linear-gradient(135deg, #fb923c, #f97316);
+        }
+
+        /* MAIN APP UI BELOW HERO */
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 14px;
+            padding: 20px 2px 4px;
+        }
+
+        .title-block h1 {
+            margin: 0 0 4px 0;
+            font-size: 20px;
+            background: linear-gradient(135deg, #38bdf8, #60a5fa, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .title-block p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .cta-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .pill {
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            color: var(--text-muted);
+            white-space: nowrap;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pill-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 0 4px rgba(34,197,94,0.3);
+        }
+
+        .mode-switch {
+            display: inline-flex;
+            padding: 4px;
+            border-radius: 999px;
+            background: radial-gradient(circle at top left, #020617, #020617f5);
+            border: 1px solid rgba(148,163,184,0.5);
+            gap: 4px;
+            box-shadow: 0 14px 36px rgba(0,0,0,0.85);
+        }
+
+        .mode-btn {
+            border: none;
+            border-radius: 999px;
+            padding: 6px 14px;
+            font-size: 13px;
+            color: var(--text-muted);
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+            font-weight: 500;
+        }
+
+        .mode-btn span {
+            font-size: 12px;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-1px);
+            background: rgba(15,23,42,0.94);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.75);
+        }
+
+        .mode-btn.is-active.walk {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #0b1120;
+        }
+
+        .mode-btn.is-active.drive {
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+            color: #0b1120;
+        }
+
+        .mode-btn.is-active.fly {
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            color: #fff;
+        }
+
+        .mode-btn.is-active.sit {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: #fff;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 340px minmax(0, 1fr);
+            gap: 18px;
+            align-items: flex-start;
+            margin-top: 4px;
+        }
+
+        .map-panel {
+            background: radial-gradient(circle at top left, #020617, #020617f7);
+            border-radius: 20px;
+            padding: 12px 12px 10px;
+            border: 1px solid rgba(56, 189, 248, 0.6);
+            box-shadow: 0 24px 52px rgba(0,0,0,1), 0 0 40px rgba(56,189,248,0.45);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .map-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .map-header span:first-child {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .map-header span:first-child::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: var(--accent);
+            box-shadow: 0 0 0 4px rgba(56,189,248,0.4);
+        }
+
+        .chip {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.55);
+            color: var(--text-muted);
+        }
+
+        #map {
+            width: 100%;
+            height: 300px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(30, 64, 175, 0.9);
+            box-shadow: 0 0 0 1px rgba(15,23,42,1), 0 18px 40px rgba(0,0,0,1), 0 0 46px rgba(37,99,235,0.5);
+        }
+
+        .map-footer {
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .map-footer a {
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(56, 189, 248, 0.6);
+            background: rgba(15,23,42,0.96);
+            transition: all 0.2s ease;
+        }
+
+        .map-footer a:hover {
+            background: var(--accent-soft);
+            box-shadow: 0 0 22px rgba(56,189,248,0.6);
+        }
+
+        #topRatedBox, #recentBox {
+            margin-top: 8px;
+            padding-top: 8px;
+            font-size: 12px;
+        }
+
+        #topRatedBox {
+            border-top: 1px solid rgba(148,163,184,0.4);
+        }
+
+        #recentBox {
+            border-top: 1px dashed rgba(148,163,184,0.35);
+        }
+
+        #topRatedTitle, #recentTitle {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #e5e7eb;
+        }
+
+        #topRatedList, #recentList {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .top-rated-item, .recent-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            padding: 6px 8px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            color: var(--text-main);
+            font-size: 12px;
+        }
+
+        .top-rated-item span {
+            color: #f97316;
+            font-size: 11px;
+        }
+
+        .top-rated-item:hover, .recent-item:hover {
+            background: rgba(15,23,42,0.95);
+            transform: translateX(4px);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.7);
+        }
+
+        .viewer-panel {
+            background: radial-gradient(circle at top, #020617, #020617f7);
+            border-radius: 20px;
+            padding: 16px 16px 18px;
+            border: 1px solid rgba(30, 64, 175, 0.75);
+            box-shadow: 0 24px 52px rgba(0, 0, 0, 1), 0 0 40px rgba(37,99,235,0.6);
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .viewer-header-main h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .viewer-header-main p {
+            margin: 2px 0 0;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .viewer-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.4);
+            background: rgba(15,23,42,0.9);
+        }
+
+        .search-container {
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        #homeSearchInput {
+            width: 100%;
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.55);
+            padding: 9px 18px 9px 40px;
+            background: rgba(15,23,42,0.96);
+            color: #e5e7eb;
+            font-size: 13px;
+            transition: all 0.25s ease;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+        }
+
+        #homeSearchInput:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px rgba(15,23,42,1), 0 0 0 3px var(--focus-ring-color);
+            background: rgba(15,23,42,0.98);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .category-bar {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 8px;
+            margin: 6px 0 10px;
+            padding-bottom: 2px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .category-bar::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .category-bar::-webkit-scrollbar-thumb {
+            background: rgba(148,163,184,0.5);
+            border-radius: 999px;
+        }
+
+        .cat-chip {
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.55);
+            background: rgba(15,23,42,0.96);
+            color: var(--text-muted);
+            font-size: 11px;
+            padding: 4px 11px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+            flex-shrink: 0;
+        }
+
+        .cat-chip:hover {
+            background: rgba(31,41,55,1);
+            color: var(--text-main);
+            transform: translateY(-1px);
+        }
+
+        .cat-chip.active {
+            background: var(--accent-soft);
+            color: #e0f2fe;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px rgba(15,23,42,1), 0 0 22px rgba(56,189,248,0.55);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .card {
+            background: radial-gradient(circle at top left, #020617, #020617f3);
+            border-radius: 16px;
+            border: 1px solid rgba(30,64,175,0.55);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
+            min-height: 220px;
+            position: relative;
+            animation: fadeInUp 0.45s ease forwards;
+            opacity: 0;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            border: 1px solid transparent;
+            background: linear-gradient(135deg, rgba(56,189,248,0.7), transparent);
+            -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+            mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.22s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-6px) scale(1.01);
+            box-shadow: 0 22px 40px rgba(0, 0, 0, 0.98);
+            border-color: rgba(56,189,248,0.85);
+            background: radial-gradient(circle at top left, #020617, #020617);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .thumb img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+            display: block;
+            border-bottom: 1px solid rgba(15,23,42,1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover .thumb img {
+            transform: scale(1.05);
+        }
+
+        .card-info {
+            padding: 11px 11px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .card-info h4 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.35;
+        }
+
+        .card-info p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .card-meta-row {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .mode-pill {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.6);
+            color: var(--text-muted);
+            white-space: nowrap;
+            font-weight: 500;
+            background: rgba(15,23,42,0.95);
+        }
+
+        .mode-walk {
+            border-color: #22c55e;
+            color: #bbf7d0;
+        }
+
+        .mode-drive {
+            border-color: #38bdf8;
+            color: #e0f2fe;
+        }
+
+        .mode-fly {
+            border-color: #a855f7;
+            color: #f3e8ff;
+        }
+
+        .mode-sit {
+            border-color: #f97316;
+            color: #ffedd5;
+        }
+
+        .like-btn {
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 999px;
+            transition: all 0.18s ease;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .like-btn:hover {
+            background: rgba(248, 250, 252, 0.08);
+            color: #f97316;
+            transform: scale(1.06);
+        }
+
+        .like-btn.liked {
+            color: #f97316;
+            background: rgba(249, 115, 22, 0.16);
+        }
+
+        .grid.loading .card {
+            opacity: 0.6;
+            transform: scale(0.95);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @media (max-width: 960px) {
+            body {
+                padding: 8px 0;
+            }
+
+            .shell {
+                padding: 16px 14px 18px;
+                border-radius: 18px;
+            }
+
+            .hero {
+                padding: 20px 12px 6px;
+            }
+
+            .hero-modes {
+                grid-template-columns: 1fr;
+            }
+
+            .destinations-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            #map {
+                height: 260px;
+            }
+
+            .top-nav {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .top-nav-right {
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+
+            .grid {
+                grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            .shell {
+                padding: 14px 10px 16px;
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+            }
+
+            .top-nav {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .top-nav-left, .top-nav-right {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .destinations-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px;
+            }
+
+            .dest-thumb {
+                height: 160px;
+            }
+
+            .grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            }
+
+            .hero-search {
+                margin: 0 auto 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero {
+                padding-inline: 10px;
+            }
+
+            .hero-search button {
+                padding-inline: 16px;
+            }
+
+            .hero-modes {
+                gap: 12px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="shell">
-    <div class="top-nav">
-      <div class="top-nav-left">
-        <div class="logo-wrap">
-          <div class="logo-mark">VS</div>
-          <div class="logo">Virtual Street Walk</div>
-        </div>
-        <a href="{{ url_for('upload') }}" class="nav-link">+ Add street</a>
-        <a href="{{ url_for('dashboard') }}" class="nav-link dashboard-btn">📊 Dashboard</a>
-      </div>
-    </div>
-
-    <div class="header-row">
-      <div class="title-block">
-        <h1>Explore streets like a game</h1>
-        <p>Pick any street, then walk, drive, fly or just sit and watch.</p>
-      </div>
-
-      <div class="cta-row">
-        <div class="pill">
-          <span class="pill-dot"></span>
-          Today • {{ streets|length }} streets available
-        </div>
-
-        <div class="mode-switch">
-          <a href="{{ url_for('walk') }}"
-             class="mode-btn walk {% if request.path.startswith('/walk') or request.path.startswith('/world/walk') %}is-active{% endif %}">
-            <span>🚶</span><span>Walk</span>
-          </a>
-          <a href="{{ url_for('drive') }}"
-             class="mode-btn drive {% if request.path.startswith('/drive') or request.path.startswith('/world/drive') %}is-active{% endif %}">
-            <span>🚗</span><span>Drive</span>
-          </a>
-          <a href="{{ url_for('fly') }}"
-             class="mode-btn fly {% if request.path.startswith('/fly') or request.path.startswith('/world/fly') %}is-active{% endif %}">
-            <span>🪂</span><span>Fly</span>
-          </a>
-          <a href="{{ url_for('sit') }}"
-             class="mode-btn sit {% if request.path.startswith('/sit') or request.path.startswith('/world/sit') %}is-active{% endif %}">
-            <span>🪑</span><span>Sit</span>
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <div class="container">
-      <!-- LEFT PANEL -->
-      <div class="map-panel">
-        <div class="map-header">
-          <span>World map</span>
-          <span class="chip">Click a pin to jump</span>
-        </div>
-
-        <div id="map"></div>
-
-        <div class="map-footer">
-          <span>Scroll to zoom, drag to pan.</span>
-          <a href="{{ url_for('upload') }}">+ Add new street</a>
-        </div>
-
-        <div id="topRatedBox">
-          <div id="topRatedTitle">Top liked</div>
-          <ul id="topRatedList"></ul>
-        </div>
-
-        <div id="recentBox">
-          <div id="recentTitle">Recently added</div>
-          <ul id="recentList"></ul>
-        </div>
-      </div>
-
-      <!-- RIGHT PANEL -->
-      <div class="viewer-panel">
-        <div class="viewer-header">
-          <div class="viewer-header-main">
-            <h2>Browse streets</h2>
-            <p>Click any card or map pin to go into that street.</p>
-          </div>
-          <div class="viewer-meta">{{ streets|length }} total streets</div>
-        </div>
-
-        <div class="search-container">
-          <span class="search-icon">🔍</span>
-          <input id="homeSearchInput"
-                 type="search"
-                 placeholder="Search streets by name, city or country…"
-                 autocomplete="off">
-          <div id="searchResultsCount" style="font-size: 11px; color: var(--text-muted); margin-top: 4px;"></div>
-        </div>
-
-        <!-- CATEGORY FILTER BAR -->
-        <div class="category-bar" id="categoryBar"></div>
-
-        <div class="grid loading" id="streetsGrid">
-          {% for st in streets %}
-            <div class="card"
-                 tabindex="0"
-                 data-id="{{ st._id }}"
-                 data-lat="{{ st.lat }}"
-                 data-lng="{{ st.lng }}"
-                 data-name="{{ st.name }}"
-                 data-city="{{ st.city }}"
-                 data-country="{{ st.country }}"
-                 data-mode="{{ st.mode if st.type == 'video' else '3d' }}"
-                 data-category="{{ st.category if st.category else '' }}"
-                 data-href="
-                   {% if st.type == '3d' %}
-                     {{ url_for('world', street_id=st._id) }}
-                   {% elif st.mode == 'walk' %}
-                     {{ url_for('world_walk', street_id=st._id) }}
-                   {% elif st.mode == 'drive' %}
-                     {{ url_for('world_drive', street_id=st._id) }}
-                   {% elif st.mode == 'fly' %}
-                     {{ url_for('world_fly', street_id=st._id) }}
-                   {% elif st.mode == 'sit' %}
-                     {{ url_for('world_sit', street_id=st._id) }}
-                   {% else %}
-                     {{ url_for('world', street_id=st._id) }}
-                   {% endif %}
-                 ">
-              <div class="thumb">
-                {% if st.type == 'video' and st.videos and st.videos[0].url %}
-                  {% set base = st.videos[0].url %}
-                  {% set thumb = base.replace('/video/upload/', '/video/upload/so_1,f_jpg,q_auto,w_320/') %}
-                  <img src="{{ thumb }}" alt="thumbnail" loading="lazy">
-                {% else %}
-                  <img src="https://dummyimage.com/320x180/020617/64748b&text=3D+World" alt="3D World" loading="lazy">
-                {% endif %}
-              </div>
-
-              <div class="card-info">
-                <div>
-                  <h4>{{ st.name }}</h4>
-                  <p>
-                    {{ st.city }}, {{ st.country }}
-                    {% if st.category %} • {{ st.category }}{% endif %}
-                  </p>
+    <div class="shell">
+        <div class="top-nav">
+            <div class="top-nav-left">
+                <div class="logo-wrap">
+                    <div class="logo-mark">🚶</div>
+                    <div class="logo">Virtual Street<span>Walk</span></div>
                 </div>
-
-                <div class="card-meta-row">
-                  {% if st.type == '3d' %}
-                    <span class="mode-pill">3D</span>
-                  {% else %}
-                    <span class="mode-pill mode-{{ st.mode }}">{{ st.mode|capitalize }}</span>
-                  {% endif %}
-
-                  <button type="button"
-                          class="like-btn"
-                          data-like-id="{{ st._id }}">
-                    ♥ <span class="like-count">{{ st.likes or 0 }}</span>
-                  </button>
-                </div>
-              </div>
             </div>
-          {% endfor %}
+            <div class="top-nav-right">
+                {% if current_user %}
+                    <div class="user-chip-compact">
+                        <div class="user-avatar">
+                            {{ current_user.name[0]|upper if current_user.name else 'U' }}
+                        </div>
+                        <span class="user-chip-name">
+                            {{ current_user.name or current_user.email.split('@')[0] }}
+                        </span>
+                        <a href="{{ url_for('logout') }}" class="logout-icon" title="Logout">
+                            ⎋
+                        </a>
+                    </div>
+                    <a href="{{ url_for('dashboard') }}" class="nav-link primary">Dashboard</a>
+                    <a href="{{ url_for('upload') }}" class="nav-link">Upload Street</a>
+                {% else %}
+                    <a href="{{ url_for('upload') }}" class="nav-link">Upload Street</a>
+                    <a href="{{ url_for('login') }}" class="nav-link primary">Login</a>
+                {% endif %}
+            </div>
         </div>
-      </div>
+
+        <section class="hero">
+            <p class="hero-kicker">Virtual Street Walk</p>
+            <h1>Explore the <span>World</span><br>from <span>Your Screen</span></h1>
+            <p class="hero-sub">Walk, Drive, or Fly through real streets around the globe.</p>
+            <form class="hero-search" onsubmit="return false;">
+                <input id="heroSearch" type="search" placeholder="Search streets, cities, or landmarks..." autocomplete="off">
+                <button type="button" id="heroSearchBtn">Search</button>
+            </form>
+            <div class="hero-modes">
+                <a href="{{ url_for('world_walk') }}" class="hero-mode-card hero-walk">
+                    <div class="hero-mode-bg"></div>
+                    <div class="hero-mode-content">
+                        <div class="hero-mode-icon">🚶</div>
+                        <div>
+                            <h3>Walk Mode</h3>
+                            <p>Step into the streets<br>Explore on foot.</p>
+                        </div>
+                    </div>
+                </a>
+                <a href="{{ url_for('world_drive') }}" class="hero-mode-card hero-drive">
+                    <div class="hero-mode-bg"></div>
+                    <div class="hero-mode-content">
+                        <div class="hero-mode-icon">🚗</div>
+                        <div>
+                            <h3>Drive Mode</h3>
+                            <p>Cruise the roads<br>Experience by car.</p>
+                        </div>
+                    </div>
+                </a>
+                <a href="{{ url_for('world_fly') }}" class="hero-mode-card hero-fly">
+                    <div class="hero-mode-bg"></div>
+                    <div class="hero-mode-content">
+                        <div class="hero-mode-icon">✈️</div>
+                        <div>
+                            <h3>Fly Mode</h3>
+                            <p>Soar above the city<br>View from the sky.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+      <section class="destinations">
+    <div class="destinations-header">
+        <h2>Popular Destinations</h2>
+        <p>Trending Places to Explore</p>
     </div>
-  </div>
 
-<script src="./static/js/maplibre-gl.js"></script>
-<script>
-  const MAPTILER_KEY = "PqdU3M5vnOQK0dDQnkIq";
-  const STREETS = {{ streets | tojson | safe }};
+    <div class="destinations-grid">
+        <!-- Existing featured demo streets -->
+        
 
-  const map = new maplibregl.Map({
-    container: "map",
-    style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`,
-    center: [55.2708, 25.2048],
-    zoom: 2.5,
-    attributionControl: false
-  });
+        <!-- REAL STREETS FROM YOUR DB -->
 
-  map.addControl(new maplibregl.NavigationControl(), "top-right");
+        <!-- Tsutenkaku Hondori, Osaka (walk) -->
+        <a class="dest-card"
+           href="{{ url_for('world_walk', street_id='69353fc9de46ad1121757e84') }}">
+            <div class="dest-thumb"
+                 style="background-image:url(../static/img/dest-osaka-market-walk.png);">
+                <div class="dest-overlay">
+                    <div class="dest-info">
+                        <h3>Tsutenkaku Hondori</h3>
+                        <p>Market walk in Osaka, Japan</p>
+                    </div>
+                </div>
+            </div>
+        </a>
 
-  map.on("load", () => {
-    setTimeout(() => map.resize(), 200);
-    setTimeout(() => map.resize(), 800);
-  });
+        <!-- Historic Moorish Alleyway, Ronda (walk) -->
+        <a class="dest-card"
+           href="{{ url_for('world_walk', street_id='69354e0d8076ceab3f745e95') }}">
+            <div class="dest-thumb"
+                 style="background-image:url(../static/img/dest-ronda-alley.png);">
+                <div class="dest-overlay">
+                    <div class="dest-info">
+                        <h3>Historic Moorish Alleyway</h3>
+                        <p>Ronda, Spain • City walk</p>
+                    </div>
+                </div>
+            </div>
+        </a>
 
-  let markers = [];
+        <!-- Quiet Residential Street, Ho Chi Minh City (drive) -->
+        <a class="dest-card"
+           href="{{ url_for('world_drive', street_id='693557008076ceab3f745e98') }}">
+            <div class="dest-thumb"
+                 style="background-image:url(../static/img/dest-hcmc-drive.png);">
+                <div class="dest-overlay">
+                    <div class="dest-info">
+                        <h3>Quiet Residential Street</h3>
+                        <p>City drive in Ho Chi Minh City</p>
+                    </div>
+                </div>
+            </div>
+        </a>
 
-  function addMarkers() {
-    STREETS.forEach((st, index) => {
-      if (st.lat == null || st.lng == null) return;
+        <!-- Gay Street, Knoxville (fly) -->
+        <a class="dest-card"
+           href="{{ url_for('world_fly', street_id='693eaf742c420b8c9b5cc365') }}">
+            <div class="dest-thumb"
+                 style="background-image:url(../static/img/dest-gay-street-drone.png);">
+                <div class="dest-overlay">
+                    <div class="dest-info">
+                        <h3>Gay Street</h3>
+                        <p>Drone panorama over Knoxville, Tennessee</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
 
-      const marker = new maplibregl.Marker({
-        color: "#38bdf8"
-      })
-        .setLngLat([st.lng, st.lat])
-        .addTo(map);
+    <!-- keep your CTA row below if you want -->
+</section>
 
-      marker.getElement().style.filter =
-        "drop-shadow(0 0 6px rgba(56,189,248,0.8))";
-      marker.getElement().style.transition = "all 0.2s ease";
 
-      marker.getElement().addEventListener("click", () => {
-        focusCardByIndex(index);
-        openStreetByIndex(index);
-      });
 
-      markers.push(marker);
-    });
-  }
+        <!-- EXISTING APP UI -->
+        <div class="header-row">
+            <div class="title-block">
+                <h1>Explore streets like a game</h1>
+                <p>Pick any street, then walk, drive, fly or just sit and watch.</p>
+            </div>
+            <div class="cta-row">
+                <div class="pill">
+                    <span class="pill-dot"></span>
+                    {{ streets|length }} streets available
+                </div>
+            </div>
+            <div class="mode-switch">
+                <a href="{{ url_for('walk') }}" class="mode-btn walk{% if request.path.startswith('/walk') or request.path.startswith('/world/walk') %} is-active{% endif %}">
+                    <span>🚶</span><span>Walk</span>
+                </a>
+                <a href="{{ url_for('drive') }}" class="mode-btn drive{% if request.path.startswith('/drive') or request.path.startswith('/world/drive') %} is-active{% endif %}">
+                    <span>🚗</span><span>Drive</span>
+                </a>
+                <a href="{{ url_for('fly') }}" class="mode-btn fly{% if request.path.startswith('/fly') or request.path.startswith('/world/fly') %} is-active{% endif %}">
+                    <span>✈️</span><span>Fly</span>
+                </a>
+                <a href="{{ url_for('sit') }}" class="mode-btn sit{% if request.path.startswith('/sit') or request.path.startswith('/world/sit') %} is-active{% endif %}">
+                    <span>🪑</span><span>Sit</span>
+                </a>
+            </div>
+        </div>
 
-  map.on("load", addMarkers);
+        <div class="container">
+            <div class="map-panel">
+                <div class="map-header">
+                    <span>World map</span>
+                    <span class="chip">Click a pin to jump</span>
+                </div>
+                <div id="map"></div>
+                <div class="map-footer">
+                    <span>Scroll to zoom, drag to pan.</span>
+                    <a href="{{ url_for('upload') }}">Add new street</a>
+                </div>
+                <div id="topRatedBox">
+                    <div id="topRatedTitle">Top liked</div>
+                    <ul id="topRatedList"></ul>
+                </div>
+                <div id="recentBox">
+                    <div id="recentTitle">Recently added</div>
+                    <ul id="recentList"></ul>
+                </div>
+            </div>
 
-  const topRatedList = document.getElementById("topRatedList");
-  const recentList = document.getElementById("recentList");
+            <div class="viewer-panel">
+                <div class="viewer-header">
+                    <div class="viewer-header-main">
+                        <h2>Browse streets</h2>
+                        <p>Click any card or map pin to go into that street.</p>
+                    </div>
+                    <div class="viewer-meta">{{ streets|length }} total streets</div>
+                </div>
 
-  const sortedByLikes = [...STREETS]
-    .sort((a, b) => (b.likes || 0) - (a.likes || 0))
-    .slice(0, 5);
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input id="homeSearchInput" type="search" placeholder="Search streets by name, city or country..." autocomplete="off">
+                    <div id="searchResultsCount" style="font-size: 11px; color: var(--text-muted); margin-top: 4px;"></div>
+                </div>
 
-  sortedByLikes.forEach((st, i) => {
-    const li = document.createElement("li");
-    li.className = "top-rated-item";
-    li.innerHTML = `<span>♥ ${st.likes || 0}</span> ${st.name}`;
-    li.style.animationDelay = `${i * 0.05}s`;
-    li.addEventListener("click", () => focusCardById(st._id));
-    topRatedList.appendChild(li);
-  });
+                <div class="category-bar" id="categoryBar"></div>
 
-  const sortedByTime = [...STREETS]
-    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-    .slice(0, 5);
+                <div class="grid loading" id="streetsGrid">
+                    {% for st in streets %}
+                    <div class="card" tabindex="0"
+                         data-id="{{ st._id }}"
+                         data-lat="{{ st.lat }}"
+                         data-lng="{{ st.lng }}"
+                         data-name="{{ st.name }}"
+                         data-city="{{ st.city }}"
+                         data-country="{{ st.country }}"
+                         data-mode="{{ st.mode if st.type == 'video' else '3d' }}"
+                         {% if st.category %}data-category="{{ st.category }}"{% endif %}
+                         data-href="{% if st.type == '3d' %}{{ url_for('world', street_id=st._id) }}{% elif st.mode == 'walk' %}{{ url_for('world_walk', street_id=st._id) }}{% elif st.mode == 'drive' %}{{ url_for('world_drive', street_id=st._id) }}{% elif st.mode == 'fly' %}{{ url_for('world_fly', street_id=st._id) }}{% elif st.mode == 'sit' %}{{ url_for('world_sit', street_id=st._id) }}{% else %}{{ url_for('world', street_id=st._id) }}{% endif %}">
+                        <div class="thumb">
+                            {% if st.type == 'video' and st.videos and st.videos[0].url %}
+                                {% set base = st.videos[0].url %}
+                                {% set thumb = base.replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_320') %}
+                                <img src="{{ thumb }}" alt="thumbnail" loading="lazy">
+                            {% else %}
+                                <img src="https://dummyimage.com/320x180/020617/64748b?text=3D+World" alt="3D World" loading="lazy">
+                            {% endif %}
+                        </div>
+                        <div class="card-info">
+                            <h4>{{ st.name }}</h4>
+                            <p>{{ st.city }}, {{ st.country }}{% if st.category %} • {{ st.category }}{% endif %}</p>
+                            <div class="card-meta-row">
+                                {% if st.type == '3d' %}
+                                    <span class="mode-pill">3D</span>
+                                {% else %}
+                                    <span class="mode-pill mode-{{ st.mode }}">{{ st.mode.capitalize() }}</span>
+                                {% endif %}
+                                <button type="button" class="like-btn" data-like-id="{{ st._id }}">
+                                    <span>❤️</span>
+                                    <span class="like-count">{{ st.likes or 0 }}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
 
-  sortedByTime.forEach((st, i) => {
-    const li = document.createElement("li");
-    li.className = "recent-item";
-    li.textContent = `${st.name} · ${st.city || ""}`;
-    li.style.animationDelay = `${i * 0.05}s`;
-    li.addEventListener("click", () => focusCardById(st._id));
-    recentList.appendChild(li);
-  });
+    <script src="{{ url_for('static', filename='js/maplibre-gl.js') }}"></script>
+    <script>
+        const MAPTILER_KEY = '{{ config.MAP_STYLE_URL.split("key=")[1].split("&")[0] if config.MAP_STYLE_URL else "PqdU3M5vnOQK0dDQnkIq" }}';
+        const STREETS = {{ streets|tojson|safe }};
 
-  function focusCardById(id) {
-    const card = document.querySelector(`.card[data-id="${id}"]`);
-    if (!card) return;
-
-    card.scrollIntoView({ behavior: "smooth", block: "center" });
-    card.focus();
-    card.style.transform = "scale(1.02)";
-    setTimeout(() => (card.style.transform = ""), 260);
-
-    const st = STREETS.find(s => s._id === id);
-    if (st && st.lat != null && st.lng != null) {
-      map.flyTo({
-        center: [st.lng, st.lat],
-        zoom: 13,
-        duration: 1600,
-        essential: true
-      });
-    }
-  }
-
-  function focusCardByIndex(i) {
-    const st = STREETS[i];
-    if (st) focusCardById(st._id);
-  }
-
-  function openStreetByIndex(i) {
-    const cardsNodeList = document.querySelectorAll(".card");
-    const card = cardsNodeList[i];
-    if (!card) return;
-    const href = card.dataset.href ? card.dataset.href.trim() : "";
-    if (href) {
-      window.location.href = href;
-    }
-  }
-
-  document.querySelectorAll(".card").forEach((card, index) => {
-    card.style.animationDelay = `${index * 0.04}s`;
-
-    card.addEventListener("click", () => {
-      const href = card.dataset.href?.trim();
-      if (href) {
-        card.style.transform = "scale(0.97)";
-        setTimeout(() => (window.location.href = href), 120);
-      }
-    });
-
-    card.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        card.click();
-      }
-    });
-  });
-
-  document.getElementById("streetsGrid").classList.remove("loading");
-
-  document.querySelectorAll(".like-btn").forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      e.stopPropagation();
-      const id = btn.dataset.likeId;
-      if (!id) return;
-
-      btn.style.transform = "scale(1.18)";
-
-      try {
-        const res = await fetch(`/like/${id}`, {
-          method: "POST",
-          headers: { "X-Requested-With": "XMLHttpRequest" },
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`,
+            center: [55.2708, 25.2048],
+            zoom: 2.5,
+            attributionControl: false
         });
 
-        if (!res.ok) return;
-        const data = await res.json();
+        map.addControl(new maplibregl.NavigationControl({ position: 'top-right' }));
 
-        const span = btn.querySelector(".like-count");
-        if (span && typeof data.likes === "number") {
-          span.textContent = data.likes;
-          btn.classList.add("liked");
+        map.on('load', () => {
+            setTimeout(() => map.resize(), 200);
+            setTimeout(() => map.resize(), 800);
+        });
+
+        let markers = [];
+        function addMarkers() {
+            STREETS.forEach((st, index) => {
+                if (st.lat == null || st.lng == null) return;
+
+                const marker = new maplibregl.Marker({ color: '#38bdf8' })
+                    .setLngLat([st.lng, st.lat])
+                    .addTo(map);
+
+                marker.getElement().style.filter = 'drop-shadow(0 0 6px rgba(56,189,248,0.8))';
+                marker.getElement().style.transition = 'all 0.2s ease';
+
+                marker.getElement().addEventListener('click', () => {
+                    focusCardByIndex(index);
+                    openStreetByIndex(index);
+                });
+
+                markers.push(marker);
+            });
         }
-      } catch (err) {
-        console.error("Like failed", err);
-      }
 
-      setTimeout(() => (btn.style.transform = ""), 140);
-    });
-  });
+        map.on('load', addMarkers);
 
-  const searchInput = document.getElementById("homeSearchInput");
-  const cards = Array.from(document.querySelectorAll("#streetsGrid .card"));
-  const searchResultsCount = document.getElementById("searchResultsCount");
-  const categoryBar = document.getElementById("categoryBar");
+        const topRatedList = document.getElementById('topRatedList');
+        const recentList = document.getElementById('recentList');
 
-  let currentCategory = "all";
+        const sortedByLikes = [...STREETS]
+            .sort((a, b) => (b.likes || 0) - (a.likes || 0))
+            .slice(0, 5);
 
-  if (categoryBar) {
-    const catSet = new Set();
-    STREETS.forEach(st => {
-      if (st.category) {
-        catSet.add(st.category);
-      }
-    });
+        sortedByLikes.forEach((st, i) => {
+            const li = document.createElement('li');
+            li.className = 'top-rated-item';
+            li.innerHTML = `<span>${st.likes || 0}</span> ${st.name}`;
+            li.style.animationDelay = `${i * 0.05}s`;
+            li.addEventListener('click', () => focusCardById(st._id));
+            topRatedList.appendChild(li);
+        });
 
-    function createChip(label, value, isActive = false) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "cat-chip" + (isActive ? " active" : "");
-      btn.textContent = label;
-      btn.dataset.cat = value;
+        const sortedByTime = [...STREETS]
+            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+            .slice(0, 5);
 
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".cat-chip").forEach(c => c.classList.remove("active"));
-        btn.classList.add("active");
+        sortedByTime.forEach((st, i) => {
+            const li = document.createElement('li');
+            li.className = 'recent-item';
+            li.textContent = `${st.name}, ${st.city}`;
+            li.style.animationDelay = `${i * 0.05}s`;
+            li.addEventListener('click', () => focusCardById(st._id));
+            recentList.appendChild(li);
+        });
 
-        currentCategory = value;
-        applyHomeFilter();
-      });
+        function focusCardById(id) {
+            const card = document.querySelector(`.card[data-id="${id}"]`);
+            if (!card) return;
 
-      categoryBar.appendChild(btn);
-    }
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.focus();
+            card.style.transform = 'scale(1.02)';
+            setTimeout(() => card.style.transform = '', 260);
 
-    createChip("All categories", "all", true);
+            const st = STREETS.find(s => s._id === id);
+            if (st && st.lat != null && st.lng != null) {
+                map.flyTo({
+                    center: [st.lng, st.lat],
+                    zoom: 13,
+                    duration: 1600,
+                    essential: true
+                });
+            }
+        }
 
-    Array.from(catSet).sort().forEach(cat => {
-      createChip(cat, cat, false);
-    });
-  }
+        function focusCardByIndex(i) {
+            const st = STREETS[i];
+            if (st) focusCardById(st._id);
+        }
 
-  function applyHomeFilter() {
-    const q = (searchInput?.value || "").trim().toLowerCase();
-    let visibleCount = 0;
+        function openStreetByIndex(i) {
+            const cardsNodeList = document.querySelectorAll('.card');
+            const card = cardsNodeList[i];
+            if (!card) return;
 
-    cards.forEach(card => {
-      const name = (card.dataset.name || "").toLowerCase();
-      const city = (card.dataset.city || "").toLowerCase();
-      const country = (card.dataset.country || "").toLowerCase();
-      const cardCat = (card.dataset.category || "").toLowerCase();
+            const href = card.dataset.href?.trim();
+            if (href) {
+                window.location.href = href;
+            }
+        }
 
-      const matchesText =
-        !q ||
-        name.includes(q) ||
-        city.includes(q) ||
-        country.includes(q);
+        document.querySelectorAll('.card').forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.04}s`;
 
-      const matchesCategory =
-        currentCategory === "all" ||
-        currentCategory === "" ||
-        cardCat === currentCategory.toLowerCase();
+            card.addEventListener('click', () => {
+                const href = card.dataset.href?.trim();
+                if (href) {
+                    card.style.transform = 'scale(0.97)';
+                    setTimeout(() => window.location.href = href, 120);
+                }
+            });
 
-      const show = matchesText && matchesCategory;
+            card.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    card.click();
+                }
+            });
+        });
 
-      if (show) {
-        visibleCount++;
-        card.style.display = "";
-      } else {
-        card.style.display = "none";
-      }
-    });
+        document.getElementById('streetsGrid').classList.remove('loading');
 
-    searchResultsCount.textContent =
-      q || currentCategory !== "all"
-        ? `${visibleCount} result${visibleCount !== 1 ? "s" : ""}`
-        : "";
-  }
+        document.querySelectorAll('.like-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const id = btn.dataset.likeId;
+                if (!id) return;
 
-  if (searchInput) {
-    searchInput.addEventListener("input", applyHomeFilter);
-  }
+                btn.style.transform = 'scale(1.18)';
+                try {
+                    const res = await fetch(`/like/${id}`, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    if (!res.ok) return;
 
-  document.addEventListener("keydown", (e) => {
-    if (e.target.matches("#homeSearchInput")) return;
+                    const data = await res.json();
+                    const span = btn.querySelector('.like-count');
+                    if (span && typeof data.likes === 'number') {
+                        span.textContent = data.likes;
+                    }
+                    btn.classList.add('liked');
+                } catch (err) {
+                    console.error('Like failed', err);
+                }
+                setTimeout(() => btn.style.transform = '', 140);
+            });
+        });
 
-    const visibleCards = cards.filter(c => c.style.display !== "none");
-    if (!visibleCards.length) return;
+        const searchInput = document.getElementById('homeSearchInput');
+        const cards = Array.from(document.querySelectorAll('#streetsGrid .card'));
+        const searchResultsCount = document.getElementById('searchResultsCount');
+        const categoryBar = document.getElementById('categoryBar');
 
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-      e.preventDefault();
+        let currentCategory = 'all';
 
-      const focused = document.activeElement;
-      const currentIndex = visibleCards.indexOf(focused);
-      const nextIndex =
-        e.key === "ArrowDown"
-          ? (currentIndex + 1) % visibleCards.length
-          : (currentIndex - 1 + visibleCards.length) % visibleCards.length;
+        if (categoryBar) {
+            const catSet = new Set();
+            STREETS.forEach(st => {
+                if (st.category) catSet.add(st.category);
+            });
 
-      visibleCards[nextIndex]?.focus();
-    }
-  });
-</script>
+            function createChip(label, value, isActive = false) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `cat-chip ${isActive ? 'active' : ''}`;
+                btn.textContent = label;
+                btn.dataset.cat = value;
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentCategory = value;
+                    applyHomeFilter();
+                });
+                categoryBar.appendChild(btn);
+            }
 
+            createChip('All categories', 'all', true);
+            Array.from(catSet).sort().forEach(cat => createChip(cat, cat, false));
+        }
+
+        function applyHomeFilter() {
+            const q = searchInput?.value?.trim().toLowerCase();
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const name = card.dataset.name?.toLowerCase();
+                const city = card.dataset.city?.toLowerCase();
+                const country = card.dataset.country?.toLowerCase();
+                const cardCat = card.dataset.category?.toLowerCase();
+
+                const matchesText = !q || name?.includes(q) || city?.includes(q) || country?.includes(q);
+                const matchesCategory = currentCategory === 'all' || currentCategory === cardCat;
+
+                const show = matchesText && matchesCategory;
+                if (show) {
+                    visibleCount++;
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (searchResultsCount) {
+                searchResultsCount.textContent = q || currentCategory !== 'all'
+                    ? `${visibleCount} result${visibleCount !== 1 ? 's' : ''}`
+                    : '';
+            }
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', applyHomeFilter);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.matches('#homeSearchInput')) return;
+
+            const visibleCards = cards.filter(c => c.style.display !== 'none');
+            if (!visibleCards.length) return;
+
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                const focused = document.activeElement;
+                const currentIndex = visibleCards.indexOf(focused);
+                const nextIndex = e.key === 'ArrowDown'
+                    ? (currentIndex + 1) % visibleCards.length
+                    : (currentIndex - 1 + visibleCards.length) % visibleCards.length;
+                visibleCards[nextIndex]?.focus();
+            }
+        });
+
+        const heroSearch = document.getElementById('heroSearch');
+        const heroSearchBtn = document.getElementById('heroSearchBtn');
+
+        if (heroSearch) {
+            heroSearch.addEventListener('input', () => {
+                searchInput.value = heroSearch.value;
+                applyHomeFilter();
+            });
+        }
+
+        if (heroSearchBtn) {
+            heroSearchBtn.addEventListener('click', () => {
+                searchInput.value = heroSearch.value;
+                applyHomeFilter();
+            });
+        }
+
+        document.getElementById('streetsGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    </script>
 </body>
 </html>
