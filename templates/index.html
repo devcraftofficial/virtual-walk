@@ -1251,64 +1251,12 @@
             </div>
             <div class="destinations-grid">
 
-                <!-- Demo featured streets -->
-                <a class="dest-card"
-                   href="{{ url_for('world_walk', street_id='nyc_times_square_id') }}">
-                    <div class="dest-thumb"
-                         style="background-image:url('{{ url_for('static', filename='img/dest-nyc.jpg') }}');">
-                        <div class="dest-overlay">
-                            <div class="dest-info">
-                                <h3>New York City</h3>
-                                <p>Famous for Times Square</p>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-
-                <a class="dest-card"
-                   href="{{ url_for('world_drive', street_id='paris_champs_id') }}">
-                    <div class="dest-thumb"
-                         style="background-image:url('{{ url_for('static', filename='img/dest-paris.png') }}');">
-                        <div class="dest-overlay">
-                            <div class="dest-info">
-                                <h3>Paris</h3>
-                                <p>Famous for Champs-Élysées</p>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-
-                <a class="dest-card"
-                   href="{{ url_for('world_walk', street_id='kyoto_gion_id') }}">
-                    <div class="dest-thumb"
-                         style="background-image:url('{{ url_for('static', filename='img/dest-kyoto.png') }}');">
-                        <div class="dest-overlay">
-                            <div class="dest-info">
-                                <h3>Kyoto</h3>
-                                <p>Famous for Gion’s Hanamikoji Street</p>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-
-                <a class="dest-card"
-                   href="{{ url_for('world_fly', street_id='dubai_sheikh_zayed_id') }}">
-                    <div class="dest-thumb"
-                         style="background-image:url('{{ url_for('static', filename='img/dest-dubai.jpg') }}');">
-                        <div class="dest-overlay">
-                            <div class="dest-info">
-                                <h3>Dubai</h3>
-                                <p>Famous for Sheikh Zayed Road</p>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-
+                
                 <!-- Your MongoDB streets -->
                 <a class="dest-card"
                    href="{{ url_for('world_walk', street_id='69353fc9de46ad1121757e84') }}">
                     <div class="dest-thumb"
-                         style="background-image:url('{{ url_for('static', filename='img/dest-osaka-market-walk.jpg') }}');">
+                         style="background-image:url('{{ url_for('static', filename='img/dest-osaka-market-walk.png') }}');">
                         <div class="dest-overlay">
                             <div class="dest-info">
                                 <h3>Tsutenkaku Hondori</h3>
@@ -1321,7 +1269,7 @@
                 <a class="dest-card"
                    href="{{ url_for('world_walk', street_id='69354e0d8076ceab3f745e95') }}">
                     <div class="dest-thumb"
-                         style="background-image:url('{{ url_for('static', filename='img/dest-ronda-alley.jpg') }}');">
+                         style="background-image:url('{{ url_for('static', filename='img/dest-ronda-alley.png') }}');">
                         <div class="dest-overlay">
                             <div class="dest-info">
                                 <h3>Historic Moorish Alleyway</h3>
@@ -1334,7 +1282,7 @@
                 <a class="dest-card"
                    href="{{ url_for('world_drive', street_id='693557008076ceab3f745e98') }}">
                     <div class="dest-thumb"
-                         style="background-image:url('{{ url_for('static', filename='img/dest-hcmc-drive.jpg') }}');">
+                         style="background-image:url('{{ url_for('static', filename='img/dest-hcmc-drive.png') }}');">
                         <div class="dest-overlay">
                             <div class="dest-info">
                                 <h3>Quiet Residential Street</h3>
@@ -1347,7 +1295,7 @@
                 <a class="dest-card"
                    href="{{ url_for('world_fly', street_id='693eaf742c420b8c9b5cc365') }}">
                     <div class="dest-thumb"
-                         style="background-image:url('{{ url_for('static', filename='img/dest-gay-street-drone.jpg') }}');">
+                         style="background-image:url('{{ url_for('static', filename='img/dest-gay-street-drone.png') }}');">
                         <div class="dest-overlay">
                             <div class="dest-info">
                                 <h3>Gay Street</h3>
@@ -1359,11 +1307,7 @@
 
             </div>
 
-            <div class="dest-cta-row">
-                <button type="button" class="dest-cta secondary">Featured Streets</button>
-                <button type="button" class="dest-cta primary">Start Exploring Now!</button>
-                <button type="button" class="dest-cta secondary">Upload Your Own Street</button>
-            </div>
+            
         </section>
 
         <div class="header-row">
