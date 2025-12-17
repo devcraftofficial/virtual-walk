@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login – Virtual Street Walk</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    /* [Keep all your existing CSS exactly the same - no changes needed] */
+    :root {
+      --bg-page: #020617;
+      --accent: #1d9bf0;
+      --accent-strong: #0b63d1;
+      --accent-soft: rgba(29,155,240,0.16);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --radius-lg: 22px;
+      --shadow-soft: 0 26px 70px rgba(0, 0, 0, 0.9);
+      --focus-ring-color: rgba(56, 189, 248, 0.85);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(to top, rgba(4,7,20,0.98), rgba(15,23,42,0.45)),
+        url("/static/img/hero-skyline.jpg") center bottom / cover no-repeat fixed;
+      font-family: system-ui, -apple-system, sans-serif;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 420px;
+      background: radial-gradient(circle at top left,#020617,#020617f6);
+      border-radius: 26px;
+      padding: 26px 26px 24px;
+      box-shadow:
+        0 40px 110px rgba(0,0,0,1),
+        0 0 0 1px rgba(15,23,42,0.7);
+      border: 1px solid rgba(148,163,184,0.35);
+      backdrop-filter: blur(26px) saturate(140%);
+    }
+
+    .top-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 30% 25%, #facc15 0, #fb923c 22%, #3b82f6 60%, #0f172a 100%);
+      box-shadow:
+        0 0 0 2px rgba(15,23,42,0.95),
+        0 0 20px rgba(56,189,248,0.7);
+    }
+
+    .logo {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      color: #f9fafb;
+    }
+
+    .logo span { color: #60a5fa; }
+
+    .back-link {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.5);
+      background: rgba(15,23,42,0.9);
+    }
+
+    .back-link:hover {
+      color: #e5e7eb;
+      background: rgba(15,23,42,1);
+    }
+
+    .heading {
+      margin-bottom: 18px;
+    }
+
+    .heading h1 {
+      margin: 0 0 6px;
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .heading p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    label {
+      font-size: 13px;
+      margin-bottom: 3px;
+      display: block;
+    }
+
+    .field {
+      margin-bottom: 6px;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.55);
+      padding: 10px 16px;
+      background: rgba(15,23,42,0.96);
+      color: #e5e7eb;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+    }
+
+    input[type="email"]:focus,
+    input[type="password"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow:
+        0 0 0 1px rgba(15,23,42,1),
+        0 0 0 3px var(--focus-ring-color);
+      background: rgba(15,23,42,0.98);
+    }
+
+    input[type="email"]::placeholder,
+    input[type="password"]::placeholder {
+      color: #6b7280;
+    }
+
+    .remember-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 6px;
+      margin-bottom: 4px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .remember-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 1px solid rgba(148,163,184,0.7);
+      accent-color: var(--accent);
+    }
+
+    .forgot-link,
+    .signup-link {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .forgot-link:hover,
+    .signup-link:hover {
+      text-decoration: underline;
+    }
+
+    button[type="submit"] {
+      margin-top: 4px;
+      width: 100%;
+      border: none;
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(135deg,#1d9bf0,#0b63d1);
+      color: #f9fafb;
+      box-shadow: 0 18px 40px rgba(37,99,235,0.9);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    button[type="submit"]:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 24px 55px rgba(37,99,235,1);
+    }
+
+    button[type="submit"]:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .divider {
+      margin: 10px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(148,163,184,0.4);
+    }
+
+    .google-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.6);
+      padding: 9px 14px;
+      font-size: 13px;
+      text-decoration: none;
+      color: #e5e7eb;
+      background: rgba(15,23,42,0.96);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.55);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .google-btn:hover {
+      background: rgba(15,23,42,1);
+      transform: translateY(-1px);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.8);
+    }
+
+    .google-btn img {
+      width: 16px;
+      height: 16px;
+      border-radius: 2px;
+      background: #fff;
+    }
+
+    .note {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .note span {
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    .bottom-row {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .flash-messages {
+      margin-bottom: 16px;
+    }
+
+    .flash-message {
+      padding: 10px 14px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .flash-message.error {
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5;
+    }
+
+    .flash-message.success {
+      background: rgba(34,197,94,0.15);
+      border: 1px solid rgba(34,197,94,0.3);
+      color: #86efac;
+    }
+
+    .flash-message.info {
+      background: rgba(59,130,246,0.15);
+      border: 1px solid rgba(59,130,246,0.3);
+      color: #93c5fd;
+    }
+
+    @media (max-width: 480px) {
+      .shell {
+        border-radius: 18px;
+        padding: 20px 18px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="top-nav">
+      <div class="logo-wrap">
+        <div class="logo-mark">🚶</div>
+        <div class="logo">Virtual Street <span>Walk</span></div>
+      </div>
+      <a href="{{ url_for('index') }}" class="back-link">← Back home</a>
+    </div>
+
+    <div class="heading">
+      <h1>Sign in</h1>
+      <p>Login to upload your own streets and manage your experiences.</p>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="post" action="{{ url_for('login') }}">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" placeholder="you@example.com" required autocomplete="email">
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="Enter password" required autocomplete="current-password">
+      </div>
+
+      <div class="remember-row">
+        <label class="remember-left">
+          <input type="checkbox" name="remember" value="1">
+          <span>Remember me</span>
+        </label>
+        <a href="{{ url_for('forgot_password') }}" class="forgot-link">Forgot password?</a>
+      </div>
+
+      <button type="submit">Continue</button>
+
+      <div class="divider">
+        <div class="divider-line"></div>
+        <span>or</span>
+        <div class="divider-line"></div>
+      </div>
+
+      <!-- Google sign-in button -->
+      {% if config.MAP_STYLE_URL %}
+      <a class="google-btn" href="{{ url_for('login_google', next=url_for('index')) }}">
+        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google">
+        <span>Sign in with Google</span>
+      </a>
+      {% endif %}
+
+      <div class="note">
+        Use email/password or sign in with Google to unlock <span>Upload Street</span>.
+      </div>
+
+      <div class="bottom-row">
+        New here? <a href="{{ url_for('signup') }}" class="signup-link">Create an account</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
