@@ -61,42 +61,42 @@
             line-height: 1.5;
         }
 
-        @media (min-width: 960px) {
-            body {
-                background-attachment: fixed;
-            }
-        }
-
-        .shell {
-    width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
-    background:
-        radial-gradient(circle at top right,
-                        rgba(15, 23, 42, 0.237),
-                        rgba(15, 23, 42, 0.427)),
-        rgba(15, 23, 42, 0.475); /* lower alpha for more transparency */
-    padding: 24px 28px 26px;
-    border-radius: 26px;
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
-    border: 1px solid rgba(148,163,184,0.24);
+        /* Desktop fixed background */
+@media (min-width: 960px) {
+    body {
+        background-attachment: fixed;
+    }
 }
 
-        @media (min-width: 960px) {
-            .shell {
-                box-shadow: 0 40px 110px rgba(0,0,0,0.9),
-                            0 0 0 1px rgba(15,23,42,0.18);
-                backdrop-filter: blur(26px) saturate(140%);
-            }
-        }
+/* Mobile: move image up and add overlay */
+@media (max-width: 768px) {
+    body {
+        background-position: center 15%;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(
+            to top,
+            rgba(2,6,23,0.92),
+            rgba(15,23,42,0.7)
+        ); /* overlay color */
+        pointer-events: none;
+        z-index: -1; /* behind content, above background image */
+    }
+}
+
+        
 
         .top-nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 6px 0 4px;
+            padding: 8px 0 7px;
         }
 
         .top-nav-left, .top-nav-right {
@@ -109,7 +109,7 @@
         .logo-wrap {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .logo-mark {
@@ -123,6 +123,7 @@
             box-shadow: 0 0 0 2px rgba(15,23,42,0.95), 0 0 20px rgba(56,189,248,0.7);
             font-size: 14px;
             font-weight: 700;
+            margin-left: 20px;
         }
 
         .logo {
@@ -148,6 +149,7 @@
             gap: 6px;
             border: 1px solid rgba(148,163,184,0.6);
             background: rgba(15,23,42,0.85);
+            margin-right: 20px;
         }
 
         .nav-link:hover {
