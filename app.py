@@ -3,8 +3,7 @@ os.environ["HTTPX_DISABLE_HTTP2"] = "1"  # Cloudinary upload fix on Windows
 
 import uuid
 import logging
-from datetime import datetime, timezone
-
+from datetime import datetime, timezone, timedelta
 
 from flask import (
     Flask,
@@ -24,6 +23,9 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 import requests
+
+from authlib.integrations.flask_client import OAuth
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # --------------------------------------------------------
 # Logging
@@ -45,6 +47,9 @@ CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 SUPABASE_URL = os.getenv("SUPABASE_URL") or "https://cepabjmlengczyiezdqd.supabase.co"
 SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET") or "streetwalk"
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
 # ---------------- MapTiler config ----------------
 MAPTILER_KEY = os.getenv("MAPTILER_KEY")
@@ -78,11 +83,28 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY") or os.urandom(24)
 app.config["MAP_STYLE_URL"] = MAP_STYLE_URL
 
 # --------------------------------------------------------
+# OAuth (Google)
+# --------------------------------------------------------
+oauth = OAuth(app)
+if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
+    oauth.register(
+        name="google",
+        client_id=GOOGLE_CLIENT_ID,
+        client_secret=GOOGLE_CLIENT_SECRET,
+        server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+        client_kwargs={"scope": "openid email profile"},
+    )
+else:
+    logger.warning("Google OAuth client ID/secret not set; Google login disabled.")
+
+# --------------------------------------------------------
 # MongoDB Setup
 # --------------------------------------------------------
 client = MongoClient(MONGO_URI)
 db = client["streetwalk"]
 streets_collection = db["streets"]
+users_collection = db["users"]
+reset_tokens = db["password_resets"]
 
 # --------------------------------------------------------
 # MongoDB Indexes
@@ -92,24 +114,9 @@ streets_collection.create_index([("createdAt", -1)])
 streets_collection.create_index([("likes", -1)])
 streets_collection.create_index([("lat", 1), ("lng", 1)])
 
-# --------------------------------------------------------
-# Simple admin protection for /upload
-# --------------------------------------------------------
-@app.before_request
-def protect_upload():
-    # Allow static and make-admin itself
-    if request.endpoint in (None, "static", "make_admin"):
-        return
-
-    if request.endpoint == "upload" and not session.get("is_admin"):
-        return redirect(url_for("index"))
-
-
-@app.route("/make-admin")
-def make_admin():
-    session["is_admin"] = True
-    return "Admin enabled"
-
+users_collection.create_index("email", unique=True)
+users_collection.create_index("googleId", unique=True, sparse=True)
+reset_tokens.create_index("expiresAt", expireAfterSeconds=0)
 
 # --------------------------------------------------------
 # Helpers
@@ -117,12 +124,10 @@ def make_admin():
 MAX_VIDEO_SIZE = 100 * 1024 * 1024  # 100MB
 MAX_GLB_SIZE = 50 * 1024 * 1024     # 50MB
 
-
 def clean_text(value, max_len=200):
     if not value:
         return None
     return value.strip()[:max_len]
-
 
 def upload_glb_supabase(file):
     filename = f"models/{uuid.uuid4()}.glb"
@@ -146,7 +151,6 @@ def upload_glb_supabase(file):
         logger.error("Supabase upload failed: %s", res.text)
         raise Exception(f"Supabase Upload Failed: {res.text}")
 
-
 def upload_video_cloudinary(file):
     try:
         upload = cloudinary.uploader.upload(
@@ -159,7 +163,6 @@ def upload_video_cloudinary(file):
     except Exception:
         logger.error("Cloudinary video upload failed", exc_info=True)
         raise
-
 
 def get_street_by_id(street_id):
     if not street_id:
@@ -177,13 +180,11 @@ def get_street_by_id(street_id):
     doc["_id"] = str(doc["_id"])
     return doc
 
-
 def list_with_str_id(cursor):
     items = list(cursor)
     for s in items:
         s["_id"] = str(s["_id"])
     return items
-
 
 def published_not_deleted(extra=None):
     base = {"status": "published", "deleted": False}
@@ -191,12 +192,7 @@ def published_not_deleted(extra=None):
         base.update(extra)
     return base
 
-
 def distinct_categories_for_mode(mode: str):
-    """
-    Return sorted unique category names for a given mode.
-    Only applied to video streets with that mode.
-    """
     cats = streets_collection.distinct(
         "category",
         {"type": "video", "mode": mode, "status": "published", "deleted": False},
@@ -211,17 +207,59 @@ def format_date(dt):
         return dt.astimezone(timezone.utc).strftime("%d %b %Y")
     return ""
 
+def current_user():
+    uid = session.get("user_id")
+    if not uid:
+        return None
+    try:
+        oid = ObjectId(uid)
+        user = users_collection.find_one({"_id": oid})
+        if user:
+            user["_id"] = str(user["_id"])
+        return user
+    except InvalidId:
+        return None
+
+@app.context_processor
+def inject_current_user():
+    return {"current_user": current_user()}
+
 # --------------------------------------------------------
-# Home Page - show all published, not deleted streets
+# Route protection for upload & dashboard
+# --------------------------------------------------------
+@app.before_request
+def protect_protected_routes():
+    # Allow public routes and static/auth
+    public_endpoints = (
+        None, "static", "index", "world", "world_walk", "world_drive", 
+        "world_fly", "world_sit", "walk", "drive", "fly", "sit",
+        "login", "signup", "forgot_password", "reset_password",
+        "login_google", "auth_google_callback", "make_admin", "logout"
+    )
+    
+    if request.endpoint in public_endpoints:
+        return
+
+    # Protect upload and dashboard
+    if request.endpoint in ("upload", "dashboard") and not session.get("user_id"):
+        session["next"] = request.path
+        return redirect(url_for("login"))
+
+@app.route("/make-admin")
+def make_admin():
+    session["is_admin"] = True
+    return "Admin enabled"
+
+# --------------------------------------------------------
+# Home Page
 # --------------------------------------------------------
 @app.route("/")
 def index():
     streets = list_with_str_id(streets_collection.find(published_not_deleted()))
-    return render_template("index.html", streets=streets)
-
+    return render_template("index.html", streets=streets, map_style_url=MAP_STYLE_URL)
 
 # --------------------------------------------------------
-# Generic World Page (avatar WALK + 3D only)
+# Generic World Page
 # --------------------------------------------------------
 @app.route("/world")
 def world():
@@ -244,25 +282,22 @@ def world():
         streets=streets,
         center=center,
         selected_street=selected_street,
-        map_style_url=current_app.config["MAP_STYLE_URL"],
+        map_style_url=MAP_STYLE_URL,
     )
 
-
 # --------------------------------------------------------
-# WALK world (avatar, video walk + 3D)
+# WALK world
 # --------------------------------------------------------
 @app.route("/world/walk")
 def world_walk():
     streets = list_with_str_id(
         streets_collection.find(
-            published_not_deleted(
-                {
-                    "$or": [
-                        {"type": "3d"},
-                        {"type": "video", "mode": "walk"},
-                    ]
-                }
-            )
+            published_not_deleted({
+                "$or": [
+                    {"type": "3d"},
+                    {"type": "video", "mode": "walk"},
+                ]
+            })
         )
     )
 
@@ -278,10 +313,7 @@ def world_walk():
         and not selected_street.get("deleted", False)
         and (
             selected_street.get("type") == "3d"
-            or (
-                selected_street.get("type") == "video"
-                and selected_street.get("mode") == "walk"
-            )
+            or (selected_street.get("type") == "video" and selected_street.get("mode") == "walk")
         )
     ):
         selected_street = None
@@ -291,12 +323,193 @@ def world_walk():
         streets=streets,
         center=center,
         selected_street=selected_street,
-        map_style_url=current_app.config["MAP_STYLE_URL"],
+        map_style_url=MAP_STYLE_URL,
     )
 
+# --------------------------------------------------------
+# Signup
+# --------------------------------------------------------
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    if request.method == "POST":
+        email = request.form["email"].strip().lower()
+        name = request.form["name"].strip()
+        password = request.form["password"]
+
+        if users_collection.find_one({"email": email}):
+            flash("Email already registered", "error")
+            return redirect(url_for("signup"))
+
+        users_collection.insert_one({
+            "email": email,
+            "name": name,
+            "passwordHash": generate_password_hash(password),
+            "createdAt": datetime.utcnow(),
+            "lastLoginAt": None,
+        })
+        flash("Account created. Please log in.", "success")
+        return redirect(url_for("login"))
+
+    return render_template("signup.html")
 
 # --------------------------------------------------------
-# DRIVE world (no avatar) – drive_world.html
+# Email/password Login - FIXED ✅
+# --------------------------------------------------------
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        email = request.form["email"].strip().lower()
+        password = request.form["password"]
+
+        user = users_collection.find_one({"email": email})
+        if not user or not user.get("passwordHash"):
+            flash("Invalid email or password", "error")
+            return redirect(url_for("login"))
+
+        if not check_password_hash(user["passwordHash"], password):
+            flash("Invalid email or password", "error")
+            return redirect(url_for("login"))
+
+        users_collection.update_one(
+            {"_id": user["_id"]},
+            {"$set": {"lastLoginAt": datetime.utcnow()}}
+        )
+
+        session["user_id"] = str(user["_id"])
+        session["user_name"] = user.get("name", user.get("email", "User"))  # ✅ Store user name
+        session["is_admin"] = True
+
+        next_url = session.pop("next", None) or url_for("index")  # ✅ Always to index
+        return redirect(next_url)
+
+    return render_template("login.html")
+
+# --------------------------------------------------------
+# Logout
+# --------------------------------------------------------
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("You have been signed out.", "info")
+    return redirect(url_for("index"))
+
+# --------------------------------------------------------
+# Google Login - FIXED ✅
+# --------------------------------------------------------
+@app.route("/login/google")
+def login_google():
+    if "google" not in oauth._registry:
+        flash("Google login is not configured.", "error")
+        return redirect(url_for("login"))
+
+    next_url = request.args.get("next") or session.get("next") or url_for("index")
+    session["next"] = next_url
+
+    redirect_uri = url_for("auth_google_callback", _external=True)
+    return oauth.google.authorize_redirect(redirect_uri)
+
+@app.route("/auth/google/callback")
+def auth_google_callback():
+    if "google" not in oauth._registry:
+        flash("Google login is not configured.", "error")
+        return redirect(url_for("login"))
+
+    token = oauth.google.authorize_access_token()
+    userinfo = oauth.google.userinfo()
+
+    google_id = userinfo.get("sub")
+    email = (userinfo.get("email") or "").lower()
+    name = userinfo.get("name") or ""
+    now = datetime.utcnow()
+
+    # 1) Try find by googleId
+    user = users_collection.find_one({"googleId": google_id})
+
+    if not user and email:
+        # 2) Try find by email (existing local account)
+        user = users_collection.find_one({"email": email})
+
+    if user:
+        # 3) Update existing user, attach googleId if missing
+        users_collection.update_one(
+            {"_id": user["_id"]},
+            {
+                "$set": {
+                    "googleId": google_id,
+                    "email": email,
+                    "name": name,
+                    "lastLoginAt": now,
+                },
+                "$setOnInsert": {"createdAt": user.get("createdAt", now)},
+            },
+        )
+    else:
+        # 4) Create brand new user
+        users_collection.insert_one(
+            {
+                "googleId": google_id,
+                "email": email,
+                "name": name,
+                "createdAt": now,
+                "lastLoginAt": now,
+            }
+        )
+        user = users_collection.find_one({"googleId": google_id})
+
+    session["user_id"] = str(user["_id"])
+    session["user_name"] = user.get("name", user.get("email", "User"))
+    session["is_admin"] = True
+    session["google_user"] = {
+        "id": google_id,
+        "email": email,
+        "name": name,
+    }
+
+    next_url = session.pop("next", None)
+    return redirect(next_url or url_for("index"))
+
+# --------------------------------------------------------
+# Forgot / Reset Password
+# --------------------------------------------------------
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        email = request.form["email"].strip().lower()
+        user = users_collection.find_one({"email": email})
+        if user:
+            token = uuid.uuid4().hex
+            reset_tokens.insert_one({
+                "userId": user["_id"],
+                "token": token,
+                "expiresAt": datetime.utcnow() + timedelta(hours=1),
+            })
+            reset_link = url_for("reset_password", token=token, _external=True)
+            logger.info("Password reset link for %s: %s", email, reset_link)
+        flash("If that email exists, a reset link has been sent.", "info")
+        return redirect(url_for("login"))
+    return render_template("forgot_password.html")
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    rec = reset_tokens.find_one({"token": token})
+    if not rec:
+        flash("Reset link is invalid or expired.", "error")
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        new_pw = request.form["password"]
+        users_collection.update_one(
+            {"_id": rec["userId"]},
+            {"$set": {"passwordHash": generate_password_hash(new_pw)}}
+        )
+        reset_tokens.delete_one({"_id": rec["_id"]})
+        flash("Password updated. You can log in now.", "success")
+        return redirect(url_for("login"))
+
+    return render_template("reset_password.html")
+
+# --------------------------------------------------------
+# DRIVE world
 # --------------------------------------------------------
 @app.route("/world/drive")
 def world_drive():
@@ -325,12 +538,11 @@ def world_drive():
         streets=streets,
         center=center,
         selected_street=selected_street,
-        map_style_url=current_app.config["MAP_STYLE_URL"],
+        map_style_url=MAP_STYLE_URL,
     )
 
-
 # --------------------------------------------------------
-# FLY world (no avatar) – fly_world.html
+# FLY world
 # --------------------------------------------------------
 @app.route("/world/fly")
 def world_fly():
@@ -359,12 +571,11 @@ def world_fly():
         streets=streets,
         center=center,
         selected_street=selected_street,
-        map_style_url=current_app.config["MAP_STYLE_URL"],
+        map_style_url=MAP_STYLE_URL,
     )
 
-
 # --------------------------------------------------------
-# SIT world (no avatar) – sit_world.html
+# SIT world
 # --------------------------------------------------------
 @app.route("/world/sit")
 def world_sit():
@@ -393,12 +604,11 @@ def world_sit():
         streets=streets,
         center=center,
         selected_street=selected_street,
-        map_style_url=current_app.config["MAP_STYLE_URL"],
+        map_style_url=MAP_STYLE_URL,
     )
 
-
 # --------------------------------------------------------
-# LIST PAGES for each mode (published + not deleted)
+# LIST PAGES
 # --------------------------------------------------------
 @app.route("/walk")
 def walk():
@@ -418,7 +628,6 @@ def walk():
         active_category=category or "all",
     )
 
-
 @app.route("/drive")
 def drive():
     category = request.args.get("category", "").strip() or None
@@ -436,7 +645,6 @@ def drive():
         categories=categories,
         active_category=category or "all",
     )
-
 
 @app.route("/fly")
 def fly():
@@ -456,7 +664,6 @@ def fly():
         active_category=category or "all",
     )
 
-
 @app.route("/sit")
 def sit():
     category = request.args.get("category", "").strip() or None
@@ -475,10 +682,8 @@ def sit():
         active_category=category or "all",
     )
 
-
 # --------------------------------------------------------
-# Upload Route - MULTIPLE VIDEOS SUPPORTED
-# (unchanged logic, but adds deleted=False)
+# Upload Route
 # --------------------------------------------------------
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
@@ -532,10 +737,7 @@ def upload():
                             return redirect(url_for("upload"))
 
             if links_raw:
-                links = [
-                    link.strip()
-                    for link in links_raw.replace("\n", ",").split(",")
-                ]
+                links = [link.strip() for link in links_raw.replace("\n", ",").split(",")]
                 video_urls.extend([link for link in links if link])
 
             if not video_urls:
@@ -552,10 +754,7 @@ def upload():
                 "lat": lat,
                 "lng": lng,
                 "description": description,
-                "videos": [
-                    {"url": url, "title": f"Part {i + 1}"}
-                    for i, url in enumerate(video_urls)
-                ],
+                "videos": [{"url": url, "title": f"Part {i + 1}"} for i, url in enumerate(video_urls)],
                 "likes": 0,
                 "createdAt": datetime.utcnow(),
                 "status": "published",
@@ -613,9 +812,8 @@ def upload():
 
     return render_template("upload.html")
 
-
 # --------------------------------------------------------
-# Dashboard Page (keeps all, including deleted/draft)
+# Dashboard Page
 # --------------------------------------------------------
 @app.route("/dashboard")
 def dashboard():
@@ -626,18 +824,10 @@ def dashboard():
 
     total_streets = len(streets)
     total_likes = sum(s.get("likes", 0) for s in streets)
-    walk_count = sum(
-        1 for s in streets if s.get("type") == "video" and s.get("mode") == "walk"
-    )
-    drive_count = sum(
-        1 for s in streets if s.get("type") == "video" and s.get("mode") == "drive"
-    )
-    fly_count = sum(
-        1 for s in streets if s.get("type") == "video" and s.get("mode") == "fly"
-    )
-    sit_count = sum(
-        1 for s in streets if s.get("type") == "video" and s.get("mode") == "sit"
-    )
+    walk_count = sum(1 for s in streets if s.get("type") == "video" and s.get("mode") == "walk")
+    drive_count = sum(1 for s in streets if s.get("type") == "video" and s.get("mode") == "drive")
+    fly_count = sum(1 for s in streets if s.get("type") == "video" and s.get("mode") == "fly")
+    sit_count = sum(1 for s in streets if s.get("type") == "video" and s.get("mode") == "sit")
 
     recent_streets = sorted(
         streets,
@@ -655,13 +845,11 @@ def dashboard():
         fly_count=fly_count,
         sit_count=sit_count,
         recent_streets=recent_streets,
-        map_style_url=current_app.config["MAP_STYLE_URL"],
+        map_style_url=MAP_STYLE_URL,
     )
 
-
-
 # --------------------------------------------------------
-# Like Endpoint with safer ObjectId + spam guard
+# Like Endpoint
 # --------------------------------------------------------
 @app.post("/like/<street_id>")
 def like_street(street_id):
@@ -683,9 +871,9 @@ def like_street(street_id):
     street = streets_collection.find_one({"_id": oid}, {"likes": 1})
     return {"likes": street.get("likes", 0) if street else 0}
 
-
 # --------------------------------------------------------
 # Start Server
 # --------------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
+
