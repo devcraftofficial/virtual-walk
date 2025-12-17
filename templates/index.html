@@ -50,7 +50,7 @@
                     rgba(4,7,20,0.82),
                     rgba(15,23,42,0.25)
                 ),
-                url("{{ url_for('static', filename='img/hero-skyline.jpg') }}");
+                url("{{ url_for('static', filename='img/hero-skyline.webp') }}");
             background-position: center bottom;
             background-size: cover;
             background-repeat: no-repeat;
@@ -68,21 +68,21 @@
         }
 
         .shell {
-            width: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
-            background:
-                radial-gradient(circle at top right,
-                                rgba(15,23,42,0.45),
-                                rgba(15,23,42,0.10)),
-                rgba(15,23,42,0.35);
-            padding: 24px 28px 26px;
-            border-radius: 26px;
-            display: flex;
-            flex-direction: column;
-            gap: 22px;
-            border: 1px solid rgba(148,163,184,0.28);
-        }
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    background:
+        radial-gradient(circle at top right,
+                        rgba(15, 23, 42, 0.237),
+                        rgba(15, 23, 42, 0.427)),
+        rgba(15, 23, 42, 0.475); /* lower alpha for more transparency */
+    padding: 24px 28px 26px;
+    border-radius: 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    border: 1px solid rgba(148,163,184,0.24);
+}
 
         @media (min-width: 960px) {
             .shell {
@@ -346,15 +346,15 @@
         }
 
         .hero-walk .hero-mode-bg {
-            background-image: url('{{ url_for("static", filename="hero/walk.png") }}');
+            background-image: url('{{ url_for("static", filename="hero/walk.webp") }}');
         }
 
         .hero-drive .hero-mode-bg {
-            background-image: url('{{ url_for("static", filename="hero/drive.png") }}');
+            background-image: url('{{ url_for("static", filename="hero/drive.webp") }}');
         }
 
         .hero-fly .hero-mode-bg {
-            background-image: url('{{ url_for("static", filename="hero/fly.jpg") }}');
+            background-image: url('{{ url_for("static", filename="hero/fly.webp") }}');
         }
 
         .hero-mode-card::after {
@@ -1256,7 +1256,7 @@
                 <a class="dest-card"
                    href="{{ url_for('world_walk', street_id='69353fc9de46ad1121757e84') }}">
                     <div class="dest-thumb"
-                         style="background-image:url('{{ url_for('static', filename='img/dest-osaka-market-walk.png') }}');">
+                         style="background-image:url('{{ url_for('static', filename='img/dest-osaka-market-walk.webp') }}');">
                         <div class="dest-overlay">
                             <div class="dest-info">
                                 <h3>Tsutenkaku Hondori</h3>
@@ -1269,7 +1269,7 @@
                 <a class="dest-card"
                    href="{{ url_for('world_walk', street_id='69354e0d8076ceab3f745e95') }}">
                     <div class="dest-thumb"
-                         style="background-image:url('{{ url_for('static', filename='img/dest-ronda-alley.png') }}');">
+                         style="background-image:url('{{ url_for('static', filename='img/dest-ronda-alley.webp') }}');">
                         <div class="dest-overlay">
                             <div class="dest-info">
                                 <h3>Historic Moorish Alleyway</h3>
@@ -1282,7 +1282,7 @@
                 <a class="dest-card"
                    href="{{ url_for('world_drive', street_id='693557008076ceab3f745e98') }}">
                     <div class="dest-thumb"
-                         style="background-image:url('{{ url_for('static', filename='img/dest-hcmc-drive.png') }}');">
+                         style="background-image:url('{{ url_for('static', filename='img/dest-hcmc-drive.webp') }}');">
                         <div class="dest-overlay">
                             <div class="dest-info">
                                 <h3>Quiet Residential Street</h3>
@@ -1295,7 +1295,7 @@
                 <a class="dest-card"
                    href="{{ url_for('world_fly', street_id='693eaf742c420b8c9b5cc365') }}">
                     <div class="dest-thumb"
-                         style="background-image:url('{{ url_for('static', filename='img/dest-gay-street-drone.png') }}');">
+                         style="background-image:url('{{ url_for('static', filename='img/dest-gay-street-drone.webp') }}');">
                         <div class="dest-overlay">
                             <div class="dest-info">
                                 <h3>Gay Street</h3>
