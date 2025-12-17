@@ -41,21 +41,22 @@
         }
 
         body {
-            margin: 0;
-            min-height: 100vh;
-            background: linear-gradient(
-                          to top,
-                          rgba(4,7,20,0.82),
-                          rgba(15,23,42,0.25)
-                       ),
-                       url("{{ url_for('static', filename='img/hero-skyline.jpg') }}")
-                       center bottom / cover no-repeat fixed;
-            font-family: system-ui, -apple-system, sans-serif;
-            color: var(--text-main);
-            padding: 12px 0;
-            scroll-behavior: smooth;
-            line-height: 1.5;
-        }
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(
+                  to top,
+                  rgba(4,7,20,0.82),
+                  rgba(15,23,42,0.25)
+               ),
+               url("{{ url_for('static', filename='img/hero-skyline.jpg') }}")
+               center bottom / cover no-repeat; /* removed fixed */
+    font-family: system-ui, -apple-system, sans-serif;
+    color: var(--text-main);
+    padding: 12px 0;
+    scroll-behavior: smooth;
+    line-height: 1.5;
+}
+
 
         .shell {
             width: 100%;
@@ -1670,3 +1671,4 @@
     </script>
 </body>
 </html>
+
