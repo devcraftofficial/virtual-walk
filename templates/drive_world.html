@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/maplibre-gl.css') }}">
 <script src="{{ url_for('static', filename='js/maplibre-gl.js') }}"></script>
 
-
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
@@ -54,6 +53,27 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
   position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
   transition:filter .4s ease, opacity .2s ease;z-index:1
 }
+
+/* Dashboard overlay (cockpit) with tilt support */
+#driveDashOverlay{
+  position:absolute;
+  left:50%;
+  bottom:-120px;
+  transform:translateX(-50%) rotate(0deg); /* base state */
+  width:70%;
+  object-fit:contain;
+  pointer-events:none;
+  z-index:10;
+  transition:transform 0.15s ease-out;      /* smooth lean */
+}
+/* Mobile tweak for bike overlay */
+@media (max-width: 908px){
+  #driveDashOverlay{
+    bottom:-20px;          /* higher than -120px so it's visible */
+    width:100%;             /* a bit wider so it fills the screen */
+  }
+}
+
 
 /* First street loading overlay */
 #videoLoading{
@@ -181,9 +201,17 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
 
     <div class="street-info"><span id="streetSmallLabel">Ready to drive</span></div>
 
+    <!-- Video background -->
     <video id="streetVideo" preload="metadata" muted playsinline>
       <source id="videoSource" src="">
     </video>
+
+    <!-- Dashboard cockpit overlay -->
+    <img
+      id="driveDashOverlay"
+      src="{{ url_for('static', filename='img/dash.png') }}"
+      alt="Bike overlay"
+    />
 
     <!-- first street loading overlay -->
     <div id="videoLoading">
@@ -233,8 +261,6 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
   </div>
 </div>
 
-
-
 <script id="streets-data" type="application/json">{{ streets | tojson | safe }}</script>
 <script id="selected-street-data" type="application/json">{{ selected_street | tojson | safe if selected_street else 'null' }}</script>
 
@@ -253,6 +279,12 @@ const videoLoading     = document.getElementById("videoLoading");
 const fullMapOverlay   = document.getElementById("fullMapOverlay");
 const fullMapContainer = document.getElementById("fullMapContainer");
 const closeMapBtn      = document.getElementById("closeMapBtn");
+const dashOverlay      = document.getElementById("driveDashOverlay");
+
+/* Tilt state for overlay */
+let tiltAngle = 0;
+const MAX_TILT = 7;      // degrees
+const TILT_STEP = 2.5;
 
 /* State */
 let currentIndex   = 0;
@@ -399,13 +431,32 @@ function recomputeDirection(){
 /* Keyboard */
 window.addEventListener("keydown", e => {
   const k = e.key;
+
+  // forward / reverse
   if (k === "w" || k === "ArrowUp"){ keyDir = 1;  recomputeDirection(); }
   if (k === "s" || k === "ArrowDown"){ keyDir = -1; recomputeDirection(); }
+
+  // lean left/right
+  if (k === "ArrowLeft"){
+    tiltAngle = Math.max(-MAX_TILT, tiltAngle - TILT_STEP);
+    dashOverlay.style.transform = `translateX(-50%) rotate(${tiltAngle}deg)`;
+  }
+  if (k === "ArrowRight"){
+    tiltAngle = Math.min(MAX_TILT, tiltAngle + TILT_STEP);
+    dashOverlay.style.transform = `translateX(-50%) rotate(${tiltAngle}deg)`;
+  }
 });
+
 window.addEventListener("keyup", e => {
   const k = e.key;
   if (["w","s","ArrowUp","ArrowDown"].includes(k)){
     keyDir = 0; recomputeDirection();
+  }
+
+  // release lean back to center
+  if (k === "ArrowLeft" || k === "ArrowRight"){
+    tiltAngle = 0;
+    dashOverlay.style.transform = "translateX(-50%) rotate(0deg)";
   }
 });
 
