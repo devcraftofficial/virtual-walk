@@ -1,1683 +1,843 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Virtual Street Walk - Home</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- MapLibre -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/maplibre-gl.css') }}">
-    <style>
-        :root {
-            --bg-page: #020617;
-            --bg-panel: #020617dd;
-            --bg-card: #020617;
-            --accent: #1d9bf0;
-            --accent-strong: #0b63d1;
-            --accent-soft: rgba(29,155,240,0.16);
-            --success: #22c55e;
-            --warning: #f97316;
-            --purple: #a855f7;
-            --text-main: #e5e7eb;
-            --text-muted: #9ca3af;
-            --radius-lg: 22px;
-            --radius-md: 14px;
-            --shadow-soft: 0 26px 70px rgba(0, 0, 0, 0.9);
-            --focus-ring-color: rgba(56, 189, 248, 0.85);
-        }
+<meta charset="UTF-8">
+<title>ABTO - A Better Travel Observer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="ABTO - A Better Travel Observer. Explore real streets worldwide with immersive walk, drive, and fly modes.">
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+<!-- Fonts & Icons -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-        a, a:visited, a:hover, a:active,
-        button {
-            text-decoration: none;
-        }
-
-        html, body {
-            max-width: 100%;
-            overflow-x: hidden;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background-color: #020617;
-            background-image:
-                linear-gradient(
-                    to top,
-                    rgba(4,7,20,0.82),
-                    rgba(15,23,42,0.25)
-                ),
-                url("{{ url_for('static', filename='img/hero-skyline.webp') }}");
-            background-position: center bottom;
-            background-size: cover;
-            background-repeat: no-repeat;
-            font-family: system-ui, -apple-system, sans-serif;
-            color: var(--text-main);
-            padding: 12px 0;
-            scroll-behavior: smooth;
-            line-height: 1.5;
-        }
-
-        /* Desktop fixed background */
-@media (min-width: 960px) {
-    body {
-        background-attachment: fixed;
-    }
+<style>
+/* ================= ROOT THEME ================= */
+:root {
+  --bg-main:#0a0b15;
+  --bg-soft:#0f1223;
+  --glass:rgba(255,255,255,.04);
+  --glass-hover:rgba(255,255,255,.08);
+  --accent:#5d5eff;
+  --accent2:#7c3aed;
+  --accent3:#ec4899;
+  --gradient:linear-gradient(135deg,#5d5eff,#7c3aed,#a855f7);
+  --gradient-glow:linear-gradient(135deg,#5d5eff22,#7c3aed22,#a855f722);
+  --text:#f8fafc;
+  --text-muted:#94a3b8;
+  --text-dim:#64748b;
+  --border:rgba(255,255,255,.08);
+  --border-accent:rgba(93,94,255,.2);
+  --radius-xl:24px;
+  --radius-lg:18px;
+  --radius:12px;
+  --shadow:0 25px 50px rgba(0,0,0,.45);
+  --shadow-glow:0 0 0 1px rgba(93,94,255,.2), 0 25px 50px rgba(0,0,0,.45);
+  --nav-h:86px;
+  --hero-badge-top:120px;
+  --ease:all .35s cubic-bezier(.4,0,.2,1);
+  --ease-fast:all .2s cubic-bezier(.4,0,.2,1);
 }
 
-/* Mobile: move image up and add overlay */
-@media (max-width: 768px) {
-    body {
-        background-position: center 15%;
-        position: relative;
-        overflow-x: hidden;
-    }
-
-    body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background: linear-gradient(
-            to top,
-            rgba(2,6,23,0.92),
-            rgba(15,23,42,0.7)
-        ); /* overlay color */
-        pointer-events: none;
-        z-index: -1; /* behind content, above background image */
-    }
+/* ================= BASE ================= */
+*, *::before, *::after {box-sizing:border-box}
+html {scroll-behavior:smooth}
+body {
+  font-family:'Inter',system-ui,sans-serif;
+  background: 
+    radial-gradient(circle at 20% 20%,rgba(93,94,255,.12),transparent 50%),
+    radial-gradient(circle at 80% 80%,rgba(124,58,237,.1),transparent 50%),
+    linear-gradient(135deg,#0a0b15,#0f1223);
+  color:var(--text);
+  line-height:1.6;
+  padding-top:var(--nav-h);
+  overflow-x:hidden;
+  position:relative;
 }
 
-        
-
-        .top-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0 7px;
-        }
-
-        .top-nav-left, .top-nav-right {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-            flex-wrap: wrap;
-        }
-
-        .logo-wrap {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo-mark {
-            width: 30px;
-            height: 30px;
-            border-radius: 999px;
-            background: radial-gradient(circle at 30% 25%, #facc15 0%, #fb923c 22%, #3b82f6 60%, #0f172a 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 0 2px rgba(15,23,42,0.95), 0 0 20px rgba(56,189,248,0.7);
-            font-size: 14px;
-            font-weight: 700;
-            margin-left: 20px;
-        }
-
-        .logo {
-            font-size: 20px;
-            font-weight: 800;
-            letter-spacing: 0.02em;
-            color: #f9fafb;
-        }
-
-        .logo span {
-            color: #60a5fa;
-        }
-
-        .nav-link {
-            color: #e5e7eb;
-            font-size: 14px;
-            opacity: 0.9;
-            transition: all 0.2s ease;
-            padding: 7px 16px;
-            border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            border: 1px solid rgba(148,163,184,0.6);
-            background: rgba(15,23,42,0.85);
-            margin-right: 20px;
-        }
-
-        .nav-link:hover {
-            opacity: 1;
-            box-shadow: 0 14px 34px rgba(0,0,0,0.9);
-            background: rgba(15,23,42,0.95);
-        }
-
-        .nav-link.primary {
-            background: linear-gradient(135deg, #1d9bf0, #0b63d1);
-            border-color: rgba(148,163,184,0.85);
-        }
-
-        .user-avatar {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #1d9bf0, #60a5fa);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 700;
-            color: white;
-            flex-shrink: 0;
-        }
-
-        .user-chip-compact {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 4px 8px 4px 6px;
-            border-radius: 999px;
-            background: rgba(15,23,42,0.9);
-            border: 1px solid rgba(148,163,184,0.6);
-            box-shadow: 0 14px 34px rgba(0,0,0,0.9);
-        }
-
-        .user-chip-name {
-            font-size: 13px;
-            font-weight: 500;
-            max-width: 140px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .logout-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-left: 2px;
-            font-size: 14px;
-            background: rgba(239,68,68,0.18);
-            border: 1px solid rgba(239,68,68,0.55);
-            color: #fecaca;
-            cursor: pointer;
-            transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
-        }
-
-        .logout-icon:hover {
-            background: rgba(239,68,68,0.32);
-            box-shadow: 0 0 18px rgba(248,113,113,0.8);
-            transform: translateY(-1px);
-        }
-
-        .hero {
-            text-align: center;
-            padding: 28px 40px 10px;
-            color: #e5e7eb;
-        }
-
-        .hero-kicker {
-            font-size: 13px;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: #bfdbfe;
-            margin: 0 0 10px;
-        }
-
-        .hero h1 {
-            margin: 0 0 8px;
-            font-size: 40px;
-            line-height: 1.25;
-            font-weight: 800;
-            color: #e5e7eb;
-        }
-
-        .hero h1 span {
-            color: #60a5fa;
-            text-shadow: 0 0 26px rgba(37,99,235,0.85);
-        }
-
-        .hero-sub {
-            margin: 0 0 22px;
-            font-size: 14px;
-            color: #e5e7eb;
-            opacity: 0.9;
-        }
-
-        .hero-search {
-            margin: 0 auto 24px;
-            max-width: 580px;
-            position: relative;
-            display: flex;
-            align-items: stretch;
-            background: #f9fafb;
-            border-radius: 999px;
-            padding: 4px;
-            border: 1px solid rgba(148,163,184,0.7);
-            box-shadow: 0 26px 70px rgba(0,0,0,0.95);
-            width: 100%;
-        }
-
-        .hero-search::before {
-            content: '🔍';
-            position: absolute;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 16px;
-            opacity: 0.65;
-            pointer-events: none;
-        }
-
-        .hero-search input {
-            flex: 1;
-            min-width: 0;
-            border: none;
-            background: transparent;
-            padding: 12px 14px 12px 40px;
-            font-size: 14px;
-            color: #111827;
-            outline: none;
-        }
-
-        .hero-search input::placeholder {
-            color: #9ca3af;
-        }
-
-        .hero-search button {
-            border: none;
-            border-radius: 999px;
-            padding: 0 24px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            background: linear-gradient(135deg, #1d9bf0, #0b63d1);
-            color: #f9fafb;
-            box-shadow: 0 18px 40px rgba(37,99,235,0.9);
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-            white-space: nowrap;
-        }
-
-        .hero-search button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 24px 55px rgba(37,99,235,1);
-        }
-
-        .hero-modes {
-            display: grid;
-            grid-template-columns: repeat(3, 300px);
-            gap: 18px;
-            margin-top: 10px;
-            justify-content: center;
-        }
-
-        .hero-mode-card {
-            position: relative;
-            border-radius: 18px;
-            height: 190px;
-            overflow: hidden;
-            border: 1px solid rgba(15,23,42,0.9);
-            box-shadow: 0 26px 60px rgba(0,0,0,0.95);
-            cursor: pointer;
-            background: radial-gradient(circle at top left, #020617 23%, #020617 00%);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .hero-mode-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 32px 70px rgba(0,0,0,0.98);
-        }
-
-        .hero-mode-bg {
-            position: absolute;
-            inset: 0;
-            background-size: cover;
-            background-position: center;
-            filter: brightness(0.9);
-            transform: scale(1.02);
-            transition: transform 0.35s ease;
-        }
-
-        .hero-walk .hero-mode-bg {
-            background-image: url('{{ url_for("static", filename="hero/walk.webp") }}');
-        }
-
-        .hero-drive .hero-mode-bg {
-            background-image: url('{{ url_for("static", filename="hero/drive.webp") }}');
-        }
-
-        .hero-fly .hero-mode-bg {
-            background-image: url('{{ url_for("static", filename="hero/fly.webp") }}');
-        }
-
-        .hero-mode-card::after {
-            content: '';
-            position: absolute;
-            inset: auto 0 0 0;
-            height: 55px;
-            background: linear-gradient(to top, rgba(15,23,42,0.96), transparent);
-        }
-
-        .hero-mode-content {
-            position: relative;
-            z-index: 1;
-            padding: 16px 16px 14px;
-            display: flex;
-            align-items: flex-end;
-            gap: 10px;
-            color: #e5e7eb;
-            text-align: left;
-            height: 100%;
-        }
-
-        .hero-mode-icon {
-            width: 34px;
-            height: 34px;
-            border-radius: 999px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 19px;
-            box-shadow: 0 0 18px rgba(0,0,0,0.8);
-            flex-shrink: 0;
-            background: radial-gradient(circle at 30% 0%, #22c55e, #16a34a);
-        }
-
-        .hero-drive .hero-mode-icon {
-            background: radial-gradient(circle at 30% 0%, #fb923c, #f97316);
-        }
-
-        .hero-fly .hero-mode-icon {
-            background: radial-gradient(circle at 30% 0%, #38bdf8, #0ea5e9);
-        }
-
-        .hero-mode-content h3 {
-            margin: 0 0 2px;
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        .hero-mode-content p {
-            margin: 0;
-            font-size: 12px;
-            opacity: 0.9;
-        }
-
-        .hero-mode-card:hover .hero-mode-bg {
-            transform: scale(1.06);
-        }
-
-        /* POPULAR DESTINATIONS */
-        .destinations {
-            margin-top: 28px;
-            padding: 12px 8px 8px;
-            text-align: center;
-        }
-
-        .destinations-header h2 {
-            margin: 0;
-            font-size: 22px;
-            font-weight: 800;
-            letter-spacing: 0.03em;
-        }
-
-        .destinations-header p {
-            margin: 4px 0 16px;
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .destinations-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 18px;
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-
-        .dest-card {
-            position: relative;
-            border-radius: 18px;
-            overflow: hidden;
-            border: 1px solid rgba(15,23,42,0.7);
-            box-shadow: 0 22px 40px rgba(0,0,0,0.9);
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            background: transparent;
-        }
-
-        .dest-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 28px 50px rgba(0,0,0,0.95);
-        }
-
-        .dest-thumb {
-            position: relative;
-            height: 190px;
-            background-size: cover;
-            background-position: center;
-        }
-
-        .dest-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(
-                to top,
-                rgba(2,6,23,0.95) 0%,
-                rgba(2,6,23,0.0) 65%
-            );
-            display: flex;
-            align-items: flex-end;
-        }
-
-        .dest-info {
-            width: 100%;
-            padding: 10px 12px 12px;
-        }
-
-        .dest-info h3 {
-            margin: 0 0 2px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #e5e7eb;
-        }
-
-        .dest-info p {
-            margin: 0;
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        .dest-cta-row {
-            margin-top: 18px;
-            display: flex;
-            justify-content: center;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-
-        .dest-cta {
-            border-radius: 999px;
-            border: 1px solid rgba(148,163,184,0.6);
-            padding: 10px 20px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            background: radial-gradient(circle at top left, #020617, #020617f6);
-            color: #e5e7eb;
-            box-shadow: 0 18px 40px rgba(0,0,0,0.9);
-            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
-        }
-
-        .dest-cta.secondary {
-            min-width: 190px;
-        }
-
-        .dest-cta.primary {
-            min-width: 220px;
-            background: linear-gradient(135deg, #f97316, #ea580c);
-            border-color: rgba(248,250,252,0.6);
-            color: #0b1120;
-            box-shadow: 0 22px 46px rgba(249,115,22,0.9);
-        }
-
-        .dest-cta:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 22px 50px rgba(0,0,0,1);
-        }
-
-        .dest-cta.primary:hover {
-            background: linear-gradient(135deg, #fb923c, #f97316);
-        }
-
-        /* MAIN APP UI BELOW HERO */
-        .header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            gap: 14px;
-            padding: 20px 2px 4px;
-        }
-
-        .title-block h1 {
-            margin: 0 0 4px 0;
-            font-size: 20px;
-            background: linear-gradient(135deg, #38bdf8, #60a5fa, #a855f7);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .title-block p {
-            margin: 0;
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        .cta-row {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: flex-end;
-        }
-
-        .pill {
-            padding: 6px 12px;
-            border-radius: 999px;
-            font-size: 12px;
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid rgba(148, 163, 184, 0.6);
-            color: var(--text-muted);
-            white-space: nowrap;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .pill-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 999px;
-            background: #22c55e;
-            box-shadow: 0 0 0 4px rgba(34,197,94,0.3);
-        }
-
-        .mode-switch {
-            display: inline-flex;
-            padding: 4px;
-            border-radius: 999px;
-            background: radial-gradient(circle at top left, #020617, #020617f5);
-            border: 1px solid rgba(148,163,184,0.5);
-            gap: 4px;
-            box-shadow: 0 14px 36px rgba(0,0,0,0.85);
-        }
-
-        .mode-btn {
-            border: none;
-            border-radius: 999px;
-            padding: 6px 14px;
-            font-size: 13px;
-            color: var(--text-muted);
-            background: transparent;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            white-space: nowrap;
-            transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
-            font-weight: 500;
-        }
-
-        .mode-btn span {
-            font-size: 12px;
-        }
-
-        .mode-btn:hover {
-            transform: translateY(-1px);
-            background: rgba(15,23,42,0.94);
-            box-shadow: 0 10px 24px rgba(0,0,0,0.75);
-        }
-
-        .mode-btn.is-active.walk {
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            color: #0b1120;
-        }
-
-        .mode-btn.is-active.drive {
-            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-            color: #0b1120;
-        }
-
-        .mode-btn.is-active.fly {
-            background: linear-gradient(135deg, #a855f7, #7c3aed);
-            color: #fff;
-        }
-
-        .mode-btn.is-active.sit {
-            background: linear-gradient(135deg, #f97316, #ea580c);
-            color: #fff;
-        }
-
-        .container {
-            display: grid;
-            grid-template-columns: 340px minmax(0, 1fr);
-            gap: 18px;
-            align-items: flex-start;
-            margin-top: 4px;
-        }
-
-        .map-panel {
-            background: radial-gradient(circle at top left, #020617, #020617f7);
-            border-radius: 20px;
-            padding: 12px 12px 10px;
-            border: 1px solid rgba(56, 189, 248, 0.6);
-            box-shadow: 0 24px 52px rgba(0,0,0,1), 0 0 40px rgba(56,189,248,0.45);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            min-width: 0;
-        }
-
-        .map-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .map-header span:first-child {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .map-header span:first-child::before {
-            content: '';
-            width: 7px;
-            height: 7px;
-            border-radius: 999px;
-            background: var(--accent);
-            box-shadow: 0 0 0 4px rgba(56,189,248,0.4);
-        }
-
-        .chip {
-            font-size: 11px;
-            padding: 4px 10px;
-            border-radius: 999px;
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid rgba(148, 163, 184, 0.55);
-            color: var(--text-muted);
-        }
-
-        #map {
-            width: 100%;
-            height: 300px;
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1px solid rgba(30, 64, 175, 0.9);
-            box-shadow: 0 0 0 1px rgba(15,23,42,1), 0 18px 40px rgba(0,0,0,1), 0 0 46px rgba(37,99,235,0.5);
-        }
-
-        .map-footer {
-            margin-top: 4px;
-            font-size: 12px;
-            color: var(--text-muted);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .map-footer a {
-            color: var(--accent);
-            font-size: 12px;
-            font-weight: 600;
-            padding: 4px 8px;
-            border-radius: 999px;
-            border: 1px solid rgba(56, 189, 248, 0.6);
-            background: rgba(15,23,42,0.96);
-            transition: all 0.2s ease;
-        }
-
-        .map-footer a:hover {
-            background: var(--accent-soft);
-            box-shadow: 0 0 22px rgba(56,189,248,0.6);
-        }
-
-        #topRatedBox, #recentBox {
-            margin-top: 8px;
-            padding-top: 8px;
-            font-size: 12px;
-        }
-
-        #topRatedBox {
-            border-top: 1px solid rgba(148,163,184,0.4);
-        }
-
-        #recentBox {
-            border-top: 1px dashed rgba(148,163,184,0.35);
-        }
-
-        #topRatedTitle, #recentTitle {
-            font-weight: 600;
-            margin-bottom: 4px;
-            color: #e5e7eb;
-        }
-
-        #topRatedList, #recentList {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .top-rated-item, .recent-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            padding: 6px 8px;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-            color: var(--text-main);
-            font-size: 12px;
-        }
-
-        .top-rated-item span {
-            color: #f97316;
-            font-size: 11px;
-        }
-
-        .top-rated-item:hover, .recent-item:hover {
-            background: rgba(15,23,42,0.95);
-            transform: translateX(4px);
-            box-shadow: 0 8px 18px rgba(0,0,0,0.7);
-        }
-
-        .viewer-panel {
-            background: radial-gradient(circle at top, #020617, #020617f7);
-            border-radius: 20px;
-            padding: 16px 16px 18px;
-            border: 1px solid rgba(30, 64, 175, 0.75);
-            box-shadow: 0 24px 52px rgba(0, 0, 0, 1), 0 0 40px rgba(37,99,235,0.6);
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
-
-        .viewer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 10px;
-        }
-
-        .viewer-header-main h2 {
-            margin: 0;
-            font-size: 20px;
-        }
-
-        .viewer-header-main p {
-            margin: 2px 0 0;
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        .viewer-meta {
-            font-size: 12px;
-            color: var(--text-muted);
-            white-space: nowrap;
-            font-weight: 500;
-            padding: 4px 10px;
-            border-radius: 999px;
-            border: 1px solid rgba(148,163,184,0.4);
-            background: rgba(15,23,42,0.9);
-        }
-
-        .search-container {
-            margin-bottom: 8px;
-            position: relative;
-        }
-
-        #homeSearchInput {
-            width: 100%;
-            border-radius: 999px;
-            border: 1px solid rgba(148,163,184,0.55);
-            padding: 9px 18px 9px 40px;
-            background: rgba(15,23,42,0.96);
-            color: #e5e7eb;
-            font-size: 13px;
-            transition: all 0.25s ease;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.5);
-        }
-
-        #homeSearchInput:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 1px rgba(15,23,42,1), 0 0 0 3px var(--focus-ring-color);
-            background: rgba(15,23,42,0.98);
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: 14px;
-        }
-
-        .category-bar {
-            display: flex;
-            flex-wrap: nowrap;
-            gap: 8px;
-            margin: 6px 0 10px;
-            padding-bottom: 2px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .category-bar::-webkit-scrollbar {
-            height: 4px;
-        }
-
-        .category-bar::-webkit-scrollbar-thumb {
-            background: rgba(148,163,184,0.5);
-            border-radius: 999px;
-        }
-
-        .cat-chip {
-            border-radius: 999px;
-            border: 1px solid rgba(148,163,184,0.55);
-            background: rgba(15,23,42,0.96);
-            color: var(--text-muted);
-            font-size: 11px;
-            padding: 4px 11px;
-            white-space: nowrap;
-            cursor: pointer;
-            transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
-            flex-shrink: 0;
-        }
-
-        .cat-chip:hover {
-            background: rgba(31,41,55,1);
-            color: var(--text-main);
-            transform: translateY(-1px);
-        }
-
-        .cat-chip.active {
-            background: var(--accent-soft);
-            color: #e0f2fe;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 1px rgba(15,23,42,1), 0 0 22px rgba(56,189,248,0.55);
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 14px;
-        }
-
-        .card {
-            background: radial-gradient(circle at top left, #020617, #020617f3);
-            border-radius: 16px;
-            border: 1px solid rgba(30,64,175,0.55);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            cursor: pointer;
-            transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
-            min-height: 220px;
-            position: relative;
-            animation: fadeInUp 0.45s ease forwards;
-            opacity: 0;
-        }
-
-        .card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            border: 1px solid transparent;
-            background: linear-gradient(135deg, rgba(56,189,248,0.7), transparent);
-            -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
-            mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.22s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-6px) scale(1.01);
-            box-shadow: 0 22px 40px rgba(0, 0, 0, 0.98);
-            border-color: rgba(56,189,248,0.85);
-            background: radial-gradient(circle at top left, #020617, #020617);
-        }
-
-        .card:hover::before {
-            opacity: 1;
-        }
-
-        .thumb img {
-            width: 100%;
-            height: 130px;
-            object-fit: cover;
-            display: block;
-            border-bottom: 1px solid rgba(15,23,42,1);
-            transition: transform 0.3s ease;
-        }
-
-        .card:hover .thumb img {
-            transform: scale(1.05);
-        }
-
-        .card-info {
-            padding: 11px 11px 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            flex: 1;
-        }
-
-        .card-info h4 {
-            margin: 0;
-            font-size: 14px;
-            font-weight: 600;
-            line-height: 1.35;
-        }
-
-        .card-info p {
-            margin: 0;
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .card-meta-row {
-            margin-top: auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            font-size: 11px;
-        }
-
-        .mode-pill {
-            font-size: 11px;
-            padding: 3px 8px;
-            border-radius: 999px;
-            border: 1px solid rgba(148,163,184,0.6);
-            color: var(--text-muted);
-            white-space: nowrap;
-            font-weight: 500;
-            background: rgba(15,23,42,0.95);
-        }
-
-        .mode-walk {
-            border-color: #22c55e;
-            color: #bbf7d0;
-        }
-
-        .mode-drive {
-            border-color: #38bdf8;
-            color: #e0f2fe;
-        }
-
-        .mode-fly {
-            border-color: #a855f7;
-            color: #f3e8ff;
-        }
-
-        .mode-sit {
-            border-color: #f97316;
-            color: #ffedd5;
-        }
-
-        .like-btn {
-            border: none;
-            background: transparent;
-            color: var(--text-muted);
-            font-size: 11px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 999px;
-            transition: all 0.18s ease;
-            white-space: nowrap;
-            font-weight: 500;
-        }
-
-        .like-btn:hover {
-            background: rgba(248, 250, 252, 0.08);
-            color: #f97316;
-            transform: scale(1.06);
-        }
-
-        .like-btn.liked {
-            color: #f97316;
-            background: rgba(249, 115, 22, 0.16);
-        }
-
-        .grid.loading .card {
-            opacity: 0.6;
-            transform: scale(0.95);
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px) scale(0.96);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        @media (max-width: 960px) {
-            body {
-                padding: 8px 0;
-            }
-
-            .shell {
-                padding: 16px 14px 18px;
-                border-radius: 18px;
-            }
-
-            .hero {
-                padding: 20px 12px 6px;
-            }
-
-            .hero-modes {
-                grid-template-columns: 1fr;
-            }
-
-            .destinations-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .container {
-                grid-template-columns: 1fr;
-            }
-
-            #map {
-                height: 260px;
-            }
-
-            .top-nav {
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-
-            .top-nav-right {
-                flex-wrap: wrap;
-                justify-content: flex-end;
-            }
-
-            .grid {
-                grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-            }
-        }
-
-        @media (max-width: 640px) {
-            .shell {
-                padding: 14px 10px 16px;
-                border-radius: 0;
-                border-left: none;
-                border-right: none;
-            }
-
-            .top-nav {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
-            }
-
-            .top-nav-left, .top-nav-right {
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-
-            .destinations-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 12px;
-            }
-
-            .dest-thumb {
-                height: 160px;
-            }
-
-            .grid {
-                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            }
-
-            .hero-search {
-                margin: 0 auto 18px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .hero {
-                padding-inline: 10px;
-            }
-
-            .hero-search button {
-                padding-inline: 16px;
-            }
-
-            .hero-modes {
-                gap: 12px;
-            }
-        }
-    </style>
+/* ================= ANIMATIONS ================= */
+@keyframes fadeInUp {
+  from {opacity:0; transform:translateY(30px)}
+  to {opacity:1; transform:translateY(0)}
+}
+@keyframes float {
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-8px)}
+}
+@keyframes pulse-glow {
+  0%,100%{box-shadow:var(--shadow)}
+  50%{box-shadow:var(--shadow-glow)}
+}
+.fade-in-up {animation:fadeInUp .8s ease forwards}
+
+/* ================= NAV ================= */
+nav {
+  position:fixed;
+  top:0;left:0;right:0;
+  height:var(--nav-h);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 max(16px, 5vw);
+  backdrop-filter:blur(22px);
+  background:rgba(10,11,21,.95);
+  border-bottom:1px solid var(--border);
+  z-index:999;
+  transition:var(--ease);
+}
+nav.scrolled {
+  background:rgba(10,11,21,.98);
+  box-shadow:0 10px 40px rgba(0,0,0,.5);
+}
+.logo {
+  font-size:clamp(20px, 5vw, 28px);
+  font-weight:900;
+  background:var(--gradient);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-decoration:none;
+  letter-spacing:-.03em;
+  position:relative;
+}
+.logo:hover {
+  transform:scale(1.05);
+}
+.logo::after {
+  content:'A Better Travel Observer';
+  position:absolute;
+  bottom:-24px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:10px;
+  color:var(--text-muted);
+  font-weight:400;
+  white-space:nowrap;
+  opacity:0;
+  transition:var(--ease);
+  pointer-events:none;
+}
+.logo:hover::after {
+  opacity:1;
+  bottom:-28px;
+}
+.nav-links {display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.nav-link {
+  text-decoration:none;
+  color:var(--text);
+  padding:10px 20px;
+  border-radius:999px;
+  font-weight:600;
+  border:1px solid transparent;
+  font-size:clamp(14px, 2.5vw, 15px);
+  transition:var(--ease);
+  position:relative;
+  overflow:hidden;
+  white-space:nowrap;
+  min-width:fit-content;
+}
+.nav-link::before {
+  content:'';
+  position:absolute;
+  top:0;left:-100%;
+  width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);
+  transition:var(--ease-fast);
+}
+.nav-link:hover::before {left:100%}
+.nav-link:hover {
+  background:var(--glass-hover);
+  border-color:var(--border);
+  transform:translateY(-2px);
+}
+.nav-link.primary {
+  background:var(--gradient);
+  box-shadow:0 15px 40px rgba(93,94,255,.45);
+  color:#fff !important;
+}
+.nav-link.primary:hover {
+  transform:translateY(-3px) scale(1.02);
+  box-shadow:0 20px 50px rgba(93,94,255,.6);
+}
+.mobile-menu-toggle {
+  display:none;
+  flex-direction:column;
+  gap:5px;
+  cursor:pointer;
+  padding:8px;
+}
+.hamburger {
+  width:24px;height:2px;
+  background:var(--text);
+  transition:var(--ease-fast);
+  border-radius:2px;
+}
+
+/* ================= HERO ================= */
+.hero {
+  min-height:calc(100vh - var(--nav-h));
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;
+  padding: var(--hero-badge-top) max(16px, 6vw) 60px;
+  position:relative;
+}
+.hero::before {
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;bottom:0;
+  background:radial-gradient(circle at 50% 20%,rgba(93,94,255,.08),transparent 50%);
+  pointer-events:none;
+}
+.hero-badge {
+  display:inline-flex;
+  gap:10px;
+  align-items:center;
+  padding:12px 24px;
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:999px;
+  backdrop-filter:blur(10px);
+  animation:float 6s ease-in-out infinite;
+  position:relative;
+  z-index:10;
+  margin-bottom:40px;
+}
+.hero-badge i {color:var(--accent);font-size:18px}
+.hero h1 {
+  font-size:clamp(36px, 10vw, 72px);
+  font-weight:800;
+  line-height:1.1;
+  background:linear-gradient(135deg,#fff 0%,var(--accent) 50%,#ec4899 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  margin:0 0 24px;
+  letter-spacing:-.02em;
+  max-width:90%;
+}
+.hero h1::after {
+  content:'ABTO';
+  display:block;
+  font-size:clamp(18px, 4vw, 24px);
+  font-weight:700;
+  color:var(--accent);
+  margin-top:8px;
+  opacity:.8;
+}
+.hero p {
+  max-width:100%;
+  font-size:clamp(16px, 3vw, 18px);
+  color:#e5e7eb;
+  margin:0 0 36px;
+  font-weight:400;
+  padding:0 10px;
+}
+.hero p::before {
+  content:'A Better Travel Observer brings you ';
+  font-weight:600;
+  color:var(--accent);
+}
+.hero-cta {
+  display:inline-flex;
+  gap:10px;
+  align-items:center;
+  padding:16px 36px;
+  background:var(--gradient);
+  color:#fff;
+  text-decoration:none;
+  font-weight:700;
+  border-radius:999px;
+  box-shadow:0 22px 50px rgba(93,94,255,.5);
+  transition:var(--ease);
+  font-size:clamp(15px, 3vw, 16px);
+  position:relative;
+  overflow:hidden;
+}
+.hero-cta::before {
+  content:'';
+  position:absolute;
+  top:0;left:-100%;
+  width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);
+  transition:var(--ease-fast);
+}
+.hero-cta:hover::before {left:100%}
+.hero-cta:hover {
+  transform:translateY(-4px) scale(1.02);
+  box-shadow:0 30px 60px rgba(93,94,255,.6);
+}
+
+/* ================= MODES ================= */
+.modes {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+  gap:24px;
+  max-width:1200px;
+  margin:60px auto 0;
+  padding:0 16px;
+}
+.mode-card {
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:var(--radius-xl);
+  padding:clamp(32px, 8vw, 42px) clamp(24px, 5vw, 30px);
+  text-align:center;
+  transition:var(--ease);
+  text-decoration:none;
+  color:inherit;
+  backdrop-filter:blur(12px);
+  position:relative;
+  overflow:hidden;
+}
+.mode-card::before {
+  content:'ABTO';
+  position:absolute;
+  top:12px;right:12px;
+  font-size:11px;
+  color:var(--accent);
+  font-weight:700;
+  background:var(--glass);
+  padding:4px 8px;
+  border-radius:12px;
+  border:1px solid var(--border-accent);
+  opacity:.9;
+  transition:var(--ease);
+}
+.mode-card::after {
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;height:4px;
+  background:var(--gradient);
+  transform:scaleX(0);
+  transition:var(--ease);
+}
+.mode-card:hover::after {transform:scaleX(1)}
+.mode-card:hover {
+  transform:translateY(-12px);
+  box-shadow:var(--shadow-glow);
+  border-color:var(--accent);
+}
+.mode-icon {
+  font-size:clamp(44px, 12vw, 52px);
+  margin-bottom:16px;
+  display:block;
+  filter:drop-shadow(0 8px 20px rgba(93,94,255,.3));
+  animation:float 4s ease-in-out infinite;
+  position:relative;
+}
+.mode-card h3 {
+  margin:0 0 12px;
+  font-size:clamp(20px, 4vw, 24px);
+  font-weight:700;
+}
+.mode-card h3::after {
+  content:' - ABTO';
+  font-size:.65em;
+  opacity:.8;
+}
+.mode-card p {
+  margin:0;
+  color:var(--text-muted);
+  font-weight:400;
+  font-size:clamp(14px, 2.5vw, 16px);
+}
+
+/* ================= SECTIONS ================= */
+.section {
+  padding:clamp(80px, 15vw, 140px) max(16px, 6vw);
+  max-width:1600px;
+  margin:auto;
+}
+.section h2 {
+  text-align:center;
+  font-size:clamp(32px, 7vw, 46px);
+  font-weight:800;
+  margin-bottom:14px;
+  background:var(--gradient);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.section h2::after {
+  content:'ABTO';
+  display:block;
+  font-size:clamp(16px, 3vw, 20px);
+  font-weight:700;
+  color:var(--accent);
+  opacity:.9;
+}
+.section p {
+  text-align:center;
+  color:var(--text-muted);
+  font-size:clamp(16px, 2.5vw, 18px);
+  margin-bottom:60px;
+  max-width:800px;
+  margin-left:auto;
+  margin-right:auto;
+}
+.grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+  gap:clamp(20px, 4vw, 28px);
+}
+.card {
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:var(--radius-xl);
+  overflow:hidden;
+  transition:var(--ease);
+  text-decoration:none;
+  color:inherit;
+  backdrop-filter:blur(12px);
+  position:relative;
+  min-height:320px;
+  display:flex;
+  flex-direction:column;
+}
+.card::before {
+  content:'ABTO';
+  position:absolute;
+  top:12px;right:12px;
+  font-size:10px;
+  color:#fff;
+  font-weight:700;
+  background:var(--accent);
+  padding:4px 8px;
+  border-radius:12px;
+  opacity:0;
+  transition:var(--ease);
+}
+.card:hover::before {opacity:1}
+.card::after {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:var(--gradient-glow);
+  opacity:0;
+  transition:var(--ease);
+}
+.card:hover::after {opacity:1}
+.card:hover {
+  transform:translateY(-10px);
+  box-shadow:var(--shadow-glow);
+}
+.thumb {
+  height:clamp(160px, 25vw, 200px);
+  background-size:cover;
+  background-position:center;
+  position:relative;
+  overflow:hidden;
+  flex-shrink:0;
+}
+.thumb::after {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(45deg,#5d5eff33,#7c3aed22);
+  opacity:0;
+  transition:var(--ease);
+}
+.card:hover .thumb::after {opacity:1}
+.thumb-placeholder {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg, var(--glass), var(--bg-soft));
+  color:var(--text-muted);
+  font-size:clamp(48px, 12vw, 64px);
+}
+.card-body {
+  padding:20px;
+  flex-grow:1;
+  display:flex;
+  flex-direction:column;
+}
+.card-body h4 {
+  margin:0 0 8px;
+  font-size:clamp(16px, 3vw, 20px);
+  font-weight:700;
+  line-height:1.3;
+  flex-grow:1;
+}
+.card-body span {
+  color:var(--text-muted);
+  font-size:clamp(13px, 2vw, 14px);
+  font-weight:500;
+  margin-top:auto;
+}
+
+/* ================= LOADING & EMPTY STATES ================= */
+.loading {
+  display:flex;align-items:center;justify-content:center;
+  padding:80px 20px;
+  color:var(--text-muted);
+  font-size:clamp(16px, 3vw, 18px);
+}
+.loading::before {
+  content:'ABTO';
+  color:var(--accent);
+  font-weight:700;
+  font-size:20px;
+  margin-right:12px;
+}
+.loading i {
+  font-size:32px;
+  animation:spin 1s linear infinite;
+  margin-right:16px;
+}
+@keyframes spin {
+  from {transform:rotate(0deg)}
+  to {transform:rotate(360deg)}
+}
+.empty-state {
+  text-align:center;
+  padding:clamp(80px, 20vw, 120px) 40px;
+  color:var(--text-muted);
+}
+.empty-state h3::before {
+  content:'ABTO';
+  display:block;
+  font-size:clamp(24px, 8vw, 32px);
+  font-weight:800;
+  background:var(--gradient);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  margin-bottom:16px;
+}
+.empty-state i {
+  font-size:clamp(48px, 15vw, 64px);
+  margin-bottom:24px;
+  opacity:.6;
+}
+
+/* ================= MOBILE RESPONSIVE ================= */
+@media(max-width:1024px) {
+  :root {
+    --hero-badge-top:100px;
+  }
+  .nav-links {gap:8px}
+}
+
+@media(max-width:768px) {
+  :root {
+    --nav-h:70px;
+    --hero-badge-top:90px;
+  }
+  nav {
+    padding:12px 16px;
+    height:var(--nav-h);
+  }
+  body {padding-top:var(--nav-h)}
+  .logo {font-size:clamp(18px, 6vw, 24px)}
+  .logo::after {font-size:9px; bottom:-20px;}
+  
+  .nav-links {
+    display:none;
+    position:fixed;
+    top:var(--nav-h);
+    left:0;right:0;
+    background:rgba(10,11,21,.98);
+    flex-direction:column;
+    padding:32px 20px;
+    backdrop-filter:blur(22px);
+    border-top:1px solid var(--border);
+    gap:16px;
+    animation:slideDown 0.3s ease;
+  }
+  @keyframes slideDown {
+    from {transform: translateY(-100%); opacity: 0;}
+    to {transform: translateY(0); opacity: 1;}
+  }
+  .nav-links.active {display:flex}
+  .mobile-menu-toggle {display:flex}
+  
+  .hero {
+    padding: var(--hero-badge-top) 20px 40px;
+    justify-content:flex-start;
+    gap:20px;
+  }
+  .hero-badge {
+    margin-bottom:20px;
+    animation-duration:4s;
+  }
+  .hero h1 {
+    margin-bottom:16px;
+    line-height:1.05;
+  }
+  .hero h1::after {font-size:clamp(16px, 5vw, 20px);}
+  .hero p {padding:0 8px}
+  
+  .section {padding:60px 20px}
+  .grid {grid-template-columns:1fr; gap:24px}
+  .modes {
+    margin-top:40px;
+    gap:20px;
+    padding:0 12px;
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:480px) {
+  :root {
+    --nav-h:65px;
+    --hero-badge-top:80px;
+  }
+  nav {padding:10px 14px}
+  .nav-link {padding:12px 18px; font-size:14px}
+  .hero-cta {flex-direction:row; gap:8px; padding:14px 28px}
+  .mode-card {padding:28px 20px}
+  .card-body {padding:16px}
+  .hero {
+    padding-top:var(--hero-badge-top);
+    padding-bottom:30px;
+  }
+}
+
+/* ================= HAMBURGER ANIMATION ================= */
+.mobile-menu-toggle.open .hamburger:nth-child(1) {
+  transform: rotate(45deg) translate(6px, 6px);
+}
+.mobile-menu-toggle.open .hamburger:nth-child(2) {
+  opacity: 0;
+}
+.mobile-menu-toggle.open .hamburger:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
+}
+</style>
 </head>
+
 <body>
-    <div class="shell">
-        <div class="top-nav">
-            <div class="top-nav-left">
-                <div class="logo-wrap">
-                    <div class="logo-mark">🚶</div>
-                    <div class="logo">Virtual Street<span>Walk</span></div>
-                </div>
-            </div>
-            <div class="top-nav-right">
-                {% if current_user %}
-                    <div class="user-chip-compact">
-                        <div class="user-avatar">
-                            {{ current_user.name[0]|upper if current_user.name else 'U' }}
-                        </div>
-                        <span class="user-chip-name">
-                            {{ current_user.name or current_user.email.split('@')[0] }}
-                        </span>
-                        <a href="{{ url_for('logout') }}" class="logout-icon" title="Logout">
-                            ⎋
-                        </a>
-                    </div>
-                    <a href="{{ url_for('dashboard') }}" class="nav-link primary">Dashboard</a>
-                    <a href="{{ url_for('upload') }}" class="nav-link">Upload Street</a>
-                {% else %}
-                    <a href="{{ url_for('upload') }}" class="nav-link">Upload Street</a>
-                    <a href="{{ url_for('login') }}" class="nav-link primary">Login</a>
-                {% endif %}
-            </div>
-        </div>
+<!-- FIXED: Preloader hides after DOM + images load -->
+<div class="loading" id="preloader">
+  <i class="fas fa-spinner"></i>
+  <span>Loading streets...</span>
+</div>
 
-        <section class="hero">
-            <p class="hero-kicker">Virtual Street Walk</p>
-            <h1>Explore the <span>World</span><br>from <span>Your Screen</span></h1>
-            <p class="hero-sub">Walk, Drive, or Fly through real streets around the globe.</p>
-            <form class="hero-search" onsubmit="return false;">
-                <input id="heroSearch" type="search" placeholder="Search streets, cities, or landmarks..." autocomplete="off">
-                <button type="button" id="heroSearchBtn">Search</button>
-            </form>
-            <div class="hero-modes">
-                <a href="{{ url_for('world_walk') }}" class="hero-mode-card hero-walk">
-                    <div class="hero-mode-bg"></div>
-                    <div class="hero-mode-content">
-                        <div class="hero-mode-icon">🚶</div>
-                        <div>
-                            <h3>Walk Mode</h3>
-                            <p>Step into the streets<br>Explore on foot.</p>
-                        </div>
-                    </div>
-                </a>
-                <a href="{{ url_for('world_drive') }}" class="hero-mode-card hero-drive">
-                    <div class="hero-mode-bg"></div>
-                    <div class="hero-mode-content">
-                        <div class="hero-mode-icon">🚗</div>
-                        <div>
-                            <h3>Drive Mode</h3>
-                            <p>Cruise the roads<br>Experience by car.</p>
-                        </div>
-                    </div>
-                </a>
-                <a href="{{ url_for('world_fly') }}" class="hero-mode-card hero-fly">
-                    <div class="hero-mode-bg"></div>
-                    <div class="hero-mode-content">
-                        <div class="hero-mode-icon">✈️</div>
-                        <div>
-                            <h3>Fly Mode</h3>
-                            <p>Soar above the city<br>View from the sky.</p>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        </section>
+<nav id="navbar">
+  <a href="{{ url_for('index') }}" class="logo">ABTO</a>
+  <div class="nav-links" id="navLinks">
+    <a href="{{ url_for('index') }}" class="nav-link">Home</a>
+    <a href="{{ url_for('upload') }}" class="nav-link">Upload</a>
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('dashboard') }}" class="nav-link primary">
+        <i class="fas fa-tachometer-alt"></i> Dashboard
+      </a>
+    {% else %}
+      <a href="{{ url_for('login') }}" class="nav-link primary">
+        <i class="fas fa-rocket"></i> Get Started
+      </a>
+    {% endif %}
+  </div>
+  <div class="mobile-menu-toggle" id="mobileToggle">
+    <div class="hamburger"></div>
+    <div class="hamburger"></div>
+    <div class="hamburger"></div>
+  </div>
+</nav>
 
-        <!-- POPULAR DESTINATIONS -->
-        <section class="destinations">
-            <div class="destinations-header">
-                <h2>Popular Destinations</h2>
-                <p>Trending Places to Explore</p>
-            </div>
-            <div class="destinations-grid">
+<main>
+<section class="hero">
+  <div class="hero-badge fade-in-up" style="animation-delay:.3s">
+    <i class="fas fa-globe-americas"></i>
+    <span id="streetCount">{{ streets|length if streets else 0 }}+ Real Streets</span>
+  </div>
+  <h1 class="fade-in-up" style="animation-delay:.5s">
+    Explore Real Streets<br>From Anywhere
+  </h1>
+  <p class="fade-in-up" style="animation-delay:.7s">
+    Walk, drive or fly through real locations around the world. 
+    No games. Just reality. Powered by real video footage.
+  </p>
+  <a href="#streets" class="hero-cta fade-in-up" style="animation-delay:.9s">
+    <i class="fas fa-play-circle"></i>
+    Start Exploring Now
+  </a>
 
-                
-                <!-- Your MongoDB streets -->
-                <a class="dest-card"
-                   href="{{ url_for('world_walk', street_id='69353fc9de46ad1121757e84') }}">
-                    <div class="dest-thumb"
-                         style="background-image:url('{{ url_for('static', filename='img/dest-osaka-market-walk.webp') }}');">
-                        <div class="dest-overlay">
-                            <div class="dest-info">
-                                <h3>Tsutenkaku Hondori</h3>
-                                <p>Osaka, Japan • Market Walk</p>
-                            </div>
-                        </div>
-                    </div>
-                </a>
+  <div class="modes fade-in-up" style="animation-delay:1.1s">
+    <a href="{{ url_for('world_walk') }}" class="mode-card">
+      <div class="mode-icon">🚶‍♂️</div>
+      <h3>Walk Mode</h3>
+      <p>Human-pace exploration with ambient realism</p>
+    </a>
+    <a href="{{ url_for('world_drive') }}" class="mode-card">
+      <div class="mode-icon">🚗</div>
+      <h3>Drive Mode</h3>
+      <p>Smooth highway and city driving experience</p>
+    </a>
+    <a href="{{ url_for('world_fly') }}" class="mode-card">
+      <div class="mode-icon">✈️</div>
+      <h3>Fly Mode</h3>
+      <p>Aerial drone perspectives of cities</p>
+    </a>
+  </div>
+</section>
 
-                <a class="dest-card"
-                   href="{{ url_for('world_walk', street_id='69354e0d8076ceab3f745e95') }}">
-                    <div class="dest-thumb"
-                         style="background-image:url('{{ url_for('static', filename='img/dest-ronda-alley.webp') }}');">
-                        <div class="dest-overlay">
-                            <div class="dest-info">
-                                <h3>Historic Moorish Alleyway</h3>
-                                <p>Ronda, Spain • City Walk</p>
-                            </div>
-                        </div>
-                    </div>
-                </a>
+<section class="section" id="streets">
+  <h2>Featured Streets</h2>
+  <p>Handpicked immersive locations from around the world</p>
 
-                <a class="dest-card"
-                   href="{{ url_for('world_drive', street_id='693557008076ceab3f745e98') }}">
-                    <div class="dest-thumb"
-                         style="background-image:url('{{ url_for('static', filename='img/dest-hcmc-drive.webp') }}');">
-                        <div class="dest-overlay">
-                            <div class="dest-info">
-                                <h3>Quiet Residential Street</h3>
-                                <p>Ho Chi Minh City, Vietnam • City Drive</p>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-
-                <a class="dest-card"
-                   href="{{ url_for('world_fly', street_id='693eaf742c420b8c9b5cc365') }}">
-                    <div class="dest-thumb"
-                         style="background-image:url('{{ url_for('static', filename='img/dest-gay-street-drone.webp') }}');">
-                        <div class="dest-overlay">
-                            <div class="dest-info">
-                                <h3>Gray Street</h3>
-                                <p>Knoxville, Tennessee • Drone Panorama</p>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-
-            </div>
-
-            
-        </section>
-
-        <div class="header-row">
-            <div class="title-block">
-                <h1>Explore streets like a game</h1>
-                <p>Pick any street, then walk, drive, fly or just sit and watch.</p>
-            </div>
-            <div class="cta-row">
-                <div class="pill">
-                    <span class="pill-dot"></span>
-                    {{ streets|length }} streets available
-                </div>
-            </div>
-            <div class="mode-switch">
-                <a href="{{ url_for('walk') }}" class="mode-btn walk{% if request.path.startswith('/walk') or request.path.startswith('/world/walk') %} is-active{% endif %}">
-                    <span>🚶</span><span>Walk</span>
-                </a>
-                <a href="{{ url_for('drive') }}" class="mode-btn drive{% if request.path.startswith('/drive') or request.path.startswith('/world/drive') %} is-active{% endif %}">
-                    <span>🚗</span><span>Drive</span>
-                </a>
-                <a href="{{ url_for('fly') }}" class="mode-btn fly{% if request.path.startswith('/fly') or request.path.startswith('/world/fly') %} is-active{% endif %}">
-                    <span>✈️</span><span>Fly</span>
-                </a>
-                <a href="{{ url_for('sit') }}" class="mode-btn sit{% if request.path.startswith('/sit') or request.path.startswith('/world/sit') %} is-active{% endif %}">
-                    <span>🪑</span><span>Sit</span>
-                </a>
-            </div>
-        </div>
-
-        <div class="container">
-            <div class="map-panel">
-                <div class="map-header">
-                    <span>World map</span>
-                    <span class="chip">Click a pin to jump</span>
-                </div>
-                <div id="map"></div>
-                <div class="map-footer">
-                    <span>Scroll to zoom, drag to pan.</span>
-                    <a href="{{ url_for('upload') }}">Add new street</a>
-                </div>
-                <div id="topRatedBox">
-                    <div id="topRatedTitle">Top liked</div>
-                    <ul id="topRatedList"></ul>
-                </div>
-                <div id="recentBox">
-                    <div id="recentTitle">Recently added</div>
-                    <ul id="recentList"></ul>
-                </div>
-            </div>
-
-            <div class="viewer-panel">
-                <div class="viewer-header">
-                    <div class="viewer-header-main">
-                        <h2>Browse streets</h2>
-                        <p>Click any card or map pin to go into that street.</p>
-                    </div>
-                    <div class="viewer-meta">{{ streets|length }} total streets</div>
-                </div>
-
-                <div class="search-container">
-                    <span class="search-icon">🔍</span>
-                    <input id="homeSearchInput" type="search" placeholder="Search streets by name, city or country..." autocomplete="off">
-                    <div id="searchResultsCount" style="font-size: 11px; color: var(--text-muted); margin-top: 4px;"></div>
-                </div>
-
-                <div class="category-bar" id="categoryBar"></div>
-
-                <div class="grid loading" id="streetsGrid">
-                    {% for st in streets %}
-                    <div class="card" tabindex="0"
-                         data-id="{{ st._id }}"
-                         data-lat="{{ st.lat }}"
-                         data-lng="{{ st.lng }}"
-                         data-name="{{ st.name }}"
-                         data-city="{{ st.city }}"
-                         data-country="{{ st.country }}"
-                         data-mode="{{ st.mode if st.type == 'video' else '3d' }}"
-                         {% if st.category %}data-category="{{ st.category }}"{% endif %}
-                         data-href="{% if st.type == '3d' %}{{ url_for('world', street_id=st._id) }}{% elif st.mode == 'walk' %}{{ url_for('world_walk', street_id=st._id) }}{% elif st.mode == 'drive' %}{{ url_for('world_drive', street_id=st._id) }}{% elif st.mode == 'fly' %}{{ url_for('world_fly', street_id=st._id) }}{% elif st.mode == 'sit' %}{{ url_for('world_sit', street_id=st._id) }}{% else %}{{ url_for('world', street_id=st._id) }}{% endif %}">
-                        <div class="thumb">
-                            {% if st.type == 'video' and st.videos and st.videos[0].url %}
-                                {% set base = st.videos[0].url %}
-                                {% set thumb = base.replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_320') %}
-                                <img src="{{ thumb }}" alt="thumbnail" loading="lazy">
-                            {% else %}
-                                <img src="https://dummyimage.com/320x180/020617/64748b?text=3D+World" alt="3D World" loading="lazy">
-                            {% endif %}
-                        </div>
-                        <div class="card-info">
-                            <h4>{{ st.name }}</h4>
-                            <p>{{ st.city }}, {{ st.country }}{% if st.category %} • {{ st.category }}{% endif %}</p>
-                            <div class="card-meta-row">
-                                {% if st.type == '3d' %}
-                                    <span class="mode-pill">3D</span>
-                                {% else %}
-                                    <span class="mode-pill mode-{{ st.mode }}">{{ st.mode.capitalize() }}</span>
-                                {% endif %}
-                                <button type="button" class="like-btn" data-like-id="{{ st._id }}">
-                                    <span>❤️</span>
-                                    <span class="like-count">{{ st.likes or 0 }}</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
+  {% if streets and streets|length > 0 %}
+    <div class="grid" id="streetsGrid">
+      {% for st in streets %}
+        {% if st.videos and st.videos|length > 0 and st.videos[0].url %}
+          {% set thumb_url = st.videos[0].url|replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_400,c_fill,g_center') %}
+        {% else %}
+          {% set thumb_url = '/static/images/placeholder-street.jpg' %}
+        {% endif %}
+        <a href="{{ url_for('world', street_id=st._id) }}" class="card fade-in-up" style="animation-delay:{{ loop.index0 * 0.08 }}s">
+          <div class="thumb" style="background-image:url('{{ thumb_url }}')">
+            {% if thumb_url == '/static/images/placeholder-street.jpg' %}
+              <div class="thumb-placeholder">
+                <i class="fas fa-map-marked-alt"></i>
+              </div>
+            {% endif %}
+          </div>
+          <div class="card-body">
+            <h4>{{ st.name[:45] }}{% if st.name|length > 45 %}...{% endif %}</h4>
+            <span>
+              <i class="fas fa-map-marker-alt" style="color:var(--accent);margin-right:6px"></i>
+              {{ st.city or 'Unknown' }}, {{ st.country or 'Unknown' }}
+            </span>
+          </div>
+        </a>
+      {% endfor %}
     </div>
+    {% if streets|length > 12 %}
+      <div style="text-align:center; margin-top:40px">
+        <a href="{{ url_for('dashboard') }}" class="hero-cta" style="font-size:16px; padding:14px 32px">
+          <i class="fas fa-th-large"></i> View All Streets
+        </a>
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="empty-state">
+      <i class="fas fa-map"></i>
+      <h3>No streets available yet</h3>
+      <p>Be the first to upload and explore real streets around the world.</p>
+      <a href="{{ url_for('upload') }}" class="hero-cta" style="margin-top:32px; font-size:16px">
+        <i class="fas fa-upload"></i> Upload First Street
+      </a>
+    </div>
+  {% endif %}
+</section>
+</main>
 
-    <script src="{{ url_for('static', filename='js/maplibre-gl.js') }}"></script>
-    <script>
-        const MAPTILER_KEY = '{{ config.MAP_STYLE_URL.split("key=")[1].split("&")[0] if config.MAP_STYLE_URL else "PqdU3M5vnOQK0dDQnkIq" }}';
-        const STREETS = {{ streets|tojson|safe }};
+<!-- Footer -->
+<footer style="padding:40px max(16px, 6vw);text-align:center;color:var(--text-muted);border-top:1px solid var(--border);margin-top:60px">
+  <p>&copy; 2025 <span style="font-weight:900;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.5px;font-size:1.2em">ABTO</span><br>
+  <small>A Better Travel Observer</small></p>
+</footer>
 
-        const map = new maplibregl.Map({
-            container: 'map',
-            style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`,
-            center: [55.2708, 25.2048],
-            zoom: 2.5,
-            attributionControl: false
-        });
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // ✅ FIXED: Reliable preloader that ALWAYS hides
+  const preloader = document.getElementById('preloader');
+  
+  // Hide after 2 seconds OR when everything loads
+  const hidePreloader = () => {
+    preloader.style.opacity = '0';
+    preloader.style.transform = 'scale(0.9)';
+    setTimeout(() => {
+      preloader.style.display = 'none';
+    }, 300);
+  };
+  
+  // Method 1: Timeout (backup)
+  const timeoutId = setTimeout(hidePreloader, 2000);
+  
+  // Method 2: Check if content loaded (primary)
+  const checkContentLoaded = () => {
+    const streetsGrid = document.getElementById('streetsGrid');
+    const streetCount = document.getElementById('streetCount');
+    if (streetsGrid || streetCount) {
+      clearTimeout(timeoutId);
+      hidePreloader();
+    }
+  };
+  
+  // Check immediately and after short delay
+  setTimeout(checkContentLoaded, 500);
+  setTimeout(checkContentLoaded, 1000);
 
-        map.addControl(new maplibregl.NavigationControl({ position: 'top-right' }));
+  // Navbar scroll effect
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 50);
+  });
 
-        map.on('load', () => {
-            setTimeout(() => map.resize(), 200);
-            setTimeout(() => map.resize(), 800);
-        });
+  // Mobile menu toggle
+  const mobileToggle = document.getElementById('mobileToggle');
+  const navLinks = document.getElementById('navLinks');
+  
+  if (mobileToggle && navLinks) {
+    mobileToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+      mobileToggle.classList.toggle('open');
+      document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : '';
+    });
+  }
 
-        let markers = [];
-        function addMarkers() {
-            STREETS.forEach((st, index) => {
-                if (st.lat == null || st.lng == null) return;
+  // Close mobile menu on link click
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      navLinks.classList.remove('active');
+      mobileToggle.classList.remove('open');
+      document.body.style.overflow = '';
+    });
+  });
 
-                const marker = new maplibregl.Marker({ color: '#38bdf8' })
-                    .setLngLat([st.lng, st.lat])
-                    .addTo(map);
+  // Smooth scroll for hero CTA
+  const heroCta = document.querySelector('.hero-cta[href="#streets"]');
+  if (heroCta) {
+    heroCta.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('streets').scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    });
+  }
 
-                marker.getElement().style.filter = 'drop-shadow(0 0 6px rgba(56,189,248,0.8))';
-                marker.getElement().style.transition = 'all 0.2s ease';
+  // Street count formatting
+  const streetCount = document.getElementById('streetCount');
+  if (streetCount) {
+    const countMatch = streetCount.textContent.match(/(\d+)/);
+    if (countMatch) {
+      const count = parseInt(countMatch[1]);
+      streetCount.textContent = count.toLocaleString() + '+ Real Streets';
+    }
+  }
 
-                marker.getElement().addEventListener('click', () => {
-                    focusCardByIndex(index);
-                    openStreetByIndex(index);
-                });
+  // Intersection Observer for animations
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -100px 0px'
+  };
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, observerOptions);
 
-                markers.push(marker);
-            });
-        }
+  // Observe all animated elements
+  document.querySelectorAll('.card, .mode-card, .hero-badge, .hero h1, .hero p, .hero-cta').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(30px)';
+    el.style.transition = 'all .6s cubic-bezier(0.4, 0, 0.2, 1)';
+    observer.observe(el);
+  });
 
-        map.on('load', addMarkers);
+  // Prevent body scroll when mobile menu open
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('nav') && navLinks && navLinks.classList.contains('active')) {
+      navLinks.classList.remove('active');
+      mobileToggle.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  });
+});
+</script>
 
-        const topRatedList = document.getElementById('topRatedList');
-        const recentList = document.getElementById('recentList');
-
-        const sortedByLikes = [...STREETS]
-            .sort((a, b) => (b.likes || 0) - (a.likes || 0))
-            .slice(0, 5);
-
-        sortedByLikes.forEach((st, i) => {
-            const li = document.createElement('li');
-            li.className = 'top-rated-item';
-            li.innerHTML = `<span>${st.likes || 0}</span> ${st.name}`;
-            li.style.animationDelay = `${i * 0.05}s`;
-            li.addEventListener('click', () => focusCardById(st._id));
-            topRatedList.appendChild(li);
-        });
-
-        const sortedByTime = [...STREETS]
-            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-            .slice(0, 5);
-
-        sortedByTime.forEach((st, i) => {
-            const li = document.createElement('li');
-            li.className = 'recent-item';
-            li.textContent = `${st.name}, ${st.city}`;
-            li.style.animationDelay = `${i * 0.05}s`;
-            li.addEventListener('click', () => focusCardById(st._id));
-            recentList.appendChild(li);
-        });
-
-        function focusCardById(id) {
-            const card = document.querySelector(`.card[data-id="${id}"]`);
-            if (!card) return;
-
-            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            card.focus();
-            card.style.transform = 'scale(1.02)';
-            setTimeout(() => card.style.transform = '', 260);
-
-            const st = STREETS.find(s => s._id === id);
-            if (st && st.lat != null && st.lng != null) {
-                map.flyTo({
-                    center: [st.lng, st.lat],
-                    zoom: 13,
-                    duration: 1600,
-                    essential: true
-                });
-            }
-        }
-
-        function focusCardByIndex(i) {
-            const st = STREETS[i];
-            if (st) focusCardById(st._id);
-        }
-
-        function openStreetByIndex(i) {
-            const cardsNodeList = document.querySelectorAll('.card');
-            const card = cardsNodeList[i];
-            if (!card) return;
-
-            const href = card.dataset.href?.trim();
-            if (href) {
-                window.location.href = href;
-            }
-        }
-
-        document.querySelectorAll('.card').forEach((card, index) => {
-            card.style.animationDelay = `${index * 0.04}s`;
-
-            card.addEventListener('click', () => {
-                const href = card.dataset.href?.trim();
-                if (href) {
-                    card.style.transform = 'scale(0.97)';
-                    setTimeout(() => window.location.href = href, 120);
-                }
-            });
-
-            card.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    card.click();
-                }
-            });
-        });
-
-        document.getElementById('streetsGrid').classList.remove('loading');
-
-        document.querySelectorAll('.like-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                const id = btn.dataset.likeId;
-                if (!id) return;
-
-                btn.style.transform = 'scale(1.18)';
-                try {
-                    const res = await fetch(`/like/${id}`, {
-                        method: 'POST',
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                    });
-                    if (!res.ok) return;
-
-                    const data = await res.json();
-                    const span = btn.querySelector('.like-count');
-                    if (span && typeof data.likes === 'number') {
-                        span.textContent = data.likes;
-                    }
-                    btn.classList.add('liked');
-                } catch (err) {
-                    console.error('Like failed', err);
-                }
-                setTimeout(() => btn.style.transform = '', 140);
-            });
-        });
-
-        const searchInput = document.getElementById('homeSearchInput');
-        const cards = Array.from(document.querySelectorAll('#streetsGrid .card'));
-        const searchResultsCount = document.getElementById('searchResultsCount');
-        const categoryBar = document.getElementById('categoryBar');
-
-        let currentCategory = 'all';
-
-        if (categoryBar) {
-            const catSet = new Set();
-            STREETS.forEach(st => {
-                if (st.category) catSet.add(st.category);
-            });
-
-            function createChip(label, value, isActive = false) {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = `cat-chip ${isActive ? 'active' : ''}`;
-                btn.textContent = label;
-                btn.dataset.cat = value;
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentCategory = value;
-                    applyHomeFilter();
-                });
-                categoryBar.appendChild(btn);
-            }
-
-            createChip('All categories', 'all', true);
-            Array.from(catSet).sort().forEach(cat => createChip(cat, cat, false));
-        }
-
-        function applyHomeFilter() {
-            const q = searchInput?.value?.trim().toLowerCase();
-            let visibleCount = 0;
-
-            cards.forEach(card => {
-                const name = card.dataset.name?.toLowerCase();
-                const city = card.dataset.city?.toLowerCase();
-                const country = card.dataset.country?.toLowerCase();
-                const cardCat = card.dataset.category?.toLowerCase();
-
-                const matchesText = !q || name?.includes(q) || city?.includes(q) || country?.includes(q);
-                const matchesCategory = currentCategory === 'all' || currentCategory === cardCat;
-
-                const show = matchesText && matchesCategory;
-                if (show) {
-                    visibleCount++;
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-
-            if (searchResultsCount) {
-                searchResultsCount.textContent = q || currentCategory !== 'all'
-                    ? `${visibleCount} result${visibleCount !== 1 ? 's' : ''}`
-                    : '';
-            }
-        }
-
-        if (searchInput) {
-            searchInput.addEventListener('input', applyHomeFilter);
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.target.matches('#homeSearchInput')) return;
-
-            const visibleCards = cards.filter(c => c.style.display !== 'none');
-            if (!visibleCards.length) return;
-
-            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                e.preventDefault();
-                const focused = document.activeElement;
-                const currentIndex = visibleCards.indexOf(focused);
-                const nextIndex = e.key === 'ArrowDown'
-                    ? (currentIndex + 1) % visibleCards.length
-                    : (currentIndex - 1 + visibleCards.length) % visibleCards.length;
-                visibleCards[nextIndex]?.focus();
-            }
-        });
-
-        const heroSearch = document.getElementById('heroSearch');
-        const heroSearchBtn = document.getElementById('heroSearchBtn');
-
-        if (heroSearch) {
-            heroSearch.addEventListener('input', () => {
-                searchInput.value = heroSearch.value;
-                applyHomeFilter();
-            });
-        }
-
-        if (heroSearchBtn) {
-            heroSearchBtn.addEventListener('click', () => {
-                searchInput.value = heroSearch.value;
-                applyHomeFilter();
-            });
-        }
-
-        // Removed auto scroll on load to avoid mobile blinking
-        // document.getElementById('streetsGrid')
-        //   .scrollIntoView({ behavior: 'smooth', block: 'start' });
-    </script>
 </body>
 </html>
