@@ -5,7 +5,12 @@
 <title>ABTO - A Better Travel Observer</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="ABTO - A Better Travel Observer. Explore real streets worldwide with immersive walk, drive, and fly modes.">
-
+<!-- ✅ FAVICONS - ALL DEVICES -->
+<link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+<link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/fav.png') }}">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/fav.png') }}">
+<link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/fav.png') }}">
 <!-- Fonts & Icons -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -453,6 +458,50 @@ nav.scrolled {
 .mobile-menu-toggle.open .hamburger:nth-child(3) {
   transform: rotate(-45deg) translate(6px, -6px);
 }
+.logo {
+  display: flex; align-items: center; justify-content: center;
+  text-decoration: none; position: relative;
+  min-height: 56px; /* TALLER */
+}
+.logo-img {
+  width: clamp(60px, 8vw, 100px) !important;  /* BIGGER: 48→64px */
+  height: clamp(60px, 8vw, 200px) !important; /* BIGGER: 48→64px */
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 4px 16px rgba(93,94,255,0.5)); /* STRONGER GLOW */
+  transition: all 0.3s ease;
+}
+.logo:hover .logo-img {
+  filter: drop-shadow(0 6px 20px rgba(93,94,255,0.7));
+  transform: scale(1.1);
+}
+.logo:hover {transform:scale(1.05);}
+.logo::after {
+  content:'A Better Travel Observer';position:absolute;bottom:-28px;
+  left:50%;transform:translateX(-50%);font-size:11px;color:var(--text-muted);
+  font-weight:400;white-space:nowrap;opacity:0;transition:var(--ease);
+  pointer-events:none;
+}
+.logo:hover::after {opacity:1;bottom:-32px;}
+@media(max-width:768px) {
+  /* ... existing mobile styles ... */
+  
+  /* ✅ PERFECT BUTTON CENTERING */
+  .hero-cta {
+    justify-content: center !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    width: fit-content !important;
+    padding: 20px 40px !important;
+  }
+  
+  /* EXTRA MOBILE PERFECTION */
+  .hero-content {
+    align-items: center !important;
+    text-align: center !important;
+  }
+}
+
 </style>
 </head>
 
@@ -464,7 +513,15 @@ nav.scrolled {
 </div>
 
 <nav id="navbar">
-  <a href="{{ url_for('index') }}" class="logo">ABTO</a>
+
+
+<!-- WITH THIS -->
+<a href="{{ url_for('index') }}" class="logo">
+  <img src="{{ url_for('static', filename='img/logo.png') }}" 
+       alt="ABTO Logo" 
+       class="logo-img">
+</a>
+
   <div class="nav-links" id="navLinks">
     <a href="{{ url_for('index') }}" class="nav-link">Home</a>
     <a href="{{ url_for('upload') }}" class="nav-link">Upload</a>
