@@ -263,20 +263,50 @@ def index():
 # --------------------------------------------------------
 @app.route("/world")
 def world():
-    streets = list_with_str_id(streets_collection.find(published_not_deleted()))
-
-    center = {"lat": 25.2048, "lng": 55.2708}
-    if streets:
-        center = {"lat": streets[0]["lat"], "lng": streets[0]["lng"]}
-
     street_id = request.args.get("street_id")
-    selected_street = get_street_by_id(street_id)
-    if selected_street and (
-        selected_street.get("status") != "published"
-        or selected_street.get("deleted", False)
-    ):
+    streets = list_with_str_id(streets_collection.find(published_not_deleted()))
+    
+    center = {"lat": 25.2048, "lng": 55.2708}
+    
+    if street_id:
+        selected_street = get_street_by_id(street_id)
+        if selected_street and (
+            selected_street.get("status") != "published" 
+            or selected_street.get("deleted", False)
+        ):
+            selected_street = None
+    else:
         selected_street = None
-
+    
+    # ✅ CRITICAL FIX: Route to correct template based on street MODE
+    if selected_street:
+        mode = selected_street.get("mode", "walk")
+        template_map = {
+            "walk": "world.html",
+            "drive": "drive_world.html", 
+            "fly": "fly_world.html",
+            "sit": "sit_world.html"
+        }
+        template = template_map.get(mode, "world.html")
+        
+        # Filter streets by same mode for sidebar
+        mode_streets = list_with_str_id(
+            streets_collection.find(published_not_deleted({"mode": mode}))
+        )
+        
+        if streets:
+            center = {"lat": streets[0]["lat"], "lng": streets[0]["lng"]}
+            
+        return render_template(
+            template,
+            streets=mode_streets,  # Same mode streets
+            center=center,
+            selected_street=selected_street,
+            mode=mode,  # Pass mode to template
+            map_style_url=MAP_STYLE_URL,
+        )
+    
+    # No street selected - default to walk
     return render_template(
         "world.html",
         streets=streets,
@@ -284,6 +314,7 @@ def world():
         selected_street=selected_street,
         map_style_url=MAP_STYLE_URL,
     )
+
 
 # --------------------------------------------------------
 # WALK world
@@ -876,6 +907,4 @@ def like_street(street_id):
 # --------------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
-    app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
-
 
