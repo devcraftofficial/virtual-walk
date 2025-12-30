@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Virtual Street Walk – Avatar Demo</title>
+  <title>Virtual Street Walk – Avatar Demo | ABTO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- MODEL-VIEWER -->
@@ -468,6 +468,36 @@
         bottom: 200px;
       }
     }
+
+    /* Brand pill: ABTO */
+    .brand-pill {
+      position: absolute;
+      left: 16px;
+      bottom: 22px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.92);
+      border: 1px solid rgba(148,163,184,0.55);
+      box-shadow: 0 14px 30px rgba(0,0,0,0.85);
+      font-size: 11px;
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 60;
+      backdrop-filter: blur(10px);
+    }
+    .brand-pill span.abto-tag {
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(56,189,248,0.18);
+      border: 1px solid rgba(56,189,248,0.7);
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      font-size: 10px;
+      color: #7dd3fc;
+    }
   </style>
 </head>
 
@@ -493,6 +523,12 @@
       <div class="street-info">
         <h2 id="streetName">Select a Street</h2>
         <p id="streetLocation">Waiting…</p>
+      </div>
+
+      <!-- Brand pill -->
+      <div class="brand-pill">
+        <span class="abto-tag">ABTO</span>
+        <span>A Better Travel Observer</span>
       </div>
 
       <button id="settingsBtn" aria-label="Settings">⚙</button>
@@ -627,8 +663,19 @@
     let isVideoLoading = false;
     let markerEls = [];
 
-    const STREETS = JSON.parse(document.getElementById("streets-data").textContent);
-    const SELECTED = JSON.parse(document.getElementById("selected-street-data").textContent);
+    // Safer JSON parsing
+    let STREETS = [];
+    let SELECTED = null;
+    try {
+      const streetsRaw = document.getElementById("streets-data").textContent || "[]";
+      const selectedRaw = document.getElementById("selected-street-data").textContent || "null";
+      STREETS = JSON.parse(streetsRaw);
+      SELECTED = JSON.parse(selectedRaw);
+    } catch (err) {
+      console.error("Failed to parse street data", err);
+      STREETS = [];
+      SELECTED = null;
+    }
 
     const video = document.getElementById("streetVideo");
     const vsrc = document.getElementById("videoSource");
@@ -658,6 +705,8 @@
     const startHint = document.getElementById("startHint");
     const startHintSkip = document.getElementById("startHintSkip");
     const autoWalkBtn = document.getElementById("autoWalkBtn");
+
+    const fullMapOverlay = document.getElementById("fullMapOverlay");
 
     let hasStartedWalking = false;
 
@@ -842,7 +891,10 @@
       const locEl = document.getElementById("streetLocation");
 
       nameEl.textContent = street.name || "Untitled Street";
-      locEl.textContent = (street.city || "") + (street.city && street.country ? ", " : "") + (street.country || "");
+      locEl.textContent =
+        (street.city || "") +
+        (street.city && street.country ? ", " : "") +
+        (street.country || "");
 
       currentVideos = buildVideoList(street);
 
@@ -872,6 +924,13 @@
         if (isFirstStreetLoad) {
           videoLoading.style.display = "none";
           isFirstStreetLoad = false;
+        }
+
+        // If we were already walking/reversing, resume automatically
+        if (currentDir === 1) {
+          playForward();
+        } else if (currentDir === -1) {
+          playReverse();
         }
       };
 
@@ -956,13 +1015,16 @@
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        Math.cos(lat1 * Math.PI / 180) *
+        Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
       return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
     function nearestStreetIndex() {
       const base = STREETS[currentIndex];
-      if (!base) return -1;
+      if (!base || STREETS.length < 2) return -1;
+
       let best = -1;
       let bestDist = Infinity;
       const baseLat = parseFloat(base.lat);
@@ -977,9 +1039,9 @@
         }
       });
 
-      if (bestDist > 0.8) {
-        DEBUG && console.log("No nearby street within 0.8km, bestDist=", bestDist);
-        return -1;
+      // If nothing "near", fall back to next street in list
+      if (best === -1 || !Number.isFinite(bestDist) || bestDist > 0.8) {
+        return (currentIndex + 1) % STREETS.length;
       }
 
       return best;
@@ -1030,8 +1092,9 @@
         return requestAnimationFrame(tick);
       }
 
+      // Smooth yaw + correct axis (Z-axis like your old version)
       yawCurrent += (yawTarget - yawCurrent) * 0.18;
-      avatar.orientation = "0deg 0deg " + yawCurrent + "deg";
+      avatar.orientation = `0deg 0deg ${yawCurrent}deg`;
 
       motionMomentum *= 0.92;
       if (motionMomentum < 0.02) motionMomentum = 0;
@@ -1055,7 +1118,9 @@
       const swayY = Math.cos(Date.now() * 0.0015) * 1.5;
       const walkIntensity = Math.abs(currentDir) > 0 ? motionMomentum : 0.3;
 
-      video.style.transform = `translate(${strafeOffset * 0.25 + swayX * walkIntensity}px, ${headBob * 1.4 + swayY * walkIntensity}px) scale(1.02)`;
+      video.style.transform =
+        `translate(${strafeOffset * 0.25 + swayX * walkIntensity}px, ` +
+        `${headBob * 1.4 + swayY * walkIntensity}px) scale(1.02)`;
       avatar.style.transform = `translate(calc(-50% + ${strafeOffset}px), -15px)`;
 
       const shadowScale = 1 + Math.abs(headBob) * 0.04;
@@ -1080,11 +1145,35 @@
     window.addEventListener("pointerdown", unlockAudio, { once: true });
     window.addEventListener("keydown", unlockAudio, { once: true });
 
+    function cancelAutoWalkIfUserMoves() {
+      if (!autoWalkEnabled) return;
+      setAutoWalk(false);
+    }
+
     window.addEventListener("keydown", e => {
-      const k = e.key.toLowerCase();
-      if (k === "arrowleft" || k === "a") yawTarget -= 10;
-      else if (k === "arrowright" || k === "d") yawTarget += 10;
-      else if (k === "arrowup" || k === "w") {
+      const key = e.key;
+
+      // ESC closes overlays & settings
+      if (key === "Escape") {
+        if (fullMapOverlay && fullMapOverlay.style.display === "flex") {
+          fullMapOverlay.style.display = "none";
+        }
+        if (settingsPanel.classList.contains("open")) {
+          settingsPanel.classList.remove("open");
+        }
+        return;
+      }
+
+      const k = key.toLowerCase();
+
+      if (k === "arrowleft" || k === "a") {
+        cancelAutoWalkIfUserMoves();
+        yawTarget -= 10;
+      } else if (k === "arrowright" || k === "d") {
+        cancelAutoWalkIfUserMoves();
+        yawTarget += 10;
+      } else if (k === "arrowup" || k === "w") {
+        cancelAutoWalkIfUserMoves();
         const wasStopped = currentDir === 0;
         currentDir = 1;
         playForward();
@@ -1092,12 +1181,18 @@
         updateFootsteps();
         if (wasStopped) onWalkStart();
       } else if (k === "arrowdown" || k === "s") {
+        cancelAutoWalkIfUserMoves();
         currentDir = -1;
         playReverse();
         setAvatarState();
         updateFootsteps();
-      } else if (k === "q") strafe = -1;
-      else if (k === "e") strafe = 1;
+      } else if (k === "q") {
+        cancelAutoWalkIfUserMoves();
+        strafe = -1;
+      } else if (k === "e") {
+        cancelAutoWalkIfUserMoves();
+        strafe = 1;
+      }
     });
 
     window.addEventListener("keyup", e => {
@@ -1123,6 +1218,8 @@
     });
 
     function joyMove(ev) {
+      cancelAutoWalkIfUserMoves(); // manual override cancels auto-walk
+
       const rect = joystickBase.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
@@ -1211,9 +1308,19 @@
     }
 
     settingsBtn.addEventListener("click", () => settingsPanel.classList.toggle("open"));
+
+    // Close settings when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!settingsPanel.classList.contains("open")) return;
+      if (settingsPanel.contains(e.target) || e.target === settingsBtn) return;
+      settingsPanel.classList.remove("open");
+    });
+
     setVideoMuted.addEventListener("change", () => video.muted = setVideoMuted.checked);
     setVideoSlow.addEventListener("change", () => {
-      if (!video.paused && !reversePlaying) video.playbackRate = setVideoSlow.checked ? 0.5 : 1;
+      if (!video.paused && !reversePlaying) {
+        video.playbackRate = setVideoSlow.checked ? 0.5 : 1;
+      }
     });
 
     function applyAvatarVisibility() {
@@ -1283,8 +1390,8 @@
           updateMapMarkerHighlight();
           const coords = marker.getLngLat();
           fullMap.flyTo({ center: [coords.lng, coords.lat], zoom: 13, speed: 0.9 });
-          marker.togglePopup();
-          document.getElementById("fullMapOverlay").style.display = "none";
+          popup.addTo(fullMap);
+          fullMapOverlay.style.display = "none";
         });
       });
 
@@ -1296,11 +1403,11 @@
     }
 
     document.getElementById("miniMap").onclick = () => {
-      document.getElementById("fullMapOverlay").style.display = "flex";
+      fullMapOverlay.style.display = "flex";
       loadMap();
     };
     document.getElementById("closeMapBtn").onclick = () => {
-      document.getElementById("fullMapOverlay").style.display = "none";
+      fullMapOverlay.style.display = "none";
     };
 
     const popupCard = document.getElementById("streetPopup");
