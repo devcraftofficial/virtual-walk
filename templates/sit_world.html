@@ -5,10 +5,9 @@
   <title>Sit Mode – Virtual Street Sit</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- MAPLIBRE for maps -->
+  <!-- MAPLIBRE -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/maplibre-gl.css') }}">
-<script src="{{ url_for('static', filename='js/maplibre-gl.js') }}"></script>
-
+  <script src="{{ url_for('static', filename='js/maplibre-gl.js') }}"></script>
 
   <style>
     :root {
@@ -16,9 +15,13 @@
       --text-main: #e5e7eb;
       --text-muted: #9ca3af;
       --accent: #f97316;
+      --accent-soft: rgba(249,115,22,0.14);
+      --accent-strong: #ea580c;
       --radius-lg: 18px;
     }
+
     *, *::before, *::after { box-sizing: border-box; }
+
     body {
       margin: 0;
       background: radial-gradient(circle at top, #020617, #000 80%);
@@ -26,6 +29,7 @@
       color: var(--text-main);
       overflow: hidden;
     }
+
     .viewer-panel {
       position: relative;
       width: 100%;
@@ -34,6 +38,7 @@
       justify-content: center;
       align-items: center;
     }
+
     .viewer-canvas {
       position: relative;
       width: 100%;
@@ -41,6 +46,77 @@
       background: black;
       overflow: hidden;
     }
+
+    /* ---------- Mode header (brand + location) ---------- */
+    .mode-header {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      z-index: 60;
+      pointer-events: none;
+    }
+
+    .mode-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #020617ee, #111827ee);
+      border: 1px solid rgba(148,163,184,0.6);
+      box-shadow: 0 14px 32px rgba(0,0,0,0.9);
+      pointer-events: auto;
+    }
+
+    .mode-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #fee2e2, #fecaca 40%, #991b1b 100%);
+      border: 2px solid rgba(15,23,42,0.9);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.8);
+    }
+
+    .mode-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: #e5e7eb;
+      opacity: 0.9;
+    }
+
+    .mode-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: #0b1120;
+      box-shadow: 0 10px 26px rgba(248, 113, 22, 0.55);
+    }
+
+    .mode-location {
+      margin-top: 3px;
+      padding: 4px 10px;
+      font-size: 11px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.8);
+      border: 1px solid rgba(148,163,184,0.5);
+      color: #e5e7eb;
+      max-width: 260px;
+      text-align: center;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      pointer-events: auto;
+    }
+
+    /* ---------- Mini map + full map ---------- */
     .mini-map {
       position: absolute;
       top: 16px;
@@ -56,6 +132,7 @@
       cursor: pointer;
     }
     .mini-map canvas { border-radius: 999px; }
+
     #fullMapOverlay {
       position: fixed;
       inset: 0;
@@ -91,17 +168,19 @@
       backdrop-filter: blur(4px);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
     }
+
+    /* ---------- Street info (bottom-left) ---------- */
     .street-info {
       position: absolute;
-      top: 20px;
-      right: 16px;
-      padding: 8px 14px;
-      background: rgba(15, 23, 42, 0.7);
+      bottom: 24px;
+      left: 16px;
+      padding: 10px 14px;
+      background: rgba(15, 23, 42, 0.78);
       border: 1px solid rgba(148, 163, 184, 0.4);
-      border-radius: 14px;
+      border-radius: 16px;
       backdrop-filter: blur(10px);
       z-index: 50;
-      max-width: 220px;
+      max-width: 260px;
       user-select: none;
     }
     .street-info h2 {
@@ -110,11 +189,23 @@
       line-height: 1.2;
     }
     .street-info p {
-      margin: 3px 0 0;
+      margin: 4px 0 0;
       font-size: 12px;
       color: #cbd5e1;
-      line-height: 1.2;
+      line-height: 1.3;
     }
+    .street-info .category-pill {
+      margin-top: 6px;
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(248, 250, 252, 0.12);
+      color: #fed7aa;
+      display: inline-block;
+    }
+
+    /* ---------- Video + fade + subtle parallax ---------- */
     #streetVideo {
       position: absolute;
       inset: 0;
@@ -123,11 +214,11 @@
       object-fit: cover;
       pointer-events: none;
       z-index: 1;
-      transition: transform 0.15s ease-out;
+      transition: transform 0.18s ease-out;
       user-select: none;
       -webkit-user-select: none;
       will-change: transform;
-      transform: translateZ(0);
+      transform: translate3d(0,0,0);
       backface-visibility: hidden;
     }
     #fadeLayer {
@@ -136,10 +227,11 @@
       background: black;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.7s;
+      transition: opacity 0.35s;
       z-index: 110;
       user-select: none;
     }
+
     @media (max-width: 900px) {
       .mini-map {
         width: 80px !important;
@@ -148,11 +240,27 @@
         left: 14px !important;
       }
     }
+
+    @media (max-width: 480px) {
+      .street-info {
+        left: 12px;
+        right: 12px;
+        max-width: none;
+        bottom: 18px;
+      }
+      .mode-header {
+        top: 10px;
+      }
+      .mode-location {
+        max-width: 200px;
+      }
+    }
   </style>
 </head>
 
 <body>
 
+<!-- Full map overlay -->
 <div id="fullMapOverlay" role="dialog" aria-modal="true" aria-label="Full map view">
   <div id="fullMapContainer" tabindex="0" aria-live="polite"></div>
   <button id="closeMapBtn" aria-label="Close full map">✕</button>
@@ -161,13 +269,27 @@
 <div class="viewer-panel" role="main" aria-live="polite">
   <div class="viewer-canvas" id="viewerCanvas">
 
-    <div id="miniMap" class="mini-map" aria-label="Mini map preview" role="button" tabindex="0"></div>
-
-    <div class="street-info" aria-live="polite" aria-atomic="true">
-      <h2 id="streetName">Select a Sit Spot</h2>
-      <p id="streetLocation">Waiting…</p>
+    <!-- Mode header -->
+    <div class="mode-header">
+      <div class="mode-pill">
+        <div class="mode-dot"></div>
+        <div class="mode-label">ABTO · Virtual Street Walk</div>
+        <div class="mode-tag">SIT MODE</div>
+      </div>
+      <div class="mode-location" id="topLocationPill">Pick a seat to begin</div>
     </div>
 
+    <!-- Mini map -->
+    <div id="miniMap" class="mini-map" aria-label="Mini map preview" role="button" tabindex="0"></div>
+
+    <!-- Street info -->
+    <div class="street-info" aria-live="polite" aria-atomic="true">
+      <h2 id="streetName">Select a Sit Spot</h2>
+      <p id="streetLocation">Waiting for a view…</p>
+      <span class="category-pill" id="categoryLabel">Ambient view</span>
+    </div>
+
+    <!-- Sit video -->
     <video
       id="streetVideo"
       preload="auto"
@@ -180,9 +302,11 @@
     </video>
 
     <div id="fadeLayer" aria-hidden="true"></div>
+
   </div>
 </div>
 
+<!-- Streets data from Flask -->
 <script id="streets-data" type="application/json">
   {{ streets | tojson | safe }}
 </script>
@@ -191,6 +315,9 @@
 </script>
 
 <script type="module">
+  const MAP_STYLE_URL = "{{ map_style_url or '' }}";
+  const BASE_MAP_STYLE = MAP_STYLE_URL || "https://demotiles.maplibre.org/style.json";
+
   const STREETS = JSON.parse(
     document.getElementById('streets-data').textContent
   );
@@ -204,7 +331,7 @@
   function initMiniMap() {
     miniMap = new maplibregl.Map({
       container: "miniMap",
-      style: "https://demotiles.maplibre.org/style.json",
+      style: BASE_MAP_STYLE,
       center: [0, 20],
       zoom: 1.5,
       interactive: false,
@@ -217,7 +344,7 @@
 
     fullMap = new maplibregl.Map({
       container: "fullMapContainer",
-      style: "https://demotiles.maplibre.org/style.json",
+      style: BASE_MAP_STYLE,
       center: [0, 20],
       zoom: 2.5,
     });
@@ -263,7 +390,6 @@
     fullMapOverlay.style.display = "flex";
     ensureFullMap();
   }
-
   function hideFullMap() {
     fullMapOverlay.style.display = "none";
   }
@@ -279,6 +405,11 @@
   const video = document.getElementById("streetVideo");
   const vsrc = document.getElementById("videoSource");
   const fadeLayer = document.getElementById("fadeLayer");
+  const streetNameEl = document.getElementById("streetName");
+  const streetLocationEl = document.getElementById("streetLocation");
+  const topLocationEl = document.getElementById("topLocationPill");
+  const categoryEl = document.getElementById("categoryLabel");
+  const viewerCanvas = document.getElementById("viewerCanvas");
 
   let currentStreetIndex = -1;
   let currentVideos = [];
@@ -288,19 +419,28 @@
     if (!video || !video.paused) return;
     video.play().catch(() => {});
   }
+
   function safePause() {
     if (!video || video.paused) return;
     video.pause();
   }
 
-  function loadStreet(street) {
-    document.getElementById("streetName").textContent = street.name || "Sit Spot";
-    document.getElementById("streetLocation").textContent =
-      `${street.city || ""}${street.city && street.country ? ", " : ""}${street.country || ""}`;
+  function doLoadStreet(street) {
+    const name = street.name || "Sit Spot";
+    const city = street.city || "";
+    const country = street.country || "";
+    const category = street.category || "Ambient view";
+
+    const locationText = `${city}${city && country ? ", " : ""}${country}`;
+
+    streetNameEl.textContent = name;
+    streetLocationEl.textContent = locationText || "Somewhere in the world";
+    if (topLocationEl) topLocationEl.textContent = locationText || "Pick a seat to begin";
+    if (categoryEl) categoryEl.textContent = category;
 
     currentVideos = [];
     currentVideoIndex = 0;
-    if (street.videos && Array.isArray(street.videos) && street.videos.length > 0) {
+    if (Array.isArray(street.videos) && street.videos.length > 0) {
       currentVideos = street.videos.map(v => v.url).filter(Boolean);
     }
 
@@ -308,9 +448,18 @@
     if (vsrc) vsrc.src = videoUrl;
     video.load();
     video.currentTime = 0;
-    safePlay(); // auto-play once when sitting
+    safePlay();
 
     updateMiniMapForStreet(street);
+  }
+
+  function loadStreet(street) {
+    if (!street) return;
+    fadeLayer.style.opacity = 1;
+    setTimeout(() => {
+      doLoadStreet(street);
+      fadeLayer.style.opacity = 0;
+    }, 220);
   }
 
   function loadStreetByIndex(index) {
@@ -319,19 +468,39 @@
     loadStreet(STREETS[index]);
   }
 
+  // Always loop gently between all videos for that sit spot
   video.addEventListener("ended", () => {
-    if (currentVideos.length > 1 && currentVideoIndex < currentVideos.length - 1) {
-      currentVideoIndex += 1;
+    if (currentVideos.length > 0) {
+      currentVideoIndex = (currentVideoIndex + 1) % currentVideos.length;
       const nextUrl = currentVideos[currentVideoIndex];
       if (vsrc) vsrc.src = nextUrl;
       video.load();
       video.currentTime = 0;
       safePlay();
-      return;
+    } else {
+      // single video with no list: just loop
+      video.currentTime = 0;
+      safePlay();
     }
-    safePause();
   });
 
+  // subtle parallax
+  if (viewerCanvas && video) {
+    const maxShift = 10;
+    viewerCanvas.addEventListener("pointermove", (e) => {
+      const rect = viewerCanvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      const tx = -x * maxShift;
+      const ty = -y * maxShift;
+      video.style.transform = `translate(${tx}px, ${ty}px) scale(1.03)`;
+    });
+    viewerCanvas.addEventListener("pointerleave", () => {
+      video.style.transform = "translate(0,0) scale(1)";
+    });
+  }
+
+  // Initial street selection
   if (SELECTED_STREET) {
     const idx = STREETS.findIndex(s => s._id === SELECTED_STREET._id);
     if (idx !== -1) {
