@@ -14,6 +14,7 @@ from flask import (
     flash,
     current_app,
     session,
+    abort,
 )
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -105,6 +106,7 @@ db = client["streetwalk"]
 streets_collection = db["streets"]
 users_collection = db["users"]
 reset_tokens = db["password_resets"]
+activity_logs = db["activity_logs"]
 
 # --------------------------------------------------------
 # MongoDB Indexes
@@ -113,10 +115,13 @@ streets_collection.create_index([("type", 1), ("mode", 1)])
 streets_collection.create_index([("createdAt", -1)])
 streets_collection.create_index([("likes", -1)])
 streets_collection.create_index([("lat", 1), ("lng", 1)])
+streets_collection.create_index([("ownerId", 1), ("deleted", 1)])
 
 users_collection.create_index("email", unique=True)
 users_collection.create_index("googleId", unique=True, sparse=True)
 reset_tokens.create_index("expiresAt", expireAfterSeconds=0)
+
+activity_logs.create_index([("userId", 1), ("timestamp", -1)])
 
 # --------------------------------------------------------
 # Helpers
@@ -124,10 +129,12 @@ reset_tokens.create_index("expiresAt", expireAfterSeconds=0)
 MAX_VIDEO_SIZE = 100 * 1024 * 1024  # 100MB
 MAX_GLB_SIZE = 50 * 1024 * 1024     # 50MB
 
+
 def clean_text(value, max_len=200):
     if not value:
         return None
     return value.strip()[:max_len]
+
 
 def upload_glb_supabase(file):
     filename = f"models/{uuid.uuid4()}.glb"
@@ -151,6 +158,7 @@ def upload_glb_supabase(file):
         logger.error("Supabase upload failed: %s", res.text)
         raise Exception(f"Supabase Upload Failed: {res.text}")
 
+
 def upload_video_cloudinary(file):
     try:
         upload = cloudinary.uploader.upload(
@@ -163,6 +171,7 @@ def upload_video_cloudinary(file):
     except Exception:
         logger.error("Cloudinary video upload failed", exc_info=True)
         raise
+
 
 def get_street_by_id(street_id):
     if not street_id:
@@ -180,17 +189,20 @@ def get_street_by_id(street_id):
     doc["_id"] = str(doc["_id"])
     return doc
 
+
 def list_with_str_id(cursor):
     items = list(cursor)
     for s in items:
         s["_id"] = str(s["_id"])
     return items
 
+
 def published_not_deleted(extra=None):
     base = {"status": "published", "deleted": False}
     if extra:
         base.update(extra)
     return base
+
 
 def distinct_categories_for_mode(mode: str):
     cats = streets_collection.distinct(
@@ -200,12 +212,14 @@ def distinct_categories_for_mode(mode: str):
     cats = [c for c in cats if c]
     return sorted(cats)
 
+
 def format_date(dt):
     if not dt:
         return ""
     if isinstance(dt, datetime):
         return dt.astimezone(timezone.utc).strftime("%d %b %Y")
     return ""
+
 
 def current_user():
     uid = session.get("user_id")
@@ -220,6 +234,7 @@ def current_user():
     except InvalidId:
         return None
 
+
 @app.context_processor
 def inject_current_user():
     return {"current_user": current_user()}
@@ -231,19 +246,20 @@ def inject_current_user():
 def protect_protected_routes():
     # Allow public routes and static/auth
     public_endpoints = (
-        None, "static", "index", "world", "world_walk", "world_drive", 
+        None, "static", "index", "world", "world_walk", "world_drive",
         "world_fly", "world_sit", "walk", "drive", "fly", "sit",
         "login", "signup", "forgot_password", "reset_password",
         "login_google", "auth_google_callback", "make_admin", "logout"
     )
-    
+
     if request.endpoint in public_endpoints:
         return
 
-    # Protect upload and dashboard
+    # Protect upload and dashboard (my content)
     if request.endpoint in ("upload", "dashboard") and not session.get("user_id"):
         session["next"] = request.path
         return redirect(url_for("login"))
+
 
 @app.route("/make-admin")
 def make_admin():
@@ -265,38 +281,38 @@ def index():
 def world():
     street_id = request.args.get("street_id")
     streets = list_with_str_id(streets_collection.find(published_not_deleted()))
-    
+
     center = {"lat": 25.2048, "lng": 55.2708}
-    
+
     if street_id:
         selected_street = get_street_by_id(street_id)
         if selected_street and (
-            selected_street.get("status") != "published" 
+            selected_street.get("status") != "published"
             or selected_street.get("deleted", False)
         ):
             selected_street = None
     else:
         selected_street = None
-    
-    # ✅ CRITICAL FIX: Route to correct template based on street MODE
+
+    # ✅ Route to correct template based on street MODE
     if selected_street:
         mode = selected_street.get("mode", "walk")
         template_map = {
             "walk": "world.html",
-            "drive": "drive_world.html", 
+            "drive": "drive_world.html",
             "fly": "fly_world.html",
-            "sit": "sit_world.html"
+            "sit": "sit_world.html",
         }
         template = template_map.get(mode, "world.html")
-        
+
         # Filter streets by same mode for sidebar
         mode_streets = list_with_str_id(
             streets_collection.find(published_not_deleted({"mode": mode}))
         )
-        
+
         if streets:
             center = {"lat": streets[0]["lat"], "lng": streets[0]["lng"]}
-            
+
         return render_template(
             template,
             streets=mode_streets,  # Same mode streets
@@ -305,7 +321,7 @@ def world():
             mode=mode,  # Pass mode to template
             map_style_url=MAP_STYLE_URL,
         )
-    
+
     # No street selected - default to walk
     return render_template(
         "world.html",
@@ -377,6 +393,7 @@ def signup():
             "passwordHash": generate_password_hash(password),
             "createdAt": datetime.utcnow(),
             "lastLoginAt": None,
+            "role": "user",
         })
         flash("Account created. Please log in.", "success")
         return redirect(url_for("login"))
@@ -384,7 +401,7 @@ def signup():
     return render_template("signup.html")
 
 # --------------------------------------------------------
-# Email/password Login - FIXED ✅
+# Email/password Login
 # --------------------------------------------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -407,10 +424,11 @@ def login():
         )
 
         session["user_id"] = str(user["_id"])
-        session["user_name"] = user.get("name", user.get("email", "User"))  # ✅ Store user name
-        session["is_admin"] = True
+        session["user_name"] = user.get("name", user.get("email", "User"))
+        # keep your admin flag behaviour for now (you can tighten later)
+        session["is_admin"] = session.get("is_admin", False)
 
-        next_url = session.pop("next", None) or url_for("index")  # ✅ Always to index
+        next_url = session.pop("next", None) or url_for("index")
         return redirect(next_url)
 
     return render_template("login.html")
@@ -425,7 +443,7 @@ def logout():
     return redirect(url_for("index"))
 
 # --------------------------------------------------------
-# Google Login - FIXED ✅
+# Google Login
 # --------------------------------------------------------
 @app.route("/login/google")
 def login_google():
@@ -438,6 +456,7 @@ def login_google():
 
     redirect_uri = url_for("auth_google_callback", _external=True)
     return oauth.google.authorize_redirect(redirect_uri)
+
 
 @app.route("/auth/google/callback")
 def auth_google_callback():
@@ -483,13 +502,14 @@ def auth_google_callback():
                 "name": name,
                 "createdAt": now,
                 "lastLoginAt": now,
+                "role": "user",
             }
         )
         user = users_collection.find_one({"googleId": google_id})
 
     session["user_id"] = str(user["_id"])
     session["user_name"] = user.get("name", user.get("email", "User"))
-    session["is_admin"] = True
+    session["is_admin"] = session.get("is_admin", False)
     session["google_user"] = {
         "id": google_id,
         "email": email,
@@ -519,6 +539,7 @@ def forgot_password():
         flash("If that email exists, a reset link has been sent.", "info")
         return redirect(url_for("login"))
     return render_template("forgot_password.html")
+
 
 @app.route("/reset-password/<token>", methods=["GET", "POST"])
 def reset_password(token):
@@ -659,6 +680,7 @@ def walk():
         active_category=category or "all",
     )
 
+
 @app.route("/drive")
 def drive():
     category = request.args.get("category", "").strip() or None
@@ -677,6 +699,7 @@ def drive():
         active_category=category or "all",
     )
 
+
 @app.route("/fly")
 def fly():
     category = request.args.get("category", "").strip() or None
@@ -694,6 +717,7 @@ def fly():
         categories=categories,
         active_category=category or "all",
     )
+
 
 @app.route("/sit")
 def sit():
@@ -714,10 +738,17 @@ def sit():
     )
 
 # --------------------------------------------------------
-# Upload Route
+# Upload Route (CREATE with ownerId)
 # --------------------------------------------------------
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
+    user = current_user()
+    if not user:
+        session["next"] = request.path
+        return redirect(url_for("login"))
+
+    owner_oid = ObjectId(user["_id"])
+
     if request.method == "POST":
         street_type = request.form.get("street_type")
 
@@ -776,6 +807,7 @@ def upload():
                 return redirect(url_for("upload"))
 
             street_doc = {
+                "ownerId": owner_oid,
                 "type": "video",
                 "mode": mode,
                 "category": category,
@@ -788,6 +820,7 @@ def upload():
                 "videos": [{"url": url, "title": f"Part {i + 1}"} for i, url in enumerate(video_urls)],
                 "likes": 0,
                 "createdAt": datetime.utcnow(),
+                "updatedAt": datetime.utcnow(),
                 "status": "published",
                 "deleted": False,
             }
@@ -819,6 +852,7 @@ def upload():
                 return redirect(url_for("upload"))
 
             street_doc = {
+                "ownerId": owner_oid,
                 "type": "3d",
                 "name": name,
                 "city": city,
@@ -829,6 +863,7 @@ def upload():
                 "glbUrl": glb_url,
                 "likes": 0,
                 "createdAt": datetime.utcnow(),
+                "updatedAt": datetime.utcnow(),
                 "status": "published",
                 "deleted": False,
             }
@@ -839,16 +874,27 @@ def upload():
 
         streets_collection.insert_one(street_doc)
         flash("Street added successfully!", "success")
-        return redirect(url_for("index"))
+        return redirect(url_for("dashboard"))
 
     return render_template("upload.html")
 
 # --------------------------------------------------------
-# Dashboard Page
+# Dashboard Page (READ only your streets by default)
 # --------------------------------------------------------
 @app.route("/dashboard")
 def dashboard():
-    streets = list_with_str_id(streets_collection.find())
+    user = current_user()
+    if not user:
+        session["next"] = request.path
+        return redirect(url_for("login"))
+
+    query = {"deleted": False}
+
+    # If not admin, show only this user's streets
+    if not session.get("is_admin"):
+        query["ownerId"] = ObjectId(user["_id"])
+
+    streets = list_with_str_id(streets_collection.find(query))
 
     for s in streets:
         s["createdAtFmt"] = format_date(s.get("createdAt"))
@@ -866,6 +912,14 @@ def dashboard():
         reverse=True,
     )[:8]
 
+    # User info for dashboard header
+    user_info = {
+        "name": user.get("name") or user.get("email", "User"),
+        "email": user.get("email", ""),
+        "createdAtFmt": format_date(user.get("createdAt")),
+        "lastLoginFmt": format_date(user.get("lastLoginAt")),
+    }
+
     return render_template(
         "dash.html",
         streets=streets,
@@ -877,7 +931,122 @@ def dashboard():
         sit_count=sit_count,
         recent_streets=recent_streets,
         map_style_url=MAP_STYLE_URL,
+        user_info=user_info,
     )
+
+# --------------------------------------------------------
+# Edit Street (UPDATE – only owner or admin)
+# --------------------------------------------------------
+@app.route("/street/<street_id>/edit", methods=["GET", "POST"])
+def edit_street(street_id):
+    user = current_user()
+    if not user:
+        session["next"] = request.path
+        return redirect(url_for("login"))
+
+    try:
+        oid = ObjectId(street_id)
+    except InvalidId:
+        abort(404)
+
+    query = {"_id": oid, "deleted": False}
+    if not session.get("is_admin"):
+        query["ownerId"] = ObjectId(user["_id"])
+
+    street = streets_collection.find_one(query)
+    if not street:
+        abort(404)
+
+    if request.method == "POST":
+        updated_fields = {
+            "name": clean_text(request.form.get("name"), 100),
+            "city": clean_text(request.form.get("city"), 50),
+            "country": clean_text(request.form.get("country"), 50),
+            "category": clean_text(request.form.get("category"), 80),
+            "description": clean_text(request.form.get("description"), 500),
+        }
+
+        try:
+            lat = float(request.form.get("lat"))
+            lng = float(request.form.get("lng"))
+            if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+                raise ValueError
+            updated_fields["lat"] = lat
+            updated_fields["lng"] = lng
+        except Exception:
+            flash("Invalid latitude/longitude", "error")
+            return redirect(url_for("edit_street", street_id=street_id))
+
+        updated_fields["updatedAt"] = datetime.utcnow()
+        streets_collection.update_one({"_id": oid}, {"$set": updated_fields})
+        flash("Street updated successfully.", "success")
+        return redirect(url_for("dashboard"))
+
+    street["_id"] = str(street["_id"])
+    return render_template("edit_street.html", street=street)
+
+# --------------------------------------------------------
+# Delete Street (DELETE – only owner or admin, soft delete)
+# --------------------------------------------------------
+@app.route("/street/<street_id>/delete", methods=["POST"])
+def delete_street(street_id):
+    user = current_user()
+    if not user:
+        session["next"] = request.path
+        return redirect(url_for("login"))
+
+    try:
+        oid = ObjectId(street_id)
+    except InvalidId:
+        abort(404)
+
+    query = {"_id": oid}
+    if not session.get("is_admin"):
+        query["ownerId"] = ObjectId(user["_id"])
+
+    result = streets_collection.update_one(
+        query,
+        {"$set": {"deleted": True, "deletedAt": datetime.utcnow()}}
+    )
+
+    if result.matched_count == 0:
+        abort(404)
+
+    flash("Street deleted.", "info")
+    return redirect(url_for("dashboard"))
+
+# --------------------------------------------------------
+# Activity Logging API
+# --------------------------------------------------------
+@app.route("/api/activity", methods=["POST"])
+def log_activity():
+    user = current_user()
+    # If you want to track anonymous, remove this early return
+    if not user:
+        return ("", 204)
+
+    data = request.get_json(silent=True) or {}
+    event_type = clean_text(data.get("event_type"), 50)
+    street_id = data.get("street_id")
+    mode = clean_text(data.get("mode"), 10)
+    extra = data.get("extra") if isinstance(data.get("extra"), dict) else {}
+
+    try:
+        street_oid = ObjectId(street_id) if street_id else None
+    except InvalidId:
+        street_oid = None
+
+    log_doc = {
+        "userId": ObjectId(user["_id"]),
+        "streetId": street_oid,
+        "eventType": event_type,
+        "mode": mode,
+        "timestamp": datetime.utcnow(),
+        "userAgent": request.headers.get("User-Agent", "")[:200],
+        "extra": extra,
+    }
+    activity_logs.insert_one(log_doc)
+    return ("", 204)
 
 # --------------------------------------------------------
 # Like Endpoint
@@ -907,5 +1076,3 @@ def like_street(street_id):
 # --------------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
-    app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
-
