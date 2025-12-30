@@ -2,48 +2,540 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Sign up – Virtual Street Walk</title>
+  <title>Sign up – ABTO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  {# Shared base styles #}
   {% include 'auth_base_styles.html' %}
+
+  <style>
+    :root {
+      --bg-page: #020617;
+      --bg-card: #020617;
+      --bg-card-soft: #0b1120;
+      --accent: #38bdf8;
+      --accent-strong: #0ea5e9;
+      --accent-pink: #ec4899;
+      --border-soft: rgba(148,163,184,0.35);
+      --border-strong: rgba(56,189,248,0.75);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --shadow-strong: 0 24px 60px rgba(15,23,42,0.95);
+      --shadow-soft: 0 16px 40px rgba(15,23,42,0.9);
+    }
+
+    /* Dark global background (overrides base) */
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+      color: var(--text-main);
+      background:
+        radial-gradient(circle at 12% 10%, rgba(56,189,248,0.18), transparent 55%),
+        radial-gradient(circle at 82% 90%, rgba(236,72,153,0.12), transparent 55%),
+        linear-gradient(145deg, #020617, #020617);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(15,23,42,0.7) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15,23,42,0.7) 1px, transparent 1px);
+      background-size: 120px 120px;
+      opacity: 0.45;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 1100px;
+      padding: 32px 20px 40px;
+      margin: 0 auto;
+    }
+
+    /* Top nav – dark to match login, ABTO brand */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      color: var(--text-main);
+    }
+
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #38bdf8, #0f172a);
+      box-shadow: 0 15px 35px rgba(56,189,248,0.7);
+    }
+
+    .logo {
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-main);
+    }
+
+    .logo span {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .back-link {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: transparent;
+      transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+    }
+
+    .back-link:hover {
+      background: rgba(15,23,42,0.9);
+      border-color: var(--border-soft);
+      color: #e5e7eb;
+      transform: translateY(-1px);
+    }
+
+    .heading h1 {
+      margin: 0;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #f9fafb;
+    }
+
+    .heading p {
+      margin: 6px 0 0;
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 460px;
+    }
+
+    /* Two-column layout */
+    .auth-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: 36px;
+      margin-top: 26px;
+      align-items: flex-start;
+    }
+
+    .auth-main {
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(15,23,42,1));
+      border-radius: var(--radius-xl);
+      padding: 26px 26px 24px;
+      border: 1px solid var(--border-soft);
+      box-shadow: var(--shadow-strong);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: center; /* center form horizontally */
+      align-items: flex-start;
+    }
+
+    .auth-main::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top left, rgba(56,189,248,0.18), transparent 55%),
+        radial-gradient(circle at bottom right, rgba(236,72,153,0.16), transparent 55%);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .auth-main > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Inner wrapper controls form width */
+    .form-inner {
+      width: 100%;
+      max-width: 420px;   /* ↓ smaller width */
+      margin: 0 auto;
+    }
+
+    .auth-side {
+      padding: 22px 22px 20px;
+      border-radius: var(--radius-xl);
+      border: 1px dashed rgba(148,163,184,0.45);
+      background:
+        radial-gradient(circle at top, rgba(37,99,235,0.4), rgba(15,23,42,0.98));
+      color: #e5e7eb;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .auth-side h2 {
+      font-size: 19px;
+      margin: 2px 0 8px;
+    }
+
+    .auth-side p {
+      font-size: 14px;
+      margin: 0 0 12px;
+      opacity: 0.92;
+    }
+
+    .auth-side ul {
+      padding-left: 18px;
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.7;
+      opacity: 0.96;
+    }
+
+    .auth-side li + li {
+      margin-top: 4px;
+    }
+
+    /* Flash messages */
+    .flash-messages {
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+    .flash {
+      border-radius: 12px;
+      padding: 9px 12px;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    .flash-error {
+      background: rgba(220,38,38,0.12);
+      color: #fecaca;
+      border: 1px solid rgba(248,113,113,0.6);
+    }
+    .flash-success {
+      background: rgba(22,163,74,0.15);
+      color: #bbf7d0;
+      border: 1px solid rgba(52,211,153,0.7);
+    }
+    .flash-info {
+      background: rgba(37,99,235,0.16);
+      color: #bfdbfe;
+      border: 1px solid rgba(96,165,250,0.7);
+    }
+
+    /* Form and fields */
+    form {
+      margin: 0;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      color: #e5e7eb;
+      margin-bottom: 6px;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.6);
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 14px;
+      outline: none;
+      transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease,
+        transform 0.15s ease;
+    }
+
+    .field input::placeholder {
+      color: #6b7280;
+    }
+
+    .field input:focus {
+      border-color: var(--border-strong);
+      box-shadow: 0 0 0 1px var(--border-strong);
+      background: #020617;
+      transform: translateY(-1px);
+    }
+
+    .field-inline-note {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* Primary button – same width as inputs via .form-inner */
+    button[type="submit"] {
+      width: 100%;
+      border-radius: 999px;
+      border: none;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #4f46e5, #6366f1, #ec4899);
+      color: #ffffff;
+      cursor: pointer;
+      margin-top: 8px;
+      box-shadow: 0 20px 52px rgba(37,99,235,0.8);
+      transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        filter 0.18s ease;
+    }
+
+    button[type="submit"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 24px 64px rgba(37,99,235,0.95);
+      filter: brightness(1.06);
+    }
+
+    button[type="submit"]:active {
+      transform: translateY(0);
+      box-shadow: 0 12px 30px rgba(15,23,42,0.95);
+    }
+
+    /* Divider + Google button */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 16px 0 14px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .divider::before,
+    .divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: rgba(148,163,184,0.4);
+    }
+
+    .btn-google {
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.6);
+      padding: 9px 14px;
+      background: rgba(15,23,42,0.98);
+      color: #e5e7eb;
+      font-size: 14px;
+      text-decoration: none;
+      margin-bottom: 6px;
+      transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.15s ease,
+        box-shadow 0.18s ease;
+      box-shadow: 0 14px 36px rgba(15,23,42,0.95);
+    }
+
+    .btn-google:hover {
+      background: rgba(15,23,42,1);
+      border-color: rgba(96,165,250,0.95);
+      transform: translateY(-1px);
+      box-shadow: 0 18px 44px rgba(15,23,42,1);
+    }
+
+    .btn-google img {
+      width: 18px;
+      height: 18px;
+    }
+
+    .small-note {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .note {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .signup-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .signup-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .auth-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 22px;
+        margin-top: 24px;
+      }
+      .auth-side {
+        order: -1;
+      }
+      .auth-main {
+        padding: 22px 20px 20px;
+      }
+      .form-inner {
+        max-width: 100%;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .shell {
+        padding: 24px 16px 32px;
+      }
+      .heading h1 {
+        font-size: 26px;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="shell">
     <div class="top-nav">
       <div class="logo-wrap">
         <div class="logo-mark"></div>
-        <div class="logo">Virtual Street <span>Walk</span></div>
+        <div class="logo">
+          ABTO
+          <span>Virtual Street Walk</span>
+        </div>
       </div>
       <a href="{{ url_for('index') }}" class="back-link">← Back home</a>
     </div>
 
     <div class="heading">
-      <h1>Create account</h1>
-      <p>Sign up to upload your own streets and save your activity.</p>
+      <h1>Create your ABTO account</h1>
+      <p>Sign up to upload your own streets, track your sessions and unlock your ABTO dashboard.</p>
     </div>
 
-    <form method="post" action="{{ url_for('signup') }}">
-      <div class="field">
-        <label for="name">Name</label>
-        <input id="name" name="name" type="text" placeholder="Your name" required>
+    {# Flash messages #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            {% set cls = 'flash-info' %}
+            {% if category == 'error' %}{% set cls = 'flash-error' %}{% endif %}
+            {% if category == 'success' %}{% set cls = 'flash-success' %}{% endif %}
+            <div class="flash {{ cls }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="auth-layout">
+      <!-- LEFT: FORM -->
+      <div class="auth-main">
+        <div class="form-inner">
+          <form method="post" action="{{ url_for('signup') }}" novalidate>
+            <div class="field">
+              <label for="name">Name</label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                placeholder="Your name"
+                autocomplete="name"
+                required>
+            </div>
+
+            <div class="field">
+              <label for="email">Email</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required>
+            </div>
+
+            <div class="field">
+              <label for="password">Password</label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="Create a password"
+                autocomplete="new-password"
+                minlength="6"
+                required>
+              <div class="field-inline-note">
+                Use at least 6 characters. For best security, mix letters, numbers and symbols.
+              </div>
+            </div>
+
+            <button type="submit">Create account</button>
+
+            <div class="divider">
+              Or continue with
+            </div>
+
+            <a href="{{ url_for('login_google') }}" class="btn-google">
+              <img
+                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                alt=""
+                aria-hidden="true">
+              <span>Continue with Google</span>
+            </a>
+
+            <p class="small-note">
+              By creating an account, you agree to basic usage of ABTO to store
+              your uploads and viewing activity.
+            </p>
+
+            <div class="note">
+              Already have an account?
+              <a href="{{ url_for('login') }}" class="signup-link">Sign in</a>
+            </div>
+          </form>
+        </div>
       </div>
 
-      <div class="field">
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" placeholder="you@example.com" required>
-      </div>
-
-      <div class="field">
-        <label for="password">Password</label>
-        <input id="password" name="password" type="password" placeholder="Create a password" required>
-      </div>
-
-      <button type="submit">Create account</button>
-
-      <div class="note">
-        Already have an account?
-        <a href="{{ url_for('login') }}" class="signup-link">Sign in</a>
-      </div>
-    </form>
+      <!-- RIGHT: INFO PANEL -->
+      <aside class="auth-side" aria-label="Why create an ABTO account?">
+        <h2>Why create an ABTO account?</h2>
+        <p>Having an account lets you turn real streets into a personal travel collection.</p>
+        <ul>
+          <li>Upload walk, drive, sit or fly videos from your city.</li>
+          <li>Get a clean dashboard to manage all your streets in one place.</li>
+          <li>See likes and activity from people exploring your uploads.</li>
+          <li>Come back later and keep exploring exactly where you left off.</li>
+        </ul>
+      </aside>
+    </div>
   </div>
 </body>
 </html>
