@@ -1421,21 +1421,27 @@ footer p {
          alt="ABTO Logo" class="logo-img">
   </a>
 
-  <div class="nav-links" id="navLinks" aria-label="Main navigation">
+    <div class="nav-links" id="navLinks" aria-label="Main navigation">
     <a href="{{ url_for('index') }}" class="nav-link">Home</a>
     <a href="#how-it-works" class="nav-link">How it works</a>
     <a href="#streets" class="nav-link">Streets</a>
     <a href="{{ url_for('upload') }}" class="nav-link">Upload</a>
+
     {% if current_user %}
-      <a href="{{ url_for('dashboard') }}" class="nav-link primary">
+      <a href="{{ url_for('dashboard') }}" class="nav-link">
         <i class="fas fa-tachometer-alt"></i> Dashboard
       </a>
+      <a href="{{ url_for('logout') }}" class="nav-link primary">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </a>
     {% else %}
-      <a href="{{ url_for('login') }}" class="nav-link primary">
+      <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+      <a href="{{ url_for('signup') }}" class="nav-link primary">
         <i class="fas fa-rocket"></i> Get Started
       </a>
     {% endif %}
   </div>
+
   
   <button class="mobile-menu-toggle" id="mobileToggle" aria-label="Toggle navigation menu" aria-expanded="false">
     <span class="hamburger"></span>
