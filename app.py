@@ -136,6 +136,34 @@ def clean_text(value, max_len=200):
     return value.strip()[:max_len]
 
 
+def make_json_safe(obj):
+    """
+    Recursively convert ObjectId -> str so data can be passed into Jinja |tojson.
+    Works for dict, list, single values.
+    """
+    if obj is None:
+        return None
+
+    if isinstance(obj, ObjectId):
+        return str(obj)
+
+    if isinstance(obj, dict):
+        out = {}
+        for k, v in obj.items():
+            if isinstance(v, ObjectId):
+                out[k] = str(v)
+            elif isinstance(v, (dict, list)):
+                out[k] = make_json_safe(v)
+            else:
+                out[k] = v
+        return out
+
+    if isinstance(obj, list):
+        return [make_json_safe(x) for x in obj]
+
+    return obj
+
+
 def upload_glb_supabase(file):
     filename = f"models/{uuid.uuid4()}.glb"
     upload_url = f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_BUCKET}/{filename}"
@@ -186,15 +214,13 @@ def get_street_by_id(street_id):
         return None
     if not doc:
         return None
-    doc["_id"] = str(doc["_id"])
-    return doc
+    return make_json_safe(doc)
 
 
 def list_with_str_id(cursor):
     items = list(cursor)
-    for s in items:
-        s["_id"] = str(s["_id"])
-    return items
+    # convert _id, ownerId, and any nested ObjectIds to strings
+    return [make_json_safe(s) for s in items]
 
 
 def published_not_deleted(extra=None):
