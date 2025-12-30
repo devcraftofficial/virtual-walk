@@ -2,8 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Dashboard - Virtual Street Walk</title>
+  <title>ABTO – Creator Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ABTO Creator Dashboard – manage your uploaded streets, see views, likes, and modes usage.">
+  <meta name="theme-color" content="#020617">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="ABTO – Creator Dashboard">
+  <meta property="og:description" content="See how your streets are performing across walk, drive and fly modes.">
+  <meta property="og:image" content="{{ url_for('static', filename='img/logo.png') }}">
+
+  <!-- Favicons / Logo -->
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/logo.png') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/logo.png') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/logo.png') }}">
 
   <!-- Chart.js for analytics -->
   <script src="{{ url_for('static', filename='js/chart.umd.js') }}"></script>
@@ -21,6 +35,7 @@
       --success: #22c55e;
       --warning: #f97316;
       --purple: #a855f7;
+      --danger: #ef4444;
       --text-main: #e5e7eb;
       --text-muted: #9ca3af;
       --radius-lg: 18px;
@@ -56,6 +71,7 @@
       border-radius: var(--radius-lg);
     }
 
+    /* TOP NAV WITH USER INFO */
     .top-nav {
       display: flex;
       justify-content: space-between;
@@ -64,6 +80,13 @@
       padding-bottom: 20px;
       border-bottom: 1px solid rgba(148, 163, 184, 0.3);
       gap: 14px;
+    }
+
+    .top-nav-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
     }
 
     .logo {
@@ -78,11 +101,92 @@
       gap: 8px;
     }
 
+    .top-nav-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .top-nav-right {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
+
     .nav-actions {
       display: flex;
       gap: 10px;
       align-items: center;
       flex-wrap: wrap;
+    }
+
+    /* USER PILL */
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.8);
+      max-width: 260px;
+      min-width: 0;
+    }
+
+    .user-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: #e0f2fe;
+      border: 1px solid rgba(56, 189, 248, 0.7);
+      flex-shrink: 0;
+    }
+
+    .user-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      min-width: 0;
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-email {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-role-badge {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(22, 163, 74, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.7);
+      color: #bbf7d0;
+      align-self: flex-start;
+      margin-top: 2px;
     }
 
     .btn {
@@ -122,6 +226,23 @@
       border-color: var(--accent);
     }
 
+    .btn-xs {
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: 999px;
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.12);
+      color: #fecaca;
+      border: 1px solid rgba(248, 113, 113, 0.6);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    /* STATS */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -214,6 +335,11 @@
       font-size: 17px;
       font-weight: 600;
       margin: 0;
+    }
+
+    .section-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
     }
 
     .section-header select {
@@ -331,6 +457,137 @@
     .mode-stat.drive { border-color: var(--accent); }
     .mode-stat.fly { border-color: var(--purple); }
 
+    /* My Streets CRUD section */
+    .streets-section {
+      margin-top: 26px;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 18px 20px;
+    }
+
+    .streets-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+      margin-bottom: 10px;
+    }
+
+    .streets-header h2 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .street-table {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .street-row {
+      display: grid;
+      grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.7fr) minmax(0, 1.1fr) auto;
+      gap: 10px;
+      padding: 10px 8px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      align-items: center;
+    }
+
+    .street-main {
+      min-width: 0;
+    }
+
+    .street-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .street-location {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .badge {
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      color: var(--text-muted);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .badge-type {
+      border-color: rgba(56, 189, 248, 0.5);
+      color: #e0f2fe;
+    }
+
+    .badge-mode-walk {
+      border-color: rgba(34, 197, 94, 0.6);
+      color: #bbf7d0;
+    }
+
+    .badge-mode-drive {
+      border-color: rgba(56, 189, 248, 0.6);
+      color: #e0f2fe;
+    }
+
+    .badge-mode-fly {
+      border-color: rgba(168, 85, 247, 0.6);
+      color: #f3e8ff;
+    }
+
+    .badge-mode-sit {
+      border-color: rgba(249, 115, 22, 0.7);
+      color: #ffedd5;
+    }
+
+    .badge-status {
+      border-color: rgba(52, 211, 153, 0.7);
+      color: #bbf7d0;
+    }
+
+    .street-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .street-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .delete-form {
+      margin: 0;
+    }
+
+    .empty-message {
+      font-size: 13px;
+      color: var(--text-muted);
+      padding: 10px 2px 4px;
+    }
+
     @media (max-width: 900px) {
       body {
         padding: 8px 0;
@@ -343,12 +600,16 @@
 
       .top-nav {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
+      }
+
+      .top-nav-right {
+        justify-content: space-between;
       }
 
       .nav-actions {
-        width: 100%;
-        justify-content: flex-start;
+        width: auto;
+        justify-content: flex-end;
       }
 
       .main-content {
@@ -362,6 +623,19 @@
       #worldMapDashboard {
         height: 240px !important;
       }
+
+      .street-row {
+        grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.2fr);
+        grid-auto-rows: auto;
+        grid-template-areas:
+          "main meta"
+          "badges actions";
+      }
+
+      .street-main { grid-area: main; }
+      .street-meta { grid-area: meta; }
+      .badge-row { grid-area: badges; }
+      .street-actions { grid-area: actions; justify-content: flex-start; }
     }
 
     @media (max-width: 600px) {
@@ -371,9 +645,9 @@
         border-radius: 0;
       }
 
-      .top-nav {
-        align-items: center;
-        text-align: center;
+      .top-nav-right {
+        flex-direction: column;
+        align-items: stretch;
       }
 
       .nav-actions {
@@ -395,6 +669,18 @@
       #worldMapDashboard {
         height: 220px !important;
       }
+
+      .street-row {
+        grid-template-columns: 1fr;
+      }
+
+      .street-actions {
+        justify-content: flex-start;
+      }
+
+      .user-pill {
+        max-width: 100%;
+      }
     }
 
     @keyframes pulse {
@@ -407,41 +693,83 @@
 </head>
 <body>
   <div class="shell">
+    <!-- TOP NAV WITH USER DETAILS -->
     <div class="top-nav">
-      <div class="logo">📊 Dashboard</div>
-      <div class="nav-actions">
-        <a href="{{ url_for('upload') }}" class="btn btn-primary">+ Upload Street</a>
-        <a href="{{ url_for('index') }}" class="btn btn-secondary">← Back to Home</a>
+      <div class="top-nav-left">
+        <div class="logo">📊 ABTO Dashboard</div>
+        <div class="top-nav-subtitle">
+          Signed in as
+          <strong>
+            {{ (current_user.name or current_user.username or current_user.email or "Creator") }}
+          </strong>
+          {% if current_user.last_login_fmt %}
+            · Last login {{ current_user.last_login_fmt }}
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="top-nav-right">
+        <!-- USER PILL (avatar + email) -->
+        <div class="user-pill">
+          <div class="user-avatar">
+            {{ (current_user.name or current_user.username or current_user.email or "U")[:2]|upper }}
+          </div>
+          <div class="user-meta">
+            <div class="user-name">
+              {{ (current_user.name or current_user.username or "Creator") }}
+            </div>
+            <div class="user-email">
+              {{ current_user.email or "No email set" }}
+            </div>
+            <div class="user-role-badge">
+              Early ABTO Creator
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="nav-actions">
+          <a href="{{ url_for('upload') }}" class="btn btn-primary">+ Upload Street</a>
+          <a href="{{ url_for('index') }}" class="btn btn-secondary">← Back to Home</a>
+          <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+        </div>
       </div>
     </div>
 
+    <!-- TOP STATS -->
     <div class="stats-grid">
       <div class="stat-card total">
         <div class="stat-number stat-total">{{ total_streets|default(0) }}</div>
-        <div class="stat-label">Total Streets</div>
-        <div class="stat-change">Live data</div>
+        <div class="stat-label">Your Streets</div>
+        <div class="stat-change">Total streets you’ve uploaded</div>
       </div>
       <div class="stat-card likes">
         <div class="stat-number stat-likes">{{ total_likes|default(0) }}</div>
         <div class="stat-label">Total Likes</div>
-        <div class="stat-change">Live data</div>
+        <div class="stat-change">Across all your streets</div>
       </div>
       <div class="stat-card walk">
         <div class="stat-number stat-walk">{{ walk_count|default(0) }}</div>
         <div class="stat-label">Walk Mode</div>
-        <div class="stat-change">Live data</div>
+        <div class="stat-change">Streets in walk mode</div>
       </div>
       <div class="stat-card drive">
         <div class="stat-number stat-drive">{{ drive_count|default(0) }}</div>
         <div class="stat-label">Drive Mode</div>
-        <div class="stat-change">Live data</div>
+        <div class="stat-change">Streets in drive mode</div>
       </div>
     </div>
 
+    <!-- MAIN GRID: ANALYTICS + RECENT + MAP -->
     <div class="main-content">
       <div class="analytics-section">
         <div class="section-header">
-          <h2 class="section-title">Analytics Overview</h2>
+          <div>
+            <h2 class="section-title">Analytics Overview</h2>
+            <div class="section-subtitle">
+              Views and activity for your streets
+            </div>
+          </div>
           <select id="timeRange">
             <option>7 Days</option>
             <option>30 Days</option>
@@ -478,7 +806,12 @@
       <div class="side-column">
         <div class="recent-activity">
           <div class="section-header" style="margin-bottom: 0; padding-bottom: 8px;">
-            <h2 class="section-title">Recent Activity</h2>
+            <div>
+              <h2 class="section-title">Recent Activity</h2>
+              <div class="section-subtitle">
+                Latest streets you created or updated
+              </div>
+            </div>
           </div>
 
           <div id="recentActivityList">
@@ -512,6 +845,80 @@
              style="height: 260px; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid rgba(148,163,184,0.4);">
         </div>
       </div>
+    </div>
+
+    <!-- MY STREETS (CRUD) -->
+    <div class="streets-section">
+      <div class="streets-header">
+        <h2>My Streets</h2>
+        <span class="section-subtitle">
+          {{ total_streets|default(0) }} total
+        </span>
+      </div>
+
+      {% if streets %}
+        <div class="street-table">
+          {% for s in streets %}
+          <div class="street-row">
+            <div class="street-main">
+              <div class="street-name" title="{{ s.name }}">{{ s.name }}</div>
+              <div class="street-location">
+                {{ s.city or 'Unknown' }}, {{ s.country or 'Unknown' }}
+              </div>
+            </div>
+
+            <div class="badge-row">
+              <span class="badge badge-type">{{ s.type|upper }}</span>
+              {% if s.mode %}
+                {% set mode_class = 'badge-mode-' + s.mode %}
+                <span class="badge {{ mode_class }}">
+                  {{ s.mode|capitalize }}
+                </span>
+              {% endif %}
+              {% if s.status %}
+                <span class="badge badge-status">{{ s.status|capitalize }}</span>
+              {% endif %}
+            </div>
+
+            <div class="street-meta">
+              <span>♥ {{ s.likes or 0 }} likes</span>
+              <span>{{ s.createdAtFmt or '' }}</span>
+            </div>
+
+            <div class="street-actions">
+              {# View link – correct world route based on mode #}
+              {% set mode = s.mode or 'walk' %}
+              {% if mode == 'drive' %}
+                {% set world_url = url_for('world_drive', street_id=s._id) %}
+              {% elif mode == 'fly' %}
+                {% set world_url = url_for('world_fly', street_id=s._id) %}
+              {% elif mode == 'sit' %}
+                {% set world_url = url_for('world_sit', street_id=s._id) %}
+              {% else %}
+                {% set world_url = url_for('world', street_id=s._id) %}
+              {% endif %}
+
+              <a href="{{ world_url }}" class="btn btn-xs btn-secondary">View</a>
+              <a href="{{ url_for('edit_street', street_id=s._id) }}" class="btn btn-xs btn-primary">
+                Edit
+              </a>
+
+              <form method="POST"
+                    action="{{ url_for('delete_street', street_id=s._id) }}"
+                    class="delete-form">
+                <button type="submit" class="btn btn-xs btn-danger">
+                  Delete
+                </button>
+              </form>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-message">
+          You haven’t uploaded any streets yet. Click “Upload Street” above to add your first one.
+        </div>
+      {% endif %}
     </div>
   </div>
 
@@ -577,13 +984,11 @@
     const STREETS = {{ streets|tojson|safe }};
 
     dashboardMap.on('load', () => {
-      if (dashboardMap.getZoom() < 1.5) return;
-
       (STREETS || []).slice(0, 200).forEach(st => {
         if (st.lat != null && st.lng != null) {
           new maplibregl.Marker({ color: '#38bdf8' })
             .setLngLat([st.lng, st.lat])
-            .setPopup(new maplibregl.Popup().setText(`${st.name}, ${st.city}`))
+            .setPopup(new maplibregl.Popup().setText(`${st.name}, ${st.city || ''}`))
             .addTo(dashboardMap);
         }
       });
@@ -616,6 +1021,16 @@
     document.querySelectorAll('.stat-number').forEach((stat, i) => {
       setTimeout(() => stat.classList.add('pulse'), i * 200);
       setTimeout(() => stat.classList.remove('pulse'), 4000);
+    });
+
+    // Confirm delete for street delete forms
+    document.querySelectorAll('.delete-form').forEach(form => {
+      form.addEventListener('submit', (e) => {
+        const ok = confirm('Delete this street? This cannot be undone.');
+        if (!ok) {
+          e.preventDefault();
+        }
+      });
     });
   </script>
 </body>
