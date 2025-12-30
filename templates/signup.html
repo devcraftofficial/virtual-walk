@@ -3,16 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <title>Sign up – ABTO</title>
+
+  <meta name="description" content="Sign up to ABTO – Virtual Street Walk. Create your account to upload real streets and manage your travel sessions.">
+
+<!-- Favicon / Logo in browser tab -->
+<link rel="icon" type="image/png" sizes="32x32"
+      href="{{ url_for('static', filename='img/logo.png') }}">
+<link rel="icon" type="image/png" sizes="16x16"
+      href="{{ url_for('static', filename='img/logo.png') }}">
+<link rel="apple-touch-icon" sizes="180x180"
+      href="{{ url_for('static', filename='img/logo.png') }}">
+
+<!-- Social share image (uses your logo or hero) -->
+<meta property="og:title" content="Sign up – ABTO Virtual Street Walk">
+<meta property="og:description" content="Create your ABTO account to upload streets and explore the world in walk, drive, sit and fly modes.">
+<meta property="og:image" content="{{ url_for('static', filename='img/logo.png') }}">
+<meta name="theme-color" content="#020617">
+
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  {# Shared base styles #}
+
+  {# Shared base styles (if you have them) #}
   {% include 'auth_base_styles.html' %}
 
   <style>
     :root {
       --bg-page: #020617;
       --bg-card: #020617;
-      --bg-card-soft: #0b1120;
+      --bg-card-soft: #020617;
       --accent: #38bdf8;
       --accent-strong: #0ea5e9;
       --accent-pink: #ec4899;
@@ -23,20 +41,22 @@
       --text-dim: #6b7280;
       --radius-xl: 24px;
       --radius-lg: 18px;
-      --shadow-strong: 0 24px 60px rgba(15,23,42,0.95);
-      --shadow-soft: 0 16px 40px rgba(15,23,42,0.9);
+      --shadow-strong: 0 26px 70px rgba(15,23,42,0.96);
+      --shadow-soft: 0 18px 45px rgba(15,23,42,0.9);
     }
 
-    /* Dark global background (overrides base) */
+    /* GLOBAL LAYOUT -------------------------------------------------------- */
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
       min-height: 100vh;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
       color: var(--text-main);
       background:
-        radial-gradient(circle at 12% 10%, rgba(56,189,248,0.18), transparent 55%),
-        radial-gradient(circle at 82% 90%, rgba(236,72,153,0.12), transparent 55%),
-        linear-gradient(145deg, #020617, #020617);
+        radial-gradient(circle at 8% 8%, rgba(56,189,248,0.25), transparent 55%),
+        radial-gradient(circle at 82% 88%, rgba(236,72,153,0.18), transparent 55%),
+        linear-gradient(135deg, #020617, #020617);
       display: flex;
       justify-content: center;
       align-items: flex-start;
@@ -50,25 +70,36 @@
         linear-gradient(rgba(15,23,42,0.7) 1px, transparent 1px),
         linear-gradient(90deg, rgba(15,23,42,0.7) 1px, transparent 1px);
       background-size: 120px 120px;
-      opacity: 0.45;
+      opacity: 0.4;
       pointer-events: none;
       z-index: -1;
     }
 
     .shell {
       width: 100%;
-      max-width: 1100px;
-      padding: 32px 20px 40px;
+      max-width: 980px;          /* narrower overall layout */
+      padding: 28px 18px 40px;
       margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
 
-    /* Top nav – dark to match login, ABTO brand */
+    a, button {
+      outline: none;
+    }
+    a:focus-visible, button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+      border-radius: 999px;
+    }
+
+    /* TOP BAR / BRAND ------------------------------------------------------ */
     .top-nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 28px;
-      color: var(--text-main);
+      margin-bottom: 26px;
     }
 
     .logo-wrap {
@@ -82,13 +113,13 @@
       height: 32px;
       border-radius: 999px;
       background: radial-gradient(circle at 30% 20%, #38bdf8, #0f172a);
-      box-shadow: 0 15px 35px rgba(56,189,248,0.7);
+      box-shadow: 0 16px 38px rgba(56,189,248,0.75);
     }
 
     .logo {
       font-weight: 700;
       font-size: 18px;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--text-main);
     }
@@ -106,18 +137,21 @@
       font-size: 13px;
       color: var(--text-muted);
       text-decoration: none;
-      padding: 6px 10px;
+      padding: 6px 11px;
       border-radius: 999px;
       border: 1px solid transparent;
       display: inline-flex;
       align-items: center;
       gap: 4px;
       background: transparent;
-      transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+      transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.15s ease;
     }
-
     .back-link:hover {
-      background: rgba(15,23,42,0.9);
+      background: rgba(15,23,42,0.92);
       border-color: var(--border-soft);
       color: #e5e7eb;
       transform: translateY(-1px);
@@ -130,7 +164,6 @@
       letter-spacing: -0.02em;
       color: #f9fafb;
     }
-
     .heading p {
       margin: 6px 0 0;
       font-size: 14px;
@@ -138,88 +171,88 @@
       max-width: 460px;
     }
 
-    /* Two-column layout */
+    /* MAIN LAYOUT ---------------------------------------------------------- */
     .auth-layout {
+      flex: 1;
       display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-      gap: 36px;
-      margin-top: 26px;
-      align-items: flex-start;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      gap: 30px;
+      margin-top: 24px;
+      align-items: stretch;
     }
 
+    /* LEFT: FORM CARD */
     .auth-main {
       background: radial-gradient(circle at top left, rgba(15,23,42,0.98), rgba(15,23,42,1));
-      border-radius: var(--radius-xl);
+      border-radius: 24px;
       padding: 26px 26px 24px;
       border: 1px solid var(--border-soft);
       box-shadow: var(--shadow-strong);
       position: relative;
       overflow: hidden;
       display: flex;
-      justify-content: center; /* center form horizontally */
+      justify-content: center;
       align-items: flex-start;
     }
-
     .auth-main::before {
       content: "";
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(circle at top left, rgba(56,189,248,0.18), transparent 55%),
-        radial-gradient(circle at bottom right, rgba(236,72,153,0.16), transparent 55%);
-      opacity: 0.6;
+        radial-gradient(circle at top left, rgba(56,189,248,0.22), transparent 55%),
+        radial-gradient(circle at bottom right, rgba(236,72,153,0.18), transparent 55%);
+      opacity: 0.7;
       pointer-events: none;
     }
-
     .auth-main > * {
       position: relative;
       z-index: 1;
     }
 
-    /* Inner wrapper controls form width */
     .form-inner {
       width: 100%;
-      max-width: 420px;   /* ↓ smaller width */
+      max-width: 400px;         /* actual field width – smaller than card */
       margin: 0 auto;
     }
 
+    /* RIGHT: INFO CARD */
     .auth-side {
       padding: 22px 22px 20px;
-      border-radius: var(--radius-xl);
-      border: 1px dashed rgba(148,163,184,0.45);
+      border-radius: 22px;
+      border: 1px dashed rgba(148,163,184,0.5);
       background:
-        radial-gradient(circle at top, rgba(37,99,235,0.4), rgba(15,23,42,0.98));
+        radial-gradient(circle at top, rgba(37,99,235,0.45), rgba(15,23,42,0.99));
       color: #e5e7eb;
       box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
-
     .auth-side h2 {
       font-size: 19px;
       margin: 2px 0 8px;
     }
-
     .auth-side p {
       font-size: 14px;
       margin: 0 0 12px;
-      opacity: 0.92;
+      opacity: 0.95;
     }
-
     .auth-side ul {
       padding-left: 18px;
       margin: 0;
       font-size: 13px;
       line-height: 1.7;
-      opacity: 0.96;
+      opacity: 0.97;
     }
-
     .auth-side li + li {
       margin-top: 4px;
     }
 
-    /* Flash messages */
+    /* FLASH MESSAGES ------------------------------------------------------- */
     .flash-messages {
       margin-top: 14px;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
+      max-width: 400px;
     }
     .flash {
       border-radius: 12px;
@@ -228,29 +261,25 @@
       margin-bottom: 6px;
     }
     .flash-error {
-      background: rgba(220,38,38,0.12);
+      background: rgba(220,38,38,0.14);
       color: #fecaca;
-      border: 1px solid rgba(248,113,113,0.6);
+      border: 1px solid rgba(248,113,113,0.7);
     }
     .flash-success {
-      background: rgba(22,163,74,0.15);
+      background: rgba(22,163,74,0.18);
       color: #bbf7d0;
-      border: 1px solid rgba(52,211,153,0.7);
+      border: 1px solid rgba(52,211,153,0.8);
     }
     .flash-info {
-      background: rgba(37,99,235,0.16);
+      background: rgba(37,99,235,0.18);
       color: #bfdbfe;
-      border: 1px solid rgba(96,165,250,0.7);
+      border: 1px solid rgba(96,165,250,0.8);
     }
 
-    /* Form and fields */
-    form {
-      margin: 0;
-    }
+    /* FORM FIELDS ---------------------------------------------------------- */
+    form { margin: 0; }
 
-    .field {
-      margin-bottom: 16px;
-    }
+    .field { margin-bottom: 16px; }
 
     .field label {
       display: block;
@@ -275,9 +304,7 @@
         transform 0.15s ease;
     }
 
-    .field input::placeholder {
-      color: #6b7280;
-    }
+    .field input::placeholder { color: #6b7280; }
 
     .field input:focus {
       border-color: var(--border-strong);
@@ -292,7 +319,7 @@
       margin-top: 4px;
     }
 
-    /* Primary button – same width as inputs via .form-inner */
+    /* PRIMARY BUTTON ------------------------------------------------------- */
     button[type="submit"] {
       width: 100%;
       border-radius: 999px;
@@ -310,19 +337,17 @@
         box-shadow 0.18s ease,
         filter 0.18s ease;
     }
-
     button[type="submit"]:hover {
       transform: translateY(-2px);
       box-shadow: 0 24px 64px rgba(37,99,235,0.95);
-      filter: brightness(1.06);
+      filter: brightness(1.05);
     }
-
     button[type="submit"]:active {
       transform: translateY(0);
-      box-shadow: 0 12px 30px rgba(15,23,42,0.95);
+      box-shadow: 0 12px 30px rgba(15,23,42,0.96);
     }
 
-    /* Divider + Google button */
+    /* DIVIDER + GOOGLE BUTTON ---------------------------------------------- */
     .divider {
       display: flex;
       align-items: center;
@@ -336,7 +361,7 @@
       content: "";
       flex: 1;
       height: 1px;
-      background: rgba(148,163,184,0.4);
+      background: rgba(148,163,184,0.45);
     }
 
     .btn-google {
@@ -346,7 +371,7 @@
       justify-content: center;
       gap: 8px;
       border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.6);
+      border: 1px solid rgba(148,163,184,0.7);
       padding: 9px 14px;
       background: rgba(15,23,42,0.98);
       color: #e5e7eb;
@@ -358,16 +383,14 @@
         border-color 0.2s ease,
         transform 0.15s ease,
         box-shadow 0.18s ease;
-      box-shadow: 0 14px 36px rgba(15,23,42,0.95);
+      box-shadow: 0 14px 36px rgba(15,23,42,0.96);
     }
-
     .btn-google:hover {
       background: rgba(15,23,42,1);
-      border-color: rgba(96,165,250,0.95);
+      border-color: rgba(96,165,250,0.98);
       transform: translateY(-1px);
       box-shadow: 0 18px 44px rgba(15,23,42,1);
     }
-
     .btn-google img {
       width: 18px;
       height: 18px;
@@ -390,20 +413,21 @@
       text-decoration: none;
       font-weight: 500;
     }
+    .signup-link:hover { text-decoration: underline; }
 
-    .signup-link:hover {
-      text-decoration: underline;
-    }
-
-    /* Responsive */
-    @media (max-width: 900px) {
+    /* RESPONSIVE BREAKPOINTS ----------------------------------------------- */
+    @media (max-width: 960px) {
+      .shell {
+        max-width: 720px;
+        padding: 22px 16px 32px;
+      }
       .auth-layout {
         grid-template-columns: minmax(0, 1fr);
         gap: 22px;
-        margin-top: 24px;
+        margin-top: 22px;
       }
       .auth-side {
-        order: -1;
+        order: -1;            /* info card above form on tablet/mobile */
       }
       .auth-main {
         padding: 22px 20px 20px;
@@ -413,32 +437,76 @@
       }
     }
 
-    @media (max-width: 600px) {
-      .shell {
-        padding: 24px 16px 32px;
+    @media (max-width: 640px) {
+      .top-nav {
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
       }
       .heading h1 {
         font-size: 26px;
       }
+      .heading p {
+        font-size: 13px;
+      }
+      .auth-side {
+        padding: 18px 16px 16px;
+      }
     }
+
+    @media (max-width: 480px) {
+      .shell {
+        padding: 20px 14px 28px;
+      }
+      .auth-main {
+        padding: 18px 16px 18px;
+        border-radius: 20px;
+      }
+      .auth-side {
+        border-radius: 18px;
+      }
+      .field input {
+        font-size: 13px;
+        padding: 9px 12px;
+      }
+      button[type="submit"] {
+        padding: 10px 14px;
+        font-size: 13px;
+      }
+    }
+    .logo-img {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;   /* or 999px if it’s circular */
+  object-fit: contain;
+  box-shadow: 0 10px 28px rgba(56,189,248,0.7);
+}
+
   </style>
 </head>
 <body>
   <div class="shell">
+    <!-- Top brand / back -->
     <div class="top-nav">
       <div class="logo-wrap">
-        <div class="logo-mark"></div>
-        <div class="logo">
-          ABTO
-          <span>Virtual Street Walk</span>
-        </div>
-      </div>
+  <img src="{{ url_for('static', filename='img/logo.png') }}"
+       alt="ABTO logo"
+       class="logo-img">
+  <div class="logo">
+    ABTO
+    <span>VIRTUAL STREET WALK</span>
+  </div>
+</div>
+
       <a href="{{ url_for('index') }}" class="back-link">← Back home</a>
     </div>
 
+    <!-- Heading -->
     <div class="heading">
       <h1>Create your ABTO account</h1>
-      <p>Sign up to upload your own streets, track your sessions and unlock your ABTO dashboard.</p>
+      <p>
+        Sign up to upload your own streets, track your sessions and unlock your personal ABTO dashboard.
+      </p>
     </div>
 
     {# Flash messages #}
@@ -455,9 +523,10 @@
       {% endif %}
     {% endwith %}
 
+    <!-- Two-column layout -->
     <div class="auth-layout">
-      <!-- LEFT: FORM -->
-      <div class="auth-main">
+      <!-- LEFT: FORM CARD -->
+      <section class="auth-main" aria-label="Create ABTO account form">
         <div class="form-inner">
           <form method="post" action="{{ url_for('signup') }}" novalidate>
             <div class="field">
@@ -512,8 +581,7 @@
             </a>
 
             <p class="small-note">
-              By creating an account, you agree to basic usage of ABTO to store
-              your uploads and viewing activity.
+              By creating an account, you agree to basic usage of ABTO to store your uploads and viewing activity.
             </p>
 
             <div class="note">
@@ -522,17 +590,17 @@
             </div>
           </form>
         </div>
-      </div>
+      </section>
 
-      <!-- RIGHT: INFO PANEL -->
+      <!-- RIGHT: INFO CARD -->
       <aside class="auth-side" aria-label="Why create an ABTO account?">
         <h2>Why create an ABTO account?</h2>
-        <p>Having an account lets you turn real streets into a personal travel collection.</p>
+        <p>Turn real streets into your own personal travel collection.</p>
         <ul>
-          <li>Upload walk, drive, sit or fly videos from your city.</li>
-          <li>Get a clean dashboard to manage all your streets in one place.</li>
+          <li>Upload walk, drive, sit or fly videos from your city or travels.</li>
+          <li>Manage all your streets in one clean ABTO dashboard.</li>
           <li>See likes and activity from people exploring your uploads.</li>
-          <li>Come back later and keep exploring exactly where you left off.</li>
+          <li>Come back later and continue exploring exactly where you left off.</li>
         </ul>
       </aside>
     </div>
