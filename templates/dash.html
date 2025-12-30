@@ -4,20 +4,21 @@
   <meta charset="UTF-8" />
   <title>ABTO – Creator Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="ABTO Creator Dashboard – manage your uploaded streets, see views, likes, and modes usage.">
+  <meta name="description" content="ABTO Creator Dashboard – manage your streets, see analytics, and track activity.">
   <meta name="theme-color" content="#020617">
 
-  <!-- Open Graph -->
-  <meta property="og:title" content="ABTO – Creator Dashboard">
-  <meta property="og:description" content="See how your streets are performing across walk, drive and fly modes.">
-  <meta property="og:image" content="{{ url_for('static', filename='img/logo.png') }}">
-
-  <!-- Favicons / Logo -->
+  <!-- ✅ FAVICONS (same as home page) -->
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/logo.png') }}">
-  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/logo.png') }}">
-  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/logo.png') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/fav.png') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/fav.png') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/fav.png') }}">
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <!-- Chart.js for analytics -->
   <script src="{{ url_for('static', filename='js/chart.umd.js') }}"></script>
@@ -53,7 +54,7 @@
       background:
         radial-gradient(circle at top left, #0f172a, transparent 55%),
         radial-gradient(circle at bottom right, #022c3a, #000 70%);
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
       color: var(--text-main);
       padding: 12px 0;
       line-height: 1.5;
@@ -71,7 +72,7 @@
       border-radius: var(--radius-lg);
     }
 
-    /* TOP NAV WITH USER INFO */
+    /* TOP NAV / HEADER */
     .top-nav {
       display: flex;
       justify-content: space-between;
@@ -82,41 +83,40 @@
       gap: 14px;
     }
 
-    .top-nav-left {
+    .branding-area {
       display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 0;
+      align-items: center;
+      gap: 12px;
     }
 
     .logo {
-      font-size: 24px;
-      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo img {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(56, 189, 248, 0.65);
+      object-fit: contain;
+    }
+
+    .logo-text-main {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
       background: linear-gradient(135deg, #38bdf8, #60a5fa);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
     }
 
-    .top-nav-subtitle {
+    .logo-text-sub {
       font-size: 12px;
       color: var(--text-muted);
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .top-nav-right {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 12px;
-      flex-wrap: wrap;
-      min-width: 0;
     }
 
     .nav-actions {
@@ -124,69 +124,6 @@
       gap: 10px;
       align-items: center;
       flex-wrap: wrap;
-    }
-
-    /* USER PILL */
-    .user-pill {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.96);
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.8);
-      max-width: 260px;
-      min-width: 0;
-    }
-
-    .user-avatar {
-      width: 30px;
-      height: 30px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 600;
-      color: #e0f2fe;
-      border: 1px solid rgba(56, 189, 248, 0.7);
-      flex-shrink: 0;
-    }
-
-    .user-meta {
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-      min-width: 0;
-    }
-
-    .user-name {
-      font-size: 13px;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .user-email {
-      font-size: 11px;
-      color: var(--text-muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .user-role-badge {
-      font-size: 10px;
-      padding: 2px 7px;
-      border-radius: 999px;
-      background: rgba(22, 163, 74, 0.15);
-      border: 1px solid rgba(34, 197, 94, 0.7);
-      color: #bbf7d0;
-      align-self: flex-start;
-      margin-top: 2px;
     }
 
     .btn {
@@ -240,6 +177,52 @@
 
     .btn-danger:hover {
       background: rgba(239, 68, 68, 0.2);
+    }
+
+    /* USER PILL */
+    .user-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+    }
+
+    .user-avatar-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 15px;
+      background: radial-gradient(circle at top, rgba(56,189,248,.25), rgba(15,23,42,1));
+      border: 1px solid rgba(56,189,248,0.6);
+      box-shadow: 0 0 15px rgba(56,189,248,0.45);
+    }
+
+    .user-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .user-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .user-email {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .user-meta-small {
+      font-size: 11px;
+      color: var(--text-muted);
     }
 
     /* STATS */
@@ -522,7 +505,6 @@
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      font-size: 11px;
     }
 
     .badge {
@@ -531,6 +513,7 @@
       border: 1px solid rgba(148, 163, 184, 0.4);
       color: var(--text-muted);
       background: rgba(15, 23, 42, 0.9);
+      font-size: 11px;
     }
 
     .badge-type {
@@ -589,41 +572,14 @@
     }
 
     @media (max-width: 900px) {
-      body {
-        padding: 8px 0;
-      }
-
-      .shell {
-        padding: 16px;
-        margin: 6px;
-      }
-
-      .top-nav {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .top-nav-right {
-        justify-content: space-between;
-      }
-
-      .nav-actions {
-        width: auto;
-        justify-content: flex-end;
-      }
-
-      .main-content {
-        grid-template-columns: 1fr;
-      }
-
-      .chart-container {
-        height: 230px;
-      }
-
-      #worldMapDashboard {
-        height: 240px !important;
-      }
-
+      body { padding: 8px 0; }
+      .shell { padding: 16px; margin: 6px; }
+      .top-nav { flex-direction: column; align-items: flex-start; }
+      .branding-area { width: 100%; justify-content: space-between; }
+      .nav-actions { width: 100%; justify-content: flex-start; flex-wrap: wrap; }
+      .main-content { grid-template-columns: 1fr; }
+      .chart-container { height: 230px; }
+      #worldMapDashboard { height: 240px !important; }
       .street-row {
         grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.2fr);
         grid-auto-rows: auto;
@@ -631,7 +587,6 @@
           "main meta"
           "badges actions";
       }
-
       .street-main { grid-area: main; }
       .street-meta { grid-area: meta; }
       .badge-row { grid-area: badges; }
@@ -639,100 +594,60 @@
     }
 
     @media (max-width: 600px) {
-      .shell {
-        padding: 12px;
-        margin: 0;
-        border-radius: 0;
-      }
-
-      .top-nav-right {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .nav-actions {
-        justify-content: center;
-      }
-
-      .stat-number {
-        font-size: 26px;
-      }
-
-      .stats-grid {
-        gap: 14px;
-      }
-
-      .chart-container {
-        height: 210px;
-      }
-
-      #worldMapDashboard {
-        height: 220px !important;
-      }
-
-      .street-row {
-        grid-template-columns: 1fr;
-      }
-
-      .street-actions {
-        justify-content: flex-start;
-      }
-
-      .user-pill {
-        max-width: 100%;
-      }
+      .shell { padding: 12px; margin: 0; border-radius: 0; }
+      .top-nav { align-items: center; text-align: center; flex-direction: column; gap: 10px; }
+      .branding-area { justify-content: center; }
+      .nav-actions { justify-content: center; }
+      .stat-number { font-size: 26px; }
+      .stats-grid { gap: 14px; }
+      .chart-container { height: 210px; }
+      #worldMapDashboard { height: 220px !important; }
+      .street-row { grid-template-columns: 1fr; }
+      .street-actions { justify-content: flex-start; }
     }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.7; }
     }
-
     .pulse { animation: pulse 2s infinite; }
   </style>
 </head>
 <body>
   <div class="shell">
-    <!-- TOP NAV WITH USER DETAILS -->
+    <!-- TOP NAV -->
     <div class="top-nav">
-      <div class="top-nav-left">
-        <div class="logo">📊 ABTO Dashboard</div>
-        <div class="top-nav-subtitle">
-          Signed in as
-          <strong>
-            {{ (current_user.name or current_user.username or current_user.email or "Creator") }}
-          </strong>
-          {% if current_user.last_login_fmt %}
-            · Last login {{ current_user.last_login_fmt }}
-          {% endif %}
-        </div>
+      <div class="branding-area">
+        <a href="{{ url_for('index') }}" class="logo">
+          <img src="{{ url_for('static', filename='img/logo.png') }}" alt="ABTO Logo">
+          <div>
+            <div class="logo-text-main">ABTO</div>
+            <div class="logo-text-sub">Creator Dashboard</div>
+          </div>
+        </a>
       </div>
 
-      <div class="top-nav-right">
-        <!-- USER PILL (avatar + email) -->
+      <div class="nav-actions">
+        {% if user_info %}
         <div class="user-pill">
-          <div class="user-avatar">
-            {{ (current_user.name or current_user.username or current_user.email or "U")[:2]|upper }}
+          <div class="user-avatar-circle">
+            {{ (user_info.name or user_info.email or 'U')[0]|upper }}
           </div>
           <div class="user-meta">
-            <div class="user-name">
-              {{ (current_user.name or current_user.username or "Creator") }}
-            </div>
-            <div class="user-email">
-              {{ current_user.email or "No email set" }}
-            </div>
-            <div class="user-role-badge">
-              Early ABTO Creator
+            <div class="user-name">{{ user_info.name }}</div>
+            <div class="user-email">{{ user_info.email }}</div>
+            <div class="user-meta-small">
+              Joined {{ user_info.createdAtFmt or '—' }} • Last login {{ user_info.lastLoginFmt or '—' }}
             </div>
           </div>
         </div>
-
-        <!-- ACTIONS -->
-        <div class="nav-actions">
-          <a href="{{ url_for('upload') }}" class="btn btn-primary">+ Upload Street</a>
-          <a href="{{ url_for('index') }}" class="btn btn-secondary">← Back to Home</a>
-          <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
-        </div>
+        {% endif %}
+        <a href="{{ url_for('upload') }}" class="btn btn-primary">
+          <i class="fas fa-upload"></i> Upload Street
+        </a>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+          <i class="fas fa-home"></i> Home
+        </a>
       </div>
     </div>
 
@@ -740,23 +655,25 @@
     <div class="stats-grid">
       <div class="stat-card total">
         <div class="stat-number stat-total">{{ total_streets|default(0) }}</div>
-        <div class="stat-label">Your Streets</div>
-        <div class="stat-change">Total streets you’ve uploaded</div>
+        <div class="stat-label">Total Streets</div>
+        <div class="stat-change">
+          Streets you’ve uploaded{% if session.get('is_admin') %} (showing all as admin){% endif %}
+        </div>
       </div>
       <div class="stat-card likes">
         <div class="stat-number stat-likes">{{ total_likes|default(0) }}</div>
         <div class="stat-label">Total Likes</div>
-        <div class="stat-change">Across all your streets</div>
+        <div class="stat-change">Across all your published streets</div>
       </div>
       <div class="stat-card walk">
         <div class="stat-number stat-walk">{{ walk_count|default(0) }}</div>
         <div class="stat-label">Walk Mode</div>
-        <div class="stat-change">Streets in walk mode</div>
+        <div class="stat-change">Published walking experiences</div>
       </div>
       <div class="stat-card drive">
         <div class="stat-number stat-drive">{{ drive_count|default(0) }}</div>
         <div class="stat-label">Drive Mode</div>
-        <div class="stat-change">Streets in drive mode</div>
+        <div class="stat-change">Published driving experiences</div>
       </div>
     </div>
 
@@ -766,9 +683,7 @@
         <div class="section-header">
           <div>
             <h2 class="section-title">Analytics Overview</h2>
-            <div class="section-subtitle">
-              Views and activity for your streets
-            </div>
+            <div class="section-subtitle">Simple view of your recent street activity</div>
           </div>
           <select id="timeRange">
             <option>7 Days</option>
@@ -808,9 +723,7 @@
           <div class="section-header" style="margin-bottom: 0; padding-bottom: 8px;">
             <div>
               <h2 class="section-title">Recent Activity</h2>
-              <div class="section-subtitle">
-                Latest streets you created or updated
-              </div>
+              <div class="section-subtitle">Latest streets you’ve created</div>
             </div>
           </div>
 
@@ -822,10 +735,12 @@
                    data-mode="{{ street.mode }}">
                 <div class="activity-header">
                   <div class="activity-title">{{ street.name }}</div>
-                  <span class="activity-mode mode-{{ street.mode }}">{{ street.mode|capitalize }}</span>
+                  <span class="activity-mode {{ street.mode }}">
+                    {{ street.mode|capitalize if street.mode else 'Walk' }}
+                  </span>
                 </div>
                 <div class="activity-meta">
-                  <span>{{ street.city }}, {{ street.country }}</span>
+                  <span>{{ street.city or 'Unknown' }}, {{ street.country or 'Unknown' }}</span>
                   <span>♥ {{ street.likes or 0 }} likes</span>
                   <span>{{ street.createdAtFmt }}</span>
                 </div>
@@ -886,7 +801,6 @@
             </div>
 
             <div class="street-actions">
-              {# View link – correct world route based on mode #}
               {% set mode = s.mode or 'walk' %}
               {% if mode == 'drive' %}
                 {% set world_url = url_for('world_drive', street_id=s._id) %}
@@ -948,7 +862,7 @@
           fill: true,
           tension: 0.4,
           pointBackgroundColor: '#38bdf8',
-          pointBorderColor: '#fff',
+          pointBorderColor: '#ffffff',
           pointBorderWidth: 2,
           pointRadius: 5
         }]
@@ -1006,7 +920,6 @@
         if (mode === 'drive') basePath = '/world/drive';
         else if (mode === 'fly') basePath = '/world/fly';
         else if (mode === 'sit') basePath = '/world/sit';
-        // walk and 3d use /world
 
         window.location.href = `${basePath}?street_id=${streetId}`;
       });
@@ -1017,7 +930,7 @@
       console.log('Time range changed:', e.target.value);
     });
 
-    // Pulse animation on stats
+    // Pulse animation on stats (simple entrance effect)
     document.querySelectorAll('.stat-number').forEach((stat, i) => {
       setTimeout(() => stat.classList.add('pulse'), i * 200);
       setTimeout(() => stat.classList.remove('pulse'), 4000);
