@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <title>ABTO - A Better Travel Observer</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="ABTO - A Better Travel Observer. Explore real streets worldwide with immersive walk, drive, and fly modes.">
+<meta name="description" content="ABTO - A Better Travel Observer. Explore real streets worldwide with immersive walk, drive, sit and fly modes.">
 <meta property="og:title" content="ABTO - A Better Travel Observer">
-<meta property="og:description" content="Explore real streets worldwide with immersive walk, drive, and fly modes.">
+<meta property="og:description" content="Explore real streets worldwide with immersive walk, drive, sit and fly modes.">
 <meta property="og:image" content="{{ url_for('static', filename='img/og-image.jpg') }}">
 <meta name="theme-color" content="#0a0b15">
 
@@ -1460,7 +1460,7 @@ footer p {
       <h1 id="hero-title">Explore Real Streets<br>From Anywhere</h1>
 
       <p>
-        Walk, drive or fly through real locations around the world. 
+        Walk, drive, sit or fly through real locations around the world. 
         No games. Just reality. Powered by real video footage.
       </p>
 
@@ -1481,7 +1481,7 @@ footer p {
           <span>Streets uploaded</span>
         </div>
         <div class="hero-stat">
-          <strong>3</strong>
+          <strong>4</strong>
           <span>Exploration modes</span>
         </div>
         <div class="hero-stat">
@@ -1537,6 +1537,11 @@ footer p {
       <h3>Drive Mode</h3>
       <p>Smooth highway and city driving experiences for long-form, lean-back travel.</p>
     </a>
+    <a href="{{ url_for('world_sit') }}" class="mode-card">
+      <div class="mode-icon" aria-hidden="true">🪑</div>
+      <h3>Sit Mode</h3>
+      <p>Stay in one cozy spot—balcony, café or bench—and soak in the real-life ambiance.</p>
+    </a>
     <a href="{{ url_for('world_fly') }}" class="mode-card">
       <div class="mode-icon" aria-hidden="true">✈️</div>
       <h3>Fly Mode</h3>
@@ -1556,7 +1561,7 @@ footer p {
       <article class="how-step">
         <div class="how-step-badge">01</div>
         <h3>Upload real street footage</h3>
-        <p>Creators upload walking, driving or flying videos from any city using a simple web upload flow.</p>
+        <p>Creators upload walking, driving, sitting or flying videos from any city using a simple web upload flow.</p>
       </article>
       <article class="how-step">
         <div class="how-step-badge">02</div>
@@ -1566,7 +1571,7 @@ footer p {
       <article class="how-step">
         <div class="how-step-badge">03</div>
         <h3>Viewers explore on demand</h3>
-        <p>Visitors pick a street, choose a mode (walk, drive, fly) and drop into a real place in seconds.</p>
+        <p>Visitors pick a street, choose a mode (walk, drive, sit, fly) and drop into a real place in seconds.</p>
       </article>
     </div>
 
@@ -1594,7 +1599,7 @@ footer p {
   <section class="section" id="streets" aria-labelledby="featured-streets-title">
     <div class="section-header">
       <h2 id="featured-streets-title">Featured Streets</h2>
-      <p>Handpicked immersive locations from around the world, ready to walk, drive or fly through.</p>
+      <p>Handpicked immersive locations from around the world, ready to walk, drive, sit or fly through.</p>
       <p class="section-subline">
         {{ streets|length if streets else 0 }} AVAILABLE • CONTINUOUSLY GROWING
       </p>
@@ -1605,12 +1610,14 @@ footer p {
         {% for st in streets %}
           {% if st.videos and st.videos|length > 0 and st.videos[0].url %}
             {% set thumb_url = st.videos[0].url|replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_400,c_fill,g_center') %}
+            {% set is_placeholder = False %}
           {% else %}
-            {% set thumb_url = '/static/images/placeholder-street.jpg' %}
+            {% set thumb_url = url_for('static', filename='images/placeholder-street.jpg') %}
+            {% set is_placeholder = True %}
           {% endif %}
           <a href="{{ url_for('world', street_id=st._id) }}" class="card">
             <div class="thumb" style="background-image: url('{{ thumb_url }}')">
-              {% if thumb_url == '/static/images/placeholder-street.jpg' %}
+              {% if is_placeholder %}
                 <div class="thumb-placeholder">
                   <i class="fas fa-map-marked-alt" aria-hidden="true"></i>
                 </div>
@@ -1654,7 +1661,7 @@ footer p {
           Become an early ABTO creator and put your city on the map.
         </div>
         <div class="section-cta-sub">
-          Upload a single walk, drive or fly video and see it live on ABTO.
+          Upload a single walk, drive, sit or fly video and see it live on ABTO.
         </div>
       </div>
       <a href="{{ url_for('upload') }}" class="hero-cta" style="padding: 12px 26px; font-size: 15px;">
@@ -1684,7 +1691,7 @@ footer p {
     </span>
   </p>
   <p style="font-size: 14px; opacity: .85; margin-top: 4px">
-    A Better Travel Observer • Walk • Drive • Fly
+    A Better Travel Observer • Walk • Drive • Sit • Fly
   </p>
 </footer>
 
