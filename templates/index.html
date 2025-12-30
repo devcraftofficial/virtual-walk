@@ -1426,7 +1426,7 @@ footer p {
     <a href="#how-it-works" class="nav-link">How it works</a>
     <a href="#streets" class="nav-link">Streets</a>
     <a href="{{ url_for('upload') }}" class="nav-link">Upload</a>
-    {% if current_user.is_authenticated %}
+    {% if current_user %}
       <a href="{{ url_for('dashboard') }}" class="nav-link primary">
         <i class="fas fa-tachometer-alt"></i> Dashboard
       </a>
