@@ -17,16 +17,50 @@
   --accent:#38bdf8;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color:var(--text);overflow:hidden}
+body{
+  background:linear-gradient(135deg,#000,#020617);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:var(--text);overflow:hidden;
+}
 .viewer-panel{position:relative;width:100%;height:100vh}
-.viewer-canvas{position:relative;width:100%;height:100%;background:#000}
+.viewer-canvas{
+  position:relative;width:100%;height:100%;background:#000;
+}
+
+/* bottom soft gradient so HUD & dash pop on bright roads */
+.viewer-canvas::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(to top, rgba(0,0,0,.45), transparent 35%);
+  pointer-events:none;
+  z-index:2;
+}
+
+/* Mode pill */
+.mode-pill{
+  position:absolute;top:16px;left:20px;
+  padding:8px 14px;border-radius:999px;
+  background:var(--soft);border:1px solid var(--border);
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text);z-index:21;opacity:.9;
+}
 
 /* Title HUD */
 .top-street{
-  position:absolute;top:12px;left:50%;transform:translateX(-50%);
-  padding:10px 20px;border-radius:24px;background:var(--glass);
-  border:1px solid var(--border);backdrop-filter:blur(16px);
-  font-size:14px;font-weight:700;z-index:20;text-align:center;
+  position:absolute;
+  top:18px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:10px 22px;
+  border-radius:24px;
+  background:var(--glass);
+  border:1px solid var(--border);
+  backdrop-filter:blur(16px);
+  font-size:14px;
+  font-weight:700;
+  z-index:20;
+  text-align:center;
 }
 
 /* Mini map */
@@ -38,14 +72,32 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
 .mini-btn{
   position:absolute;top:178px;left:20px;padding:8px 16px;
   font-size:11px;border-radius:20px;background:var(--glass);
-  border:1px solid var(--border);cursor:pointer;font-weight:600;z-index:20
+  border:1px solid var(--border);cursor:pointer;font-weight:600;z-index:20;
+  color:var(--text);
 }
 
 /* Street info */
 .street-info{
   position:absolute;bottom:28px;left:20px;padding:12px 16px;
   background:var(--glass);border-radius:14px;font-size:12px;
-  border:1px solid var(--border)
+  border:1px solid var(--border);z-index:20;
+}
+
+/* Controls hint */
+.controls-hint{
+  position:absolute;bottom:26px;left:50%;transform:translateX(-50%);
+  padding:10px 16px;border-radius:999px;
+  background:var(--soft);border:1px solid var(--border);
+  font-size:11px;color:var(--text);letter-spacing:.08em;
+  text-transform:uppercase;display:flex;align-items:center;gap:10px;
+  z-index:22;opacity:.94;backdrop-filter:blur(12px);
+  transition:opacity .4s ease,transform .4s ease;
+  font-weight:600;
+  box-shadow:0 12px 30px rgba(15,23,42,.9);
+}
+.controls-hint span{white-space:nowrap}
+.controls-hint.hide{
+  opacity:0;transform:translate(-50%,12px);pointer-events:none;
 }
 
 /* Video */
@@ -61,19 +113,19 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
   bottom:-120px;
   transform:translateX(-50%) rotate(0deg); /* base state */
   width:70%;
+  max-width:900px;
   object-fit:contain;
   pointer-events:none;
   z-index:10;
-  transition:transform 0.15s ease-out;      /* smooth lean */
+  transition:transform 0.15s ease-out;
 }
 /* Mobile tweak for bike overlay */
 @media (max-width: 908px){
   #driveDashOverlay{
-    bottom:-20px;          /* higher than -120px so it's visible */
-    width:100%;             /* a bit wider so it fills the screen */
+    bottom:-20px;
+    width:100%;
   }
 }
-
 
 /* First street loading overlay */
 #videoLoading{
@@ -105,15 +157,24 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
 .settings-pop{
   position:absolute;right:0;bottom:70px;min-width:220px;
   background:#0f172a;border:1px solid var(--border);
-  display:none;padding:16px;border-radius:18px
+  display:none;padding:16px;border-radius:18px;
+  box-shadow:0 16px 40px rgba(15,23,42,0.9);
 }
 .settings-pop.open{display:block}
-.settings-row{display:flex;justify-content:space-between;padding:8px 0}
+.settings-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;font-size:12px;color:var(--text);
+}
 .btn-chip{
   padding:6px 14px;border-radius:20px;border:1px solid var(--border);
-  cursor:pointer
+  cursor:pointer;background:transparent;color:var(--text);
 }
-.btn-chip.active{background:var(--accent);color:#fff}
+.btn-chip.active{background:var(--accent);color:#000;border-color:var(--accent);}
+.settings-pop select,
+.settings-pop input[type="range"]{
+  background:#020617;border-radius:10px;border:1px solid var(--border);
+  color:var(--text);padding:4px 8px;font-size:12px;outline:none;
+}
 
 /* FULL MAP OVERLAY */
 #fullMapOverlay{
@@ -133,6 +194,13 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
 #fullMapContainer canvas{
   width:100%!important;height:100%!important;display:block;
 }
+.map-header{
+  position:absolute;top:20px;left:20px;
+  padding:8px 14px;border-radius:999px;
+  background:var(--glass);border:1px solid var(--border);
+  font-size:11px;color:var(--text);letter-spacing:.06em;
+  text-transform:uppercase;max-width:60%;z-index:90;
+}
 
 /* MOBILE JOYSTICK POSITION */
 @media (max-width: 768px) {
@@ -141,6 +209,14 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
   }
   #joystickKnob{width:44px;height:44px}
   .settings-anchor{right:16px;bottom:240px}
+  .street-info{
+    bottom:20px;left:16px;max-width:65%;
+  }
+  .controls-hint{
+    bottom:110px;
+    font-size:10px;
+    padding:8px 12px;
+  }
 }
 
 /* STREET POPUP */
@@ -187,16 +263,19 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
 
 <!-- FULL MAP -->
 <div id="fullMapOverlay">
+  <div id="mapHeader" class="map-header"></div>
   <div id="fullMapContainer"></div>
   <button id="closeMapBtn">✕</button>
 </div>
 
-<div class="viewer-panel">
+<div class="viewer-panel" id="viewerRoot">
   <div class="viewer-canvas">
 
+    <div class="mode-pill">ABTO • DRIVE MODE</div>
     <div class="top-street"><span id="hudStreetName">Select a Drive</span></div>
+    <div id="controlsHint" class="controls-hint"></div>
 
-    <img id="miniMapStatic" class="mini-map" src="{{ url_for('static', filename='img/minimap_placeholder.png') }}">
+    <img id="miniMapStatic" class="mini-map" src="{{ url_for('static', filename='img/minimap_placeholder.png') }}" alt="Open map">
     <button id="btnShowMap" class="mini-btn">Full Map</button>
 
     <div class="street-info"><span id="streetSmallLabel">Ready to drive</span></div>
@@ -210,7 +289,7 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
     <img
       id="driveDashOverlay"
       src="{{ url_for('static', filename='img/dash.png') }}"
-      alt="Bike overlay"
+      alt="Drive cockpit overlay"
     />
 
     <!-- first street loading overlay -->
@@ -237,7 +316,7 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
           </select>
         </div>
         <div class="settings-row">
-          <span>Night Mode</span>
+          <span>Night Filter</span>
           <button id="btnDayNight" class="btn-chip">Off</button>
         </div>
         <div class="settings-row">
@@ -269,6 +348,7 @@ body{background:linear-gradient(135deg,#000,#020617);font-family:system-ui;color
 const STREETS  = JSON.parse(document.getElementById("streets-data").textContent || "[]");
 const SELECTED = JSON.parse(document.getElementById("selected-street-data").textContent || "null");
 
+const viewerRoot       = document.getElementById("viewerRoot");
 const video            = document.getElementById("streetVideo");
 const vSource          = document.getElementById("videoSource");
 const hudStreetName    = document.getElementById("hudStreetName");
@@ -280,6 +360,7 @@ const fullMapOverlay   = document.getElementById("fullMapOverlay");
 const fullMapContainer = document.getElementById("fullMapContainer");
 const closeMapBtn      = document.getElementById("closeMapBtn");
 const dashOverlay      = document.getElementById("driveDashOverlay");
+const mapHeader        = document.getElementById("mapHeader");
 
 /* Tilt state for overlay */
 let tiltAngle = 0;
@@ -303,11 +384,36 @@ let currentVideos      = [];
 let currentVideoIndex  = 0;
 let isFirstStreetLoad  = true;
 
+let reverseRaf = null;
+
+/* ========== CONTROLS HINT ========== */
+function initControlsHint(){
+  const hintEl = document.getElementById("controlsHint");
+  if (!hintEl) return;
+  const isTouch = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
+  if (isTouch){
+    hintEl.innerHTML = `
+      <span>DRAG JOYSTICK TO DRIVE</span>
+      <span>•</span>
+      <span>TAP MAP TO CHANGE STREET</span>
+    `;
+  } else {
+    hintEl.innerHTML = `
+      <span>W / ↑ DRIVE</span>
+      <span>•</span>
+      <span>S / ↓ REVERSE</span>
+      <span>•</span>
+      <span>← → LEAN</span>
+    `;
+  }
+  setTimeout(() => hintEl.classList.add("hide"), 9000);
+}
+
 /* ========== ENGINE AUDIO (LIGHT) ========== */
 const engine = new Audio("/static/audio/engine.mp3");
 engine.loop   = true;
 engine.volume = engineVol;
-engine.play().catch(()=>{});
+engine.play().catch(()=>{}); // will be retried on user interaction
 
 function updateEngineSound(){
   const sp = walkSpeed * Math.abs(currentDir);
@@ -368,8 +474,16 @@ function buildVideoList(st){
 function loadStreet(st){
   if (!st) return;
 
-  hudStreetName.textContent    = st.name || "Drive";
-  streetSmallLabel.textContent = st.city || "";
+  hudStreetName.textContent = st.name || "Drive";
+
+  if (st.city || st.country){
+    const parts = [];
+    if (st.city) parts.push(st.city);
+    if (st.country) parts.push(st.country);
+    streetSmallLabel.textContent = parts.join(", ");
+  } else {
+    streetSmallLabel.textContent = "Press W / joystick up to start driving";
+  }
 
   currentVideos     = buildVideoList(st);
   currentVideoIndex = 0;
@@ -399,6 +513,33 @@ function safePause(){
   if (!video.paused) video.pause();
 }
 
+function cancelReverse(){
+  if (reverseRaf){
+    cancelAnimationFrame(reverseRaf);
+    reverseRaf = null;
+  }
+}
+
+function startReverse(){
+  cancelReverse();
+  const loop = () => {
+    if (currentDir !== -1){
+      reverseRaf = null;
+      return;
+    }
+    if (video.readyState >= 2){
+      if (video.currentTime <= 0){
+        reverseRaf = null;
+        return;
+      }
+      video.pause();
+      video.currentTime = Math.max(0, video.currentTime - 0.04); // scrub backwards
+    }
+    reverseRaf = requestAnimationFrame(loop);
+  };
+  reverseRaf = requestAnimationFrame(loop);
+}
+
 /* start forward only when data ready */
 function playForward(){
   const start = () => {
@@ -413,7 +554,7 @@ function playForward(){
 }
 
 function playReverse(){
-  safePause(); // keep reverse simple for now
+  startReverse();
 }
 
 function recomputeDirection(){
@@ -421,9 +562,15 @@ function recomputeDirection(){
   if (newDir === currentDir) return;
   currentDir = newDir;
 
-  if (newDir === 1)      playForward();
-  else if (newDir === -1) playReverse();
-  else                   safePause();
+  if (newDir === 1){
+    cancelReverse();
+    playForward();
+  } else if (newDir === -1){
+    playReverse();
+  } else {
+    cancelReverse();
+    safePause();
+  }
 
   updateEngineSound();
 }
@@ -431,6 +578,17 @@ function recomputeDirection(){
 /* Keyboard */
 window.addEventListener("keydown", e => {
   const k = e.key;
+
+  // Close map with Esc
+  if (k === "Escape" && fullMapOverlay.style.display === "flex"){
+    fullMapOverlay.style.display = "none";
+    return;
+  }
+
+  // ensure engine tries to play on first user gesture
+  if (engine.paused){
+    engine.play().catch(()=>{});
+  }
 
   // forward / reverse
   if (k === "w" || k === "ArrowUp"){ keyDir = 1;  recomputeDirection(); }
@@ -463,6 +621,9 @@ window.addEventListener("keyup", e => {
 /* Joystick */
 joystickBase.onpointerdown = e => {
   joystickBase.setPointerCapture(e.pointerId);
+  if (engine.paused){
+    engine.play().catch(()=>{});
+  }
   moveJoy(e);
 };
 joystickBase.onpointermove = e => {
@@ -578,6 +739,14 @@ function focusOnCurrentStreet(){
     if (m.index === currentIndex) m.el.classList.add("map-marker-selected");
     else m.el.classList.remove("map-marker-selected");
   });
+
+  if (mapHeader){
+    let loc = "";
+    if (st.city || st.country){
+      loc = " — " + [st.city, st.country].filter(Boolean).join(", ");
+    }
+    mapHeader.textContent = `Now driving: ${st.name || "Unknown"}${loc}`;
+  }
 }
 
 /* Map overlay open/close */
@@ -595,6 +764,7 @@ closeMapBtn.onclick = () => {
 
 /* ========== INIT ========== */
 document.addEventListener("DOMContentLoaded", () => {
+  initControlsHint();
   if (!STREETS.length) return;
   if (SELECTED){
     const idx = STREETS.findIndex(s => s._id === SELECTED._id);
@@ -606,23 +776,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /* ========== AUTO TELEPORT ON END ========== */
 video.addEventListener("ended", () => {
+  // If multiple clips per street, play next
   if (currentVideos.length > 1 && currentVideoIndex < currentVideos.length - 1){
     currentVideoIndex++;
     playVideoSource(currentVideos[currentVideoIndex]);
     return;
   }
 
-  let idx = STREETS.findIndex(s => s.name === hudStreetName.textContent);
-  if (idx < 0) idx = currentIndex;
-  let next = idx + 1;
+  if (!STREETS.length) return;
+
+  let next = currentIndex + 1;
   if (next >= STREETS.length) next = 0;
 
-  document.body.style.transition = "opacity 0.6s";
-  document.body.style.opacity    = 0;
+  if (viewerRoot){
+    viewerRoot.style.transition = "opacity 0.6s";
+    viewerRoot.style.opacity    = 0;
+  }
 
   setTimeout(() => {
     loadStreetByIndex(next);
-    setTimeout(() => { document.body.style.opacity = 1; }, 150);
+    if (viewerRoot){
+      setTimeout(() => { viewerRoot.style.opacity = 1; }, 150);
+    }
   }, 500);
 });
 
@@ -651,12 +826,15 @@ const popupClose       = document.getElementById("popupClose");
 
 document.querySelector(".top-street").onclick = () => {
   const name = hudStreetName.textContent;
-  const st   = STREETS.find(s => s.name === name);
+  const st   = STREETS.find(s => s.name === name) || STREETS[currentIndex];
   if (!st) return;
 
-  popupTitle.textContent       = st.name;
-  popupCity.textContent        = `📍 ${st.city}, ${st.country}`;
-  popupCategory.textContent    = st.category ? `🏷 Category: ${st.category}` : "";
+  popupTitle.textContent = st.name || "Street";
+  popupCity.textContent  = (st.city || st.country)
+    ? `📍 ${[st.city, st.country].filter(Boolean).join(", ")}`
+    : "📍 Location not specified";
+
+  popupCategory.textContent = st.category ? `🏷 Category: ${st.category}` : "";
   popupDescription.textContent = st.description || "No description added.";
   popup.style.display = "flex";
 };
