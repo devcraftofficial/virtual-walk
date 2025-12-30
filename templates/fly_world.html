@@ -51,6 +51,50 @@
       cursor: default;
     }
 
+    /* ===== TOP BRAND / MODE PILL ===== */
+    .top-brand-bar {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 49;
+    }
+
+    .top-brand-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: radial-gradient(circle at top, #020617ee, #020617dd);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9);
+      font-size: 11px;
+    }
+
+    .top-brand-chip .brand-logo {
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #0f172a;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+    }
+
+    .top-brand-chip .brand-text {
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .top-brand-chip .mode-pill {
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: #a855f7;
+      color: white;
+      font-weight: 600;
+      font-size: 10px;
+      box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.4);
+    }
+
     .mini-map {
       position: absolute;
       top: 16px;
@@ -404,6 +448,37 @@
         height: 500px;
         bottom: 15%;
       }
+
+      /* mobile brand pill: shorter, hide full text */
+      .top-brand-chip {
+        padding: 4px 10px;
+        gap: 6px;
+        font-size: 10px;
+      }
+      .top-brand-chip .brand-text {
+        display: none; /* hide 'Virtual Street Walk' */
+      }
+    }
+
+    /* Mobile layout for street name & location –
+       move to bottom-center so it has more width */
+    @media (max-width: 600px) {
+      .street-info {
+        top: auto;
+        right: auto;
+        left: 50%;
+        bottom: 50px;
+        transform: translateX(-50%);
+        max-width: 260px;
+        text-align: center;
+        padding: 6px 12px;
+      }
+      .street-info h2 {
+        font-size: 14px;
+      }
+      .street-info p {
+        font-size: 11px;
+      }
     }
 
     .map-marker {
@@ -437,6 +512,15 @@
 
 <div class="viewer-panel" role="main" aria-live="polite">
   <div class="viewer-canvas" id="viewerCanvas">
+
+    <!-- brand / mode pill -->
+    <div class="top-brand-bar" aria-label="Mode badge">
+      <div class="top-brand-chip">
+        <span class="brand-logo">ABTO</span>
+        <span class="brand-text">Virtual Street Walk</span>
+        <span class="mode-pill">FLY MODE</span>
+      </div>
+    </div>
 
     <div id="miniMap" class="mini-map" aria-label="Mini map preview" role="button" tabindex="0"></div>
 
@@ -504,7 +588,7 @@
                  aria-label="Phone tilt control">
         </div>
         <div class="settings-row">
-          <div class="settings-label">Auto‑pilot follow road</div>
+          <div class="settings-label">Auto-pilot follow road</div>
           <input id="autoPilotToggle" class="settings-toggle" type="checkbox"
                  aria-label="Auto-pilot">
         </div>
@@ -512,7 +596,7 @@
 
       <div class="settings-group">
         <div class="settings-row">
-          <div class="settings-label">GPS auto‑route</div>
+          <div class="settings-label">GPS auto-route</div>
           <input id="gpsToggle" class="settings-toggle" type="checkbox"
                  aria-label="GPS based auto route">
         </div>
