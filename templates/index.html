@@ -899,6 +899,146 @@ nav.scrolled {
 }
 
 /* ==========================================================================
+   NEW: TRIP PRICE CHECKER
+   ========================================================================== */
+.section-price {
+  padding: clamp(70px, 11vw, 110px) max(32px, 6vw) 0;
+  max-width: 1600px;
+  margin: auto;
+}
+
+.price-header {
+  max-width: 900px;
+  margin: 0 auto 26px;
+  text-align: center;
+}
+
+.price-header h3 {
+  margin: 0 0 8px;
+  font-size: clamp(26px, 5vw, 34px);
+  font-weight: 800;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.price-header p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: clamp(14px, 2.3vw, 17px);
+}
+
+.price-subline {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: .18em;
+}
+
+.price-checker {
+  max-width: 760px;
+  margin: 0 auto;
+  background: var(--glass);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-accent);
+  padding: 20px 22px 18px;
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(14px);
+}
+
+.price-input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.price-input-group {
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.price-input-group label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  color: var(--text-dim);
+}
+
+.price-input {
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(15,23,42,.96);
+  color: #e5e7eb;
+  padding: 10px 16px;
+  font-size: 13px;
+  outline: none;
+}
+
+.price-input::placeholder {
+  color: #6b7280;
+}
+
+.price-input:focus-visible,
+.price-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(93,94,255,.4);
+}
+
+.price-cta {
+  padding: 12px 24px;
+  font-size: 14px;
+  box-shadow: 0 16px 40px rgba(93,94,255,.7);
+}
+
+.price-result {
+  margin-top: 16px;
+  padding: 14px 14px 12px;
+  border-radius: var(--radius-lg);
+  background: rgba(15,23,42,.96);
+  border: 1px dashed var(--border-subtle);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.price-result-placeholder {
+  margin: 0;
+}
+
+.price-result-card h4 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  color: #e5e7eb;
+}
+
+.price-result-card p {
+  margin: 4px 0;
+}
+
+.price-tag {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.price-result-card ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.price-result-card li {
+  margin-bottom: 4px;
+}
+
+.price-disclaimer {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* ==========================================================================
    NEW: BEST TOUR PLACES SECTION
    ========================================================================== */
 .section-tour {
@@ -1413,6 +1553,10 @@ footer p {
     padding: 60px 20px 0;
   }
 
+  .section-price {
+    padding: 60px 20px 0;
+  }
+
   .grid {
     grid-template-columns: 1fr;
     gap: 24px;
@@ -1441,6 +1585,16 @@ footer p {
   .back-to-top {
     right: 16px;
     bottom: 70px;
+  }
+
+  .price-input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .price-cta {
+    width: 100%;
+    justify-content: center;
   }
 }
 
@@ -1708,6 +1862,53 @@ footer p {
       <div class="usecase-pill">
         <i class="fas fa-city"></i>
         Exploring cities you may never visit
+      </div>
+    </div>
+  </section>
+
+  <!-- 💸 TRIP PRICE CHECKER (NOW HITS /api/price) -->
+  <section class="section-price" id="trip-price" aria-labelledby="price-title">
+    <div class="price-header">
+      <h3 id="price-title">Check a Sample Trip Price</h3>
+      <p>
+        Type a simple route like <strong>Dubai → Taj Mahal</strong> to see a rough flight price range,
+        powered by live distance lookup. This is still an estimate only.
+      </p>
+      <p class="price-subline">EXPERIMENTAL • DISTANCE-BASED PRICING ONLY</p>
+    </div>
+
+    <div class="price-checker">
+      <form id="priceCheckForm" autocomplete="off">
+        <div class="price-input-row">
+          <div class="price-input-group">
+            <label for="priceFrom">From</label>
+            <input
+              type="text"
+              id="priceFrom"
+              class="price-input"
+              placeholder="Dubai, UAE"
+            >
+          </div>
+          <div class="price-input-group">
+            <label for="priceTo">To</label>
+            <input
+              type="text"
+              id="priceTo"
+              class="price-input"
+              placeholder="Taj Mahal, Agra"
+            >
+          </div>
+          <button type="submit" class="hero-cta price-cta" id="priceSubmitBtn">
+            <i class="fas fa-ticket-alt" aria-hidden="true"></i>
+            Check price
+          </button>
+        </div>
+      </form>
+
+      <div class="price-result" id="priceResult" aria-live="polite">
+        <p class="price-result-placeholder">
+          Try <strong>Dubai, UAE</strong> to <strong>Taj Mahal, Agra</strong> to see a sample distance and price range.
+        </p>
       </div>
     </div>
   </section>
@@ -2024,6 +2225,88 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
     });
+  }
+
+  // 💸 Trip price checker -> calls Flask /api/price
+  const priceForm      = document.getElementById('priceCheckForm');
+  const priceFrom      = document.getElementById('priceFrom');
+  const priceTo        = document.getElementById('priceTo');
+  const priceResult    = document.getElementById('priceResult');
+  const priceSubmitBtn = document.getElementById('priceSubmitBtn');
+
+  async function runPriceCheck(event) {
+    if (event) event.preventDefault();
+    if (!priceFrom || !priceTo || !priceResult || !priceSubmitBtn) return;
+
+    const origin      = priceFrom.value.trim();
+    const destination = priceTo.value.trim();
+
+    if (!origin || !destination) {
+      priceResult.innerHTML = `
+        <div class="price-result-card">
+          <h4>Please enter both places</h4>
+          <p>Example: try <strong>Dubai, UAE</strong> to <strong>Taj Mahal, Agra</strong> to see a sample distance + price estimate.</p>
+        </div>`;
+      return;
+    }
+
+    const originalLabel = priceSubmitBtn.innerHTML;
+    priceSubmitBtn.disabled = true;
+    priceSubmitBtn.innerHTML = `<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>&nbsp;Checking...`;
+    priceResult.innerHTML = `<p>Calculating distance and rough price estimate...</p>`;
+
+    try {
+      const resp = await fetch("{{ url_for('api_price') }}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ origin, destination })
+      });
+
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        const msg = data && data.error ? data.error : 'Something went wrong on the server.';
+        priceResult.innerHTML = `
+          <div class="price-result-card">
+            <h4>Could not fetch estimate</h4>
+            <p>${msg}</p>
+          </div>`;
+        return;
+      }
+
+      const originLabel = data.origin_formatted || origin;
+      const destLabel   = data.destination_formatted || destination;
+
+      const distanceText = data.distance_text || '';
+      const priceText    = data.price_text    || '';
+
+      priceResult.innerHTML = `
+        <div class="price-result-card">
+          <h4>${originLabel} → ${destLabel}</h4>
+          ${distanceText ? `<p>${distanceText}</p>` : ''}
+          ${priceText ? `<p class="price-tag">${priceText}</p>` : ''}
+          <p class="price-disclaimer">
+            This is an automatic estimate based on distance only. Real ticket prices change with airline,
+            season, date, offers and how early you book.
+          </p>
+        </div>`;
+    } catch (err) {
+      console.error(err);
+      priceResult.innerHTML = `
+        <div class="price-result-card">
+          <h4>Network error</h4>
+          <p>We couldn't reach the pricing service. Please check your connection and try again.</p>
+        </div>`;
+    } finally {
+      priceSubmitBtn.disabled = false;
+      priceSubmitBtn.innerHTML = originalLabel;
+    }
+  }
+
+  if (priceForm) {
+    priceForm.addEventListener('submit', runPriceCheck);
   }
 });
 </script>
