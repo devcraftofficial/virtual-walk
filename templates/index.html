@@ -1,2364 +1,888 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>ABTO - A Better Travel Observer</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="ABTO - A Better Travel Observer. Explore real streets worldwide with immersive walk, drive, sit and fly modes.">
-<meta property="og:title" content="ABTO - A Better Travel Observer">
-<meta property="og:description" content="Explore real streets worldwide with immersive walk, drive, sit and fly modes.">
-<meta property="og:image" content="{{ url_for('static', filename='img/og-image.jpg') }}">
-<meta name="theme-color" content="#0a0b15">
+  <meta charset="UTF-8">
+  <title>ABTO - A Better Travel Observer</title>
 
-<!-- ✅ FAVICONS - ALL DEVICES -->
-<link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-<link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/fav.png') }}">
-<link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/fav.png') }}">
-<link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/fav.png') }}">
+  <!-- Viewport & Color Scheme -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0a0b15">
 
-<!-- Fonts & Icons -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Primary Description -->
+  <meta name="description" content="ABTO - A Better Travel Observer. Explore real streets worldwide with immersive walk, drive, sit and fly modes.">
 
-<style>
-/* ==========================================================================
-   ROOT THEME & VARIABLES
-   ========================================================================== */
-:root {
-  --bg-main: #020617;
-  --bg-soft: #0b1020;
-  --glass: rgba(15,23,42,.85);
-  --glass-hover: rgba(15,23,42,.98);
-  --accent: #5d5eff;
-  --accent2: #7c3aed;
-  --accent3: #ec4899;
-  --gradient: linear-gradient(135deg, #5d5eff, #7c3aed, #ec4899);
-  --gradient-soft: linear-gradient(135deg, #1f2937, #020617);
-  --gradient-glow: linear-gradient(135deg, #5d5eff22, #7c3aed22, #ec489922);
-  --text: #f9fafb;
-  --text-muted: #9ca3af;
-  --text-dim: #6b7280;
-  --border: rgba(148,163,184,.2);
-  --border-subtle: rgba(148,163,184,.12);
-  --border-accent: rgba(93,94,255,.3);
-  --radius-xl: 26px;
-  --radius-lg: 18px;
-  --radius: 12px;
-  --shadow: 0 25px 50px rgba(0,0,0,.5);
-  --shadow-soft: 0 18px 40px rgba(15,23,42,.8);
-  --shadow-glow: 0 0 0 1px rgba(93,94,255,.3), 0 24px 60px rgba(15,23,42,.95);
-  --nav-h: 86px;
-  --nav-h-mobile: 70px;
-  --hero-badge-top: 80px;
-  --hero-badge-top-mobile: 80px;
-  --ease: all .35s cubic-bezier(.4,0,.2,1);
-  --ease-fast: all .2s cubic-bezier(.4,0,.2,1);
-}
+  <!-- Canonical & URLs (Flask will render full external URLs) -->
+  <link rel="canonical" href="{{ url_for('index', _external=True) }}">
 
-/* ==========================================================================
-   BASE & RESET
-   ========================================================================== */
-*, *::before, *::after { box-sizing: border-box; }
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ABTO - A Better Travel Observer">
+  <meta property="og:description" content="Explore real streets worldwide with immersive walk, drive, sit and fly modes.">
+  <meta property="og:url" content="{{ url_for('index', _external=True) }}">
+  <meta property="og:image" content="{{ url_for('static', filename='img/og-image.jpg', _external=True) }}">
 
-html {
-  scroll-behavior: smooth;
-}
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ABTO - A Better Travel Observer">
+  <meta name="twitter:description" content="Explore real streets worldwide with immersive walk, drive, sit and fly modes.">
+  <meta name="twitter:image" content="{{ url_for('static', filename='img/og-image.jpg', _external=True) }}">
+  <meta name="twitter:url" content="{{ url_for('index', _external=True) }}">
 
-body {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background:
-    radial-gradient(circle at 20% 15%, rgba(93,94,255,.16), transparent 55%),
-    radial-gradient(circle at 80% 85%, rgba(124,58,237,.12), transparent 55%),
-    radial-gradient(circle at 10% 90%, rgba(236,72,153,.12), transparent 55%),
-    linear-gradient(135deg, #020617, #020617);
-  color: var(--text);
-  line-height: 1.6;
-  padding-top: var(--nav-h);
-  overflow-x: hidden;
-  position: relative;
-}
+  <!-- ✅ FAVICONS - ALL DEVICES -->
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/fav.png') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/fav.png') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/fav.png') }}">
 
-/* Subtle grid background */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(15,23,42,.7) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(15,23,42,.7) 1px, transparent 1px);
-  background-size: 120px 120px;
-  opacity: .4;
-  pointer-events: none;
-  z-index: -2;
-}
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(circle at top, rgba(15,23,42,.8), transparent 60%);
-  z-index: -1;
-}
+  <!-- Preload hero main image for faster LCP -->
+  <link rel="preload" as="image" href="{{ url_for('static', filename='img/main.png') }}">
 
-/* Focus styles */
-a,
-button {
-  outline: none;
-}
-
-a:focus-visible,
-button:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-  border-radius: 999px;
-}
-
-/* Reduce motion for users who prefer it */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
+  <!-- JSON-LD basic structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "ABTO - A Better Travel Observer",
+    "url": "{{ url_for('index', _external=True) }}"
   }
-}
+  </script>
 
-/* ==========================================================================
-   ANIMATIONS
-   ========================================================================== */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-@keyframes slideDown {
-  from { transform: translateY(-16px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-@keyframes scrollPulse {
-  0%, 100% { transform: translateY(0); opacity: .7; }
-  50% { transform: translateY(6px); opacity: 1; }
-}
-
-/* ==========================================================================
-   PRELOADER
-   ========================================================================== */
-.loading {
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(circle at top, #020617, #020617 65%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  z-index: 10000;
-  opacity: 1;
-  transition: all .4s ease;
-  transform: scale(1);
-}
-
-.loading-inner {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 20px;
-  border-radius: 999px;
-  border: 1px solid var(--border-accent);
-  background: rgba(15,23,42,.9);
-  box-shadow: var(--shadow-soft);
-}
-
-.loading::before {
-  content: 'ABTO';
-  color: var(--accent);
-  font-weight: 800;
-  font-size: 22px;
-  letter-spacing: .08em;
-}
-
-.loading i {
-  font-size: 24px;
-  animation: spin 1s linear infinite;
-  color: var(--accent);
-}
-
-.loading span {
-  color: var(--text-muted);
-  font-size: 14px;
-}
-
-/* ==========================================================================
-   NAVIGATION
-   ========================================================================== */
-nav {
-  position: fixed;
-  inset-inline: 0;
-  top: 0;
-  height: var(--nav-h);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 max(16px, 5vw);
-  backdrop-filter: blur(22px);
-  background: radial-gradient(circle at top, rgba(15,23,42,.9), rgba(15,23,42,.96));
-  border-bottom: 1px solid var(--border-subtle);
-  z-index: 999;
-  transition: var(--ease);
-}
-
-nav.scrolled {
-  background: rgba(15,23,42,.98);
-  box-shadow: 0 10px 45px rgba(0,0,0,.8);
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  position: relative;
-  min-height: 56px;
-}
-
-.logo-img {
-  width: clamp(64px, 8vw, 100px);
-  height: clamp(64px, 8vw, 100px);
-  object-fit: contain;
-  flex-shrink: 0;
-  filter: drop-shadow(0 8px 30px rgba(93,94,255,.7));
-  transition: all .3s ease;
-}
-
-.logo:hover .logo-img {
-  filter: drop-shadow(0 10px 36px rgba(93,94,255,.9));
-  transform: translateY(-2px) scale(1.05);
-}
-
-.logo::after {
-  content: 'A Better Travel Observer';
-  position: absolute;
-  bottom: -26px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 11px;
-  color: var(--text-dim);
-  font-weight: 400;
-  white-space: nowrap;
-  opacity: 0;
-  transition: var(--ease);
-  pointer-events: none;
-}
-
-.logo:hover::after {
-  opacity: 1;
-  bottom: -30px;
-}
-
-.nav-links {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.nav-links.active {
-  display: flex !important;
-  position: fixed;
-  top: var(--nav-h);
-  left: 0;
-  right: 0;
-  background: rgba(15,23,42,.98);
-  flex-direction: column;
-  padding: 24px 20px 32px;
-  backdrop-filter: blur(22px);
-  border-top: 1px solid var(--border-subtle);
-  gap: 14px;
-  animation: slideDown .25s ease;
-}
-
-.nav-link {
-  text-decoration: none;
-  color: var(--text);
-  padding: 10px 22px;
-  border-radius: 999px;
-  font-weight: 500;
-  border: 1px solid transparent;
-  font-size: clamp(14px, 2.5vw, 15px);
-  transition: var(--ease);
-  position: relative;
-  overflow: hidden;
-  white-space: nowrap;
-  min-width: fit-content;
-}
-
-.nav-link::before {
-  content: '';
-  position: absolute;
-  inset-block: 0;
-  left: -100%;
-  width: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
-  transition: var(--ease-fast);
-}
-
-.nav-link:hover::before {
-  left: 100%;
-}
-
-.nav-link:hover {
-  background: rgba(15,23,42,.9);
-  border-color: var(--border-subtle);
-  transform: translateY(-1px);
-}
-
-.nav-link.primary {
-  background: var(--gradient);
-  box-shadow: 0 14px 40px rgba(93,94,255,.6);
-  color: #fff !important;
-  border: 1px solid transparent;
-}
-
-.nav-link.primary i {
-  margin-right: 6px;
-}
-
-.nav-link.primary:hover {
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: 0 18px 55px rgba(93,94,255,.75);
-}
-
-.mobile-menu-toggle {
-  display: none;
-  flex-direction: column;
-  gap: 5px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  transition: var(--ease-fast);
-  background: transparent;
-}
-
-.mobile-menu-toggle:hover {
-  background: rgba(15,23,42,.9);
-  border-color: var(--border-subtle);
-}
-
-.hamburger {
-  width: 24px;
-  height: 2px;
-  background: var(--text);
-  transition: var(--ease-fast);
-  border-radius: 999px;
-}
-
-/* Burger open state */
-.mobile-menu-toggle.open .hamburger:nth-child(1) {
-  transform: rotate(45deg) translate(5px, 5px);
-}
-.mobile-menu-toggle.open .hamburger:nth-child(2) {
-  opacity: 0;
-}
-.mobile-menu-toggle.open .hamburger:nth-child(3) {
-  transform: rotate(-45deg) translate(5px, -5px);
-}
-
-/* ==========================================================================
-   HERO SECTION
-   ========================================================================== */
-.hero {
-  min-height: calc(100vh - var(--nav-h));
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  align-items: center;
-  gap: 80px;
-  padding: var(--hero-badge-top) max(40px, 6vw) 56px;
-  position: relative;
-  max-width: 1600px;
-  margin: 0 auto;
-  width: 100%;
-  opacity: 0;
-  transform: translateY(24px);
-  animation: fadeInUp .7s ease forwards;
-}
-
-.hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 15% 20%, rgba(93,94,255,.14), transparent 52%),
-    radial-gradient(circle at 85% 80%, rgba(124,58,237,.12), transparent 54%);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.hero-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 30px;
-  position: relative;
-  z-index: 2;
-  max-width: 620px;
-  padding-right: 40px;
-}
-
-.hero-badge {
-  display: inline-flex;
-  gap: 12px;
-  align-items: center;
-  padding: 12px 24px;
-  background: radial-gradient(circle at top left, rgba(93,94,255,.24), rgba(15,23,42,.96));
-  border: 1px solid var(--border-accent);
-  border-radius: 999px;
-  backdrop-filter: blur(18px);
-  animation: float 6s ease-in-out infinite;
-  max-width: max-content;
-  box-shadow: 0 18px 35px rgba(15,23,42,.9);
-}
-
-.hero-badge i {
-  color: var(--accent);
-  font-size: 18px;
-}
-
-.hero-badge span {
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: .16em;
-  color: var(--text-muted);
-}
-
-.hero h1 {
-  font-size: clamp(46px, 7vw, 70px);
-  font-weight: 800;
-  line-height: 1.05;
-  background: linear-gradient(135deg, #ffffff 0%, #e5e7eb 30%, var(--accent) 70%, #ec4899 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin: 0;
-  letter-spacing: -.03em;
-}
-
-.hero h1::after {
-  content: 'ABTO';
-  display: block;
-  font-size: clamp(18px, 3.5vw, 24px);
-  font-weight: 700;
-  color: var(--accent);
-  margin-top: 10px;
-  opacity: .9;
-}
-
-.hero p {
-  max-width: 560px;
-  font-size: clamp(15px, 2.4vw, 18px);
-  color: #e5e7eb;
-  font-weight: 400;
-  line-height: 1.8;
-  margin: 0;
-}
-
-.hero p::before {
-  content: 'A Better Travel Observer brings you ';
-  font-weight: 600;
-  color: var(--accent);
-}
-
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: center;
-}
-
-.hero-cta {
-  display: inline-flex;
-  gap: 10px;
-  align-items: center;
-  padding: 18px 40px;
-  background: var(--gradient);
-  color: #fff;
-  text-decoration: none;
-  font-weight: 700;
-  border-radius: 999px;
-  box-shadow: 0 22px 55px rgba(93,94,255,.7);
-  transition: var(--ease);
-  font-size: clamp(15px, 2.5vw, 17px);
-  max-width: max-content;
-  position: relative;
-  overflow: hidden;
-}
-
-.hero-cta::before {
-  content: '';
-  position: absolute;
-  inset-block: 0;
-  left: -110%;
-  width: 90%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
-  transition: var(--ease-fast);
-}
-
-.hero-cta:hover::before {
-  left: 120%;
-}
-
-.hero-cta:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 28px 65px rgba(93,94,255,.85);
-}
-
-.hero-cta i {
-  font-size: 18px;
-}
-
-/* Hero secondary / subtle link */
-.hero-secondary {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--text-dim);
-  text-decoration: none;
-}
-
-.hero-secondary i {
-  font-size: 10px;
-}
-
-.hero-secondary:hover {
-  color: var(--accent);
-}
-
-/* Hero stats */
-.hero-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 8px;
-}
-
-.hero-stat {
-  padding: 10px 16px;
-  border-radius: 999px;
-  border: 1px solid var(--border-subtle);
-  background: rgba(15,23,42,.85);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-.hero-stat strong {
-  font-size: 16px;
-  color: #e5e7eb;
-}
-
-/* Scroll indicator */
-.scroll-indicator {
-  position: absolute;
-  left: 50%;
-  bottom: 18px;
-  transform: translateX(-50%);
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--text-dim);
-  letter-spacing: .18em;
-  text-transform: uppercase;
-  opacity: .85;
-}
-
-.scroll-indicator-dot {
-  width: 2px;
-  height: 12px;
-  border-radius: 999px;
-  background: var(--text-dim);
-  animation: scrollPulse 1.8s ease-in-out infinite;
-}
-
-/* ==========================================================================
-   HERO VISUAL - 3 SCREENSHOT LAYOUT (GRID-BASED)
-   ========================================================================== */
-.hero-visual {
-  flex: 0 0 520px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 16px;
-  height: 100%;
-  max-height: 620px;
-  z-index: 2;
-}
-
-.hero-visual-title {
-  align-self: flex-end;
-  font-size: clamp(18px, 2.5vw, 22px);
-  font-weight: 600;
-  margin: 0 0 4px auto;
-  text-align: right;
-  text-transform: uppercase;
-  letter-spacing: .18em;
-  color: var(--text-muted);
-}
-
-.hero-visual-sub {
-  align-self: flex-end;
-  font-size: 12px;
-  color: var(--text-dim);
-  margin-bottom: 6px;
-  max-width: 320px;
-  text-align: right;
-}
-
-.hero-screenshots {
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: 18px;
-  align-items: stretch;
-  width: 100%;
-}
-
-/* Left big card */
-.hero-screenshot-main {
-  background: var(--glass);
-  border-radius: var(--radius-xl);
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--border-accent);
-  box-shadow: var(--shadow-glow);
-  overflow: hidden;
-  background-image: linear-gradient(135deg, var(--gradient-glow), transparent);
-  min-height: 380px;
-}
-
-.hero-screenshot-main img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: calc(var(--radius-xl) - 4px);
-}
-
-/* Right column with 2 small cards */
-.hero-screenshot-column {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.hero-screenshot-small-top,
-.hero-screenshot-small-right {
-  background: var(--glass);
-  border-radius: var(--radius-lg);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--border-accent);
-  box-shadow: var(--shadow-glow);
-  overflow: hidden;
-  background-image: linear-gradient(135deg, var(--gradient-glow), transparent);
-  flex: 1;
-  min-height: 170px;
-}
-
-.hero-screenshot-small-top img,
-.hero-screenshot-small-right img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: calc(var(--radius-lg) - 4px);
-}
-
-/* ==========================================================================
-   MODES SECTION
-   ========================================================================== */
-.modes {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 28px;
-  max-width: 1200px;
-  margin: 60px auto 0;
-  padding: 0 24px;
-}
-
-.mode-card {
-  background: radial-gradient(circle at top, rgba(15,23,42,.96), rgba(15,23,42,.98));
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  padding: clamp(32px, 6vw, 40px) clamp(24px, 4.5vw, 32px);
-  text-align: center;
-  transition: var(--ease);
-  text-decoration: none;
-  color: inherit;
-  backdrop-filter: blur(12px);
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 14px 40px rgba(15,23,42,.85);
-}
-
-.mode-card::before {
-  content: 'ABTO MODE';
-  position: absolute;
-  top: 14px;
-  right: 16px;
-  font-size: 11px;
-  color: var(--text-dim);
-  font-weight: 600;
-  background: rgba(15,23,42,.88);
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border-subtle);
-  opacity: .95;
-  letter-spacing: .16em;
-}
-
-.mode-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at top, rgba(93,94,255,.24), transparent 60%);
-  opacity: 0;
-  transition: var(--ease);
-}
-
-.mode-card:hover::after {
-  opacity: 1;
-}
-
-.mode-card:hover {
-  transform: translateY(-12px);
-  box-shadow: var(--shadow-glow);
-  border-color: var(--accent);
-}
-
-.mode-icon {
-  font-size: clamp(44px, 10vw, 54px);
-  margin-bottom: 18px;
-  display: block;
-  filter: drop-shadow(0 10px 28px rgba(93,94,255,.5));
-  animation: float 4s ease-in-out infinite;
-}
-
-.mode-card h3 {
-  margin: 0 0 10px;
-  font-size: clamp(20px, 3.6vw, 24px);
-  font-weight: 700;
-}
-
-.mode-card h3::after {
-  content: ' – ABTO';
-  font-size: .68em;
-  opacity: .7;
-  color: var(--text-dim);
-}
-
-.mode-card p {
-  margin: 0;
-  color: var(--text-muted);
-  font-weight: 400;
-  font-size: clamp(14px, 2.4vw, 16px);
-}
-
-/* ==========================================================================
-   SECTION BASE
-   ========================================================================== */
-.section {
-  padding: clamp(90px, 14vw, 140px) max(32px, 6vw);
-  max-width: 1600px;
-  margin: auto;
-}
-
-.section-header {
-  max-width: 900px;
-  margin: 0 auto 60px;
-  text-align: center;
-}
-
-.section h2 {
-  font-size: clamp(34px, 6.5vw, 48px);
-  font-weight: 800;
-  margin-bottom: 10px;
-  background: var(--gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.section h2::after {
-  content: 'ABTO';
-  display: block;
-  font-size: clamp(16px, 3vw, 20px);
-  font-weight: 700;
-  color: var(--accent);
-  opacity: .9;
-  margin-top: 6px;
-}
-
-.section p {
-  color: var(--text-muted);
-  font-size: clamp(15px, 2.5vw, 18px);
-  margin: 0;
-}
-
-.section-subline {
-  margin-top: 8px;
-  font-size: 13px;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: .2em;
-}
-
-/* ==========================================================================
-   HOW IT WORKS
-   ========================================================================== */
-.section-how {
-  padding-top: 60px;
-}
-
-.how-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: clamp(22px, 3.5vw, 30px);
-}
-
-.how-step {
-  background: radial-gradient(circle at top, rgba(15,23,42,.96), rgba(15,23,42,.98));
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border-subtle);
-  padding: 24px 24px 22px;
-  position: relative;
-  box-shadow: 0 14px 40px rgba(15,23,42,.8);
-}
-
-.how-step-badge {
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  background: rgba(15,23,42,1);
-  border: 1px solid var(--border-subtle);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-bottom: 10px;
-}
-
-.how-step h3 {
-  margin: 0 0 6px;
-  font-size: 16px;
-  font-weight: 600;
-  color: #e5e7eb;
-}
-
-.how-step p {
-  margin: 0;
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-/* ==========================================================================
-   USE-CASES / WHO IT'S FOR
-   ========================================================================== */
-.usecases-strip {
-  margin-top: 36px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-}
-
-.usecase-pill {
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: rgba(15,23,42,.95);
-  border: 1px solid var(--border-subtle);
-  font-size: 12px;
-  color: var(--text-dim);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.usecase-pill i {
-  color: var(--accent);
-}
-
-/* ==========================================================================
-   NEW: TRIP PRICE CHECKER
-   ========================================================================== */
-.section-price {
-  padding: clamp(70px, 11vw, 110px) max(32px, 6vw) 0;
-  max-width: 1600px;
-  margin: auto;
-}
-
-.price-header {
-  max-width: 900px;
-  margin: 0 auto 26px;
-  text-align: center;
-}
-
-.price-header h3 {
-  margin: 0 0 8px;
-  font-size: clamp(26px, 5vw, 34px);
-  font-weight: 800;
-  background: var(--gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.price-header p {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: clamp(14px, 2.3vw, 17px);
-}
-
-.price-subline {
-  margin-top: 10px;
-  font-size: 12px;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: .18em;
-}
-
-.price-checker {
-  max-width: 760px;
-  margin: 0 auto;
-  background: var(--glass);
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border-accent);
-  padding: 20px 22px 18px;
-  box-shadow: var(--shadow-soft);
-  backdrop-filter: blur(14px);
-}
-
-.price-input-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-end;
-}
-
-.price-input-group {
-  flex: 1 1 220px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.price-input-group label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: .16em;
-  color: var(--text-dim);
-}
-
-.price-input {
-  border-radius: 999px;
-  border: 1px solid var(--border-subtle);
-  background: rgba(15,23,42,.96);
-  color: #e5e7eb;
-  padding: 10px 16px;
-  font-size: 13px;
-  outline: none;
-}
-
-.price-input::placeholder {
-  color: #6b7280;
-}
-
-.price-input:focus-visible,
-.price-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px rgba(93,94,255,.4);
-}
-
-.price-cta {
-  padding: 12px 24px;
-  font-size: 14px;
-  box-shadow: 0 16px 40px rgba(93,94,255,.7);
-}
-
-.price-result {
-  margin-top: 16px;
-  padding: 14px 14px 12px;
-  border-radius: var(--radius-lg);
-  background: rgba(15,23,42,.96);
-  border: 1px dashed var(--border-subtle);
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-.price-result-placeholder {
-  margin: 0;
-}
-
-.price-result-card h4 {
-  margin: 0 0 6px;
-  font-size: 15px;
-  color: #e5e7eb;
-}
-
-.price-result-card p {
-  margin: 4px 0;
-}
-
-.price-tag {
-  color: var(--accent);
-  font-weight: 500;
-}
-
-.price-result-card ul {
-  margin: 8px 0 0;
-  padding-left: 18px;
-}
-
-.price-result-card li {
-  margin-bottom: 4px;
-}
-
-.price-disclaimer {
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--text-dim);
-}
-
-/* ==========================================================================
-   NEW: BEST TOUR PLACES SECTION
-   ========================================================================== */
-.section-tour {
-  padding: clamp(70px, 11vw, 110px) max(32px, 6vw) 0;
-  max-width: 1600px;
-  margin: auto;
-}
-
-.tour-header {
-  max-width: 900px;
-  margin: 0 auto 36px;
-  text-align: center;
-}
-
-.tour-header h3 {
-  margin: 0 0 8px;
-  font-size: clamp(26px, 5vw, 34px);
-  font-weight: 800;
-  background: var(--gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.tour-header p {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: clamp(14px, 2.3vw, 17px);
-}
-
-.tour-subline {
-  margin-top: 10px;
-  font-size: 12px;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: .18em;
-}
-
-.tour-filters {
-  max-width: 540px;
-  margin: 0 auto 26px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.tour-search-wrap {
-  flex: 1 1 260px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(15,23,42,.96);
-  border-radius: 999px;
-  border: 1px solid var(--border-subtle);
-  padding: 10px 16px;
-  box-shadow: 0 12px 30px rgba(15,23,42,.9);
-}
-
-.tour-search-wrap i {
-  color: var(--text-dim);
-  font-size: 14px;
-}
-
-.tour-search-input {
-  border: none;
-  outline: none;
-  background: transparent;
-  color: #e5e7eb;
-  font-size: 13px;
-  width: 100%;
-}
-
-.tour-search-input::placeholder {
-  color: #6b7280;
-}
-
-/* Tour grid and cards */
-.tour-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: clamp(20px, 3vw, 26px);
-  max-width: 1200px;
-  margin: 0 auto 32px;
-}
-
-.tour-card {
-  cursor: pointer;
-}
-
-.tour-card-hidden {
-  display: none !important;
-}
-
-.tour-note {
-  text-align: center;
-  font-size: 12px;
-  color: var(--text-dim);
-  max-width: 520px;
-  margin: 0 auto 0;
-}
-
-/* ==========================================================================
-   CARDS / GRID (FEATURED STREETS)
-   ========================================================================== */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: clamp(22px, 3.5vw, 30px);
-}
-
-.card {
-  background: radial-gradient(circle at top, rgba(15,23,42,.96), rgba(15,23,42,.98));
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  transition: var(--ease);
-  text-decoration: none;
-  color: inherit;
-  backdrop-filter: blur(12px);
-  position: relative;
-  min-height: 320px;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 18px 40px rgba(15,23,42,.85);
-}
-
-.card::before {
-  content: 'ABTO STREET';
-  position: absolute;
-  top: 14px;
-  right: 16px;
-  font-size: 11px;
-  color: #e5e7eb;
-  font-weight: 600;
-  background: rgba(15,23,42,.88);
-  padding: 4px 10px;
-  border-radius: 999px;
-  opacity: 0;
-  transition: var(--ease);
-  letter-spacing: .18em;
-}
-
-.card:hover::before {
-  opacity: 1;
-}
-
-.card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(93,94,255,.25), transparent 55%);
-  opacity: 0;
-  transition: var(--ease);
-}
-
-.card:hover::after {
-  opacity: .9;
-}
-
-.thumb {
-  height: clamp(180px, 24vw, 220px);
-  background-size: cover;
-  background-position: center;
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.thumb::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at top, rgba(15,23,42,.35), transparent 60%);
-  opacity: .9;
-  mix-blend-mode: soft-light;
-}
-
-.thumb::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(45deg, #5d5eff33, #7c3aed22);
-  opacity: 0;
-  transition: var(--ease);
-}
-
-.card:hover .thumb::after {
-  opacity: 1;
-}
-
-.thumb-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--gradient-soft);
-  color: var(--text-muted);
-  font-size: clamp(48px, 10vw, 60px);
-  height: 100%;
-}
-
-.card-body {
-  padding: 24px 24px 22px;
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  z-index: 1;
-}
-
-.card-body h4 {
-  margin: 0 0 10px;
-  font-size: clamp(17px, 3vw, 20px);
-  font-weight: 600;
-  line-height: 1.4;
-  color: #e5e7eb;
-  flex-grow: 1;
-}
-
-.card-location {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: auto;
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-.card-location i {
-  color: var(--accent);
-}
-
-/* ==========================================================================
-   EMPTY STATE
-   ========================================================================== */
-.empty-state {
-  text-align: center;
-  padding: clamp(90px, 18vw, 130px) 40px;
-  color: var(--text-muted);
-}
-
-.empty-state h3 {
-  margin-top: 10px;
-  font-size: clamp(20px, 4.5vw, 26px);
-}
-
-.empty-state h3::before {
-  content: 'ABTO';
-  display: block;
-  font-size: clamp(26px, 7vw, 34px);
-  font-weight: 800;
-  background: var(--gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 16px;
-}
-
-.empty-state p {
-  margin-top: 10px;
-  font-size: clamp(14px, 2.5vw, 16px);
-}
-
-.empty-state i {
-  font-size: clamp(50px, 12vw, 66px);
-  margin-bottom: 18px;
-  opacity: .7;
-}
-
-/* ==========================================================================
-   CTA STRIP (BOTTOM BEFORE FOOTER)
-   ========================================================================== */
-.section-cta {
-  max-width: 960px;
-}
-
-.section-cta-inner {
-  background: radial-gradient(circle at left, rgba(93,94,255,.28), rgba(15,23,42,1));
-  border-radius: 999px;
-  border: 1px solid var(--border-accent);
-  padding: 18px 22px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 16px;
-  justify-content: space-between;
-  box-shadow: var(--shadow-soft);
-}
-
-.section-cta-title {
-  font-size: 15px;
-  color: #e5e7eb;
-  font-weight: 500;
-}
-
-.section-cta-sub {
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-/* ==========================================================================
-   FOOTER
-   ========================================================================== */
-footer {
-  padding: 40px max(32px, 6vw) 70px;
-  text-align: center;
-  color: var(--text-muted);
-  border-top: 1px solid var(--border-subtle);
-  margin-top: 80px;
-  background: radial-gradient(circle at top, rgba(15,23,42,.96), rgba(2,6,23,.98));
-}
-
-footer p {
-  margin: 0;
-}
-
-/* ==========================================================================
-   FLOATING ELEMENTS (UPLOAD PILL & BACK TO TOP)
-   ========================================================================== */
-.floating-upload-pill {
-  position: fixed;
-  right: 24px;
-  bottom: 26px;
-  padding: 10px 18px;
-  border-radius: 999px;
-  background: rgba(15,23,42,.98);
-  border: 1px solid var(--border-accent);
-  box-shadow: 0 18px 40px rgba(15,23,42,.9);
-  color: var(--text-muted);
-  font-size: 13px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  text-decoration: none;
-  z-index: 800;
-}
-
-.floating-upload-pill span {
-  color: #e5e7eb;
-}
-
-.floating-upload-pill i {
-  color: var(--accent);
-}
-
-.back-to-top {
-  position: fixed;
-  right: 24px;
-  bottom: 80px;
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
-  border: 1px solid var(--border-subtle);
-  background: rgba(15,23,42,.96);
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 10px 30px rgba(15,23,42,.9);
-  opacity: 0;
-  transform: translateY(10px);
-  pointer-events: none;
-  transition: var(--ease-fast);
-  z-index: 800;
-}
-
-.back-to-top.visible {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-/* ==========================================================================
-   RESPONSIVE BREAKPOINTS
-   ========================================================================== */
-@media (max-width: 1400px) {
-  .hero {
-    gap: 60px;
-  }
-  .hero-visual {
-    max-height: 580px;
-  }
-  .hero-screenshot-main {
-    min-height: 360px;
-  }
-}
-
-@media (max-width: 1200px) {
-  .hero {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 56px;
-    padding: var(--hero-badge-top) 40px 48px;
-  }
-  .hero-content {
-    padding-right: 0;
-    max-width: none;
-    text-align: left;
-  }
-  .hero-visual {
-    flex: none;
-    align-self: stretch;
-    justify-content: flex-start;
-  }
-  .hero-visual-title,
-  .hero-visual-sub {
-    text-align: left;
-    align-self: flex-start;
-  }
-}
-
-@media (max-width: 900px) {
-  .hero-actions {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .section-cta-inner {
-    border-radius: 24px;
-  }
-}
-
-@media (max-width: 768px) {
-  :root {
-    --nav-h: var(--nav-h-mobile);
-    --hero-badge-top: var(--hero-badge-top-mobile);
-  }
-
-  nav {
-    padding: 14px 16px;
-    height: var(--nav-h);
-  }
-
-  body {
-    padding-top: var(--nav-h);
-  }
-
-  .nav-links {
-    display: none;
-  }
-
-  .nav-links.active {
-    display: flex !important;
-  }
-
-  .mobile-menu-toggle {
-    display: flex;
-  }
-
-  .hero {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 40px;
-    padding: var(--hero-badge-top) 20px 40px;
-    text-align: center;
-  }
-
-  .hero-content {
-    padding-right: 0;
-    align-items: center;
-    text-align: center;
-  }
-
-  .hero-actions {
-    align-items: center;
-  }
-
-  .hero-cta {
-    justify-content: center;
-  }
-
-  .hero-stats {
-    justify-content: center;
-  }
-
-  .hero-visual {
-    flex: none;
-    width: 100%;
-    position: relative;
-  }
-
-  .hero-visual-title,
-  .hero-visual-sub {
-    text-align: center;
-    align-self: center;
-  }
-
-  /* Mobile screenshots: big on top, two small below */
-  .hero-screenshots {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  .hero-screenshot-main {
-    min-height: 300px;
-  }
-
-  .hero-screenshot-column {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .hero-screenshot-small-top,
-  .hero-screenshot-small-right {
-    flex: 1 1 calc(50% - 8px);
-    min-height: 150px;
-  }
-
-  .section {
-    padding: 70px 20px;
-  }
-
-  .section-tour {
-    padding: 60px 20px 0;
-  }
-
-  .section-price {
-    padding: 60px 20px 0;
-  }
-
-  .grid {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-
-  .tour-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .modes {
-    margin-top: 50px;
-    gap: 20px;
-    padding: 0 16px;
-    grid-template-columns: 1fr;
-  }
-
-  .scroll-indicator {
-    display: none;
-  }
-
-  .floating-upload-pill {
-    right: 16px;
-    bottom: 18px;
-  }
-
-  .back-to-top {
-    right: 16px;
-    bottom: 70px;
-  }
-
-  .price-input-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .price-cta {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  :root {
-    --nav-h: 64px;
-  }
-
-  nav {
-    padding: 10px 14px;
-  }
-
-  .hero-cta {
-    padding: 16px 32px;
-    font-size: 15px;
-  }
-
-  .hero-screenshot-main {
-    min-height: 260px;
-  }
-
-  .hero-screenshot-small-top,
-  .hero-screenshot-small-right {
-    min-height: 140px;
-  }
-
-  .modes {
-    margin-top: 40px;
-  }
-
-  .mode-card {
-    padding: 28px 22px;
-  }
-
-  .card-body {
-    padding: 22px 20px 20px;
-  }
-
-  .hero {
-    gap: 24px;
-    padding: var(--hero-badge-top) 16px 30px;
-  }
-
-  .section-cta-inner {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
-/* Desktop hover interactions on hero visual */
-@media (min-width: 769px) {
-  .hero-screenshot-main,
-  .hero-screenshot-small-top,
-  .hero-screenshot-small-right {
-    transition: transform .35s cubic-bezier(.4, 0, .2, 1),
-                box-shadow .35s cubic-bezier(.4, 0, .2, 1);
-  }
-
-  .hero:hover .hero-screenshot-main {
-    transform: translateY(-3px);
-  }
-  .hero:hover .hero-screenshot-small-top {
-    transform: translateY(-2px);
-  }
-  .hero:hover .hero-screenshot-small-right {
-    transform: translateY(2px);
-  }
-}
-
-@media (max-width: 768px) {
-  /* ... keep all your existing styles above ... */
-
-  .section-price {
-    padding: 50px 16px 0; /* a bit tighter on mobile */
-  }
-
-  .price-checker {
-    padding: 16px 14px 14px;
-    border-radius: 20px;
-    margin: 0;            /* full-width inside section padding */
-  }
-
-  /* Stack all fields + button vertically */
-  .price-input-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-
-  .price-input-group {
-    flex: 1 1 100%;
-    width: 100%;
-  }
-
-  .price-input {
-    width: 100%;
-    font-size: 14px;
-  }
-
-  .price-cta {
-    width: 100%;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 4px;
-    padding: 14px 16px;   /* nice big tap target */
-    font-size: 15px;
-  }
-
-  .price-result {
-    margin-top: 12px;
-    font-size: 13px;
-  }
-
-  /* ... keep all your other existing mobile styles below ... */
-}
-
-</style>
+  <!-- Main Page Styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home-abto.css') }}">
 </head>
 
 <body id="top">
-<!-- ==========================================================================
-   PRELOADER
-   ========================================================================== -->
-<div class="loading" id="preloader" aria-label="Loading ABTO" role="status">
-  <div class="loading-inner">
-    <i class="fas fa-spinner"></i>
-    <span>Loading streets...</span>
-  </div>
-</div>
+  <!-- Skip link -->
+  <a href="#hero-title" class="skip-link">Skip to main content</a>
 
-<!-- ==========================================================================
-   NAVIGATION
-   ========================================================================== -->
-<nav id="navbar">
-  <a href="{{ url_for('index') }}" class="logo" aria-label="ABTO Home">
-    <img src="{{ url_for('static', filename='img/logo.png') }}" 
-         alt="ABTO Logo" class="logo-img">
-  </a>
+  <!-- No-JS fallback -->
+  <noscript>
+    <div style="background:#020617;color:#f9fafb;text-align:center;padding:8px 16px;font-size:14px;">
+      ABTO works best with JavaScript enabled. Please enable it to explore real streets.
+    </div>
+  </noscript>
 
-  <div class="nav-links" id="navLinks" aria-label="Main navigation">
-    <a href="{{ url_for('index') }}" class="nav-link">Home</a>
-    <a href="#how-it-works" class="nav-link">How it works</a>
-    <a href="#tour-preview" class="nav-link">Tour places</a>
-    <a href="#streets" class="nav-link">Streets</a>
-    <a href="{{ url_for('upload') }}" class="nav-link">Upload</a>
-
-    {% if current_user %}
-      <a href="{{ url_for('dashboard') }}" class="nav-link">
-        <i class="fas fa-tachometer-alt"></i> Dashboard
-      </a>
-      <a href="{{ url_for('logout') }}" class="nav-link primary">
-        <i class="fas fa-sign-out-alt"></i> Logout
-      </a>
-    {% else %}
-      <a href="{{ url_for('login') }}" class="nav-link">Login</a>
-      <a href="{{ url_for('signup') }}" class="nav-link primary">
-        <i class="fas fa-rocket"></i> Get Started
-      </a>
-    {% endif %}
+  <!-- ========================================================================
+       PRELOADER
+       ====================================================================== -->
+  <div class="loading" id="preloader" aria-label="Loading ABTO" role="status">
+    <div class="loading-inner">
+      <i class="fas fa-spinner" aria-hidden="true"></i>
+      <span>Loading streets...</span>
+    </div>
   </div>
 
-  <button class="mobile-menu-toggle" id="mobileToggle" aria-label="Toggle navigation menu" aria-expanded="false">
-    <span class="hamburger"></span>
-    <span class="hamburger"></span>
-    <span class="hamburger"></span>
-  </button>
-</nav>
+  <!-- ========================================================================
+       NAVIGATION
+       ====================================================================== -->
+  <nav id="navbar" role="navigation" aria-label="Main navigation">
+    <a href="{{ url_for('index') }}" class="logo" aria-label="ABTO Home">
+      <img
+        src="{{ url_for('static', filename='img/logo.png') }}"
+        alt="ABTO Logo"
+        class="logo-img"
+        width="96"
+        height="96"
+      >
+    </a>
 
-<!-- ==========================================================================
-   MAIN CONTENT
-   ========================================================================== -->
-<main>
-  <!-- HERO SECTION -->
-  <section class="hero" aria-labelledby="hero-title">
-    <!-- Content -->
-    <div class="hero-content">
-      <div class="hero-badge">
-        <i class="fas fa-globe-americas" aria-hidden="true"></i>
-        <span id="streetCount">{{ streets|length if streets else 0 }}+ Real Streets</span>
-      </div>
+    <div class="nav-links" id="navLinks">
+      <a href="{{ url_for('index') }}" class="nav-link" aria-current="page">Home</a>
+      <a href="#how-it-works" class="nav-link">How it works</a>
+      <a href="#tour-preview" class="nav-link">Tour places</a>
+      <a href="#streets" class="nav-link">Streets</a>
+      <a href="{{ url_for('upload') }}" class="nav-link">Upload</a>
 
-      <h1 id="hero-title">Explore Real Streets<br>From Anywhere</h1>
-
-      <p>
-        Walk, drive, sit or fly through real locations around the world. 
-        No games. Just reality. Powered by real video footage.
-      </p>
-
-      <div class="hero-actions">
-        <a href="#streets" class="hero-cta">
-          <i class="fas fa-play-circle" aria-hidden="true"></i>
-          Start Exploring Now
+      {% if current_user %}
+        <a href="{{ url_for('dashboard') }}" class="nav-link">
+          <i class="fas fa-tachometer-alt" aria-hidden="true"></i> Dashboard
         </a>
-        <a href="{{ url_for('upload') }}" class="hero-secondary">
-          <i class="fas fa-circle" aria-hidden="true"></i>
-          <span>Or upload your own street</span>
+        <a href="{{ url_for('logout') }}" class="nav-link primary">
+          <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
         </a>
-      </div>
-
-      <div class="hero-stats" aria-label="ABTO quick stats">
-        <div class="hero-stat">
-          <strong>{{ streets|length if streets else 0 }}+</strong>
-          <span>Streets uploaded</span>
-        </div>
-        <div class="hero-stat">
-          <strong>4</strong>
-          <span>Exploration modes</span>
-        </div>
-        <div class="hero-stat">
-          <strong>Global</strong>
-          <span>City & neighborhood coverage</span>
-        </div>
-      </div>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+        <a href="{{ url_for('signup') }}" class="nav-link primary">
+          <i class="fas fa-rocket" aria-hidden="true"></i> Get Started
+        </a>
+      {% endif %}
     </div>
 
-    <!-- Visual: 3 Screenshots -->
-    <div class="hero-visual" aria-label="ABTO preview screenshots">
-      <p class="hero-visual-title">LIVE STREET EXPERIENCE</p>
-      <p class="hero-visual-sub">
-        Experience places before you go – preview your next tour or family journey in real streets.
-      </p>
+    <button
+      class="mobile-menu-toggle"
+      id="mobileToggle"
+      aria-label="Toggle navigation menu"
+      aria-expanded="false"
+    >
+      <span class="hamburger"></span>
+      <span class="hamburger"></span>
+      <span class="hamburger"></span>
+    </button>
+  </nav>
 
-      <div class="hero-screenshots">
-        <!-- Left: big screenshot -->
-        <div class="hero-screenshot-main">
-          <img src="{{ url_for('static', filename='img/main.png') }}" 
-               alt="ABTO main street view interface" loading="lazy" decoding="async">
+  <!-- ========================================================================
+       MAIN CONTENT
+       ====================================================================== -->
+  <main>
+    <!-- HERO SECTION -->
+    <section class="hero" aria-labelledby="hero-title">
+      <!-- Content -->
+      <div class="hero-content">
+        <div class="hero-badge">
+          <i class="fas fa-globe-americas" aria-hidden="true"></i>
+          <span
+            id="streetCount"
+            data-count="{{ streets|length if streets else 0 }}"
+          >
+            {{ streets|length if streets else 0 }}+ Real Streets
+          </span>
         </div>
 
-        <!-- Right: two stacked screenshots -->
-        <div class="hero-screenshot-column">
-          <div class="hero-screenshot-small-top">
-            <img src="{{ url_for('static', filename='img/top.png') }}" 
-                 alt="ABTO top view and navigation controls" loading="lazy" decoding="async">
+        <h1 id="hero-title">Explore Real Streets<br>From Anywhere</h1>
+
+        <p>
+          Walk, drive, sit or fly through real locations around the world. 
+          No games. Just reality. Powered by real video footage.
+        </p>
+
+        <div class="hero-actions">
+          <a href="#streets" class="hero-cta">
+            <i class="fas fa-play-circle" aria-hidden="true"></i>
+            Start Exploring Now
+          </a>
+          <a href="{{ url_for('upload') }}" class="hero-secondary">
+            <i class="fas fa-circle" aria-hidden="true"></i>
+            <span>Or upload your own street</span>
+          </a>
+        </div>
+
+        <div class="hero-stats" aria-label="ABTO quick stats">
+          <div class="hero-stat">
+            <strong>{{ streets|length if streets else 0 }}+</strong>
+            <span>Streets uploaded</span>
           </div>
-          <div class="hero-screenshot-small-right">
-            <img src="{{ url_for('static', filename='img/right.png') }}" 
-                 alt="ABTO right side walk & drive mode preview" loading="lazy" decoding="async">
+          <div class="hero-stat">
+            <strong>4</strong>
+            <span>Exploration modes</span>
+          </div>
+          <div class="hero-stat">
+            <strong>Global</strong>
+            <span>City & neighborhood coverage</span>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="scroll-indicator" aria-hidden="true">
-      <span>SCROLL TO STREETS</span>
-      <div class="scroll-indicator-dot"></div>
-    </div>
-  </section>
+      <!-- Visual: 3 Screenshots -->
+      <div class="hero-visual" aria-label="ABTO preview screenshots">
+        <p class="hero-visual-title">LIVE STREET EXPERIENCE</p>
+        <p class="hero-visual-sub">
+          Experience places before you go – preview your next tour or family journey in real streets.
+        </p>
 
-  <!-- MODES SECTION -->
-  <section class="modes" aria-label="Exploration modes">
-    <a href="{{ url_for('world_walk') }}" class="mode-card">
-      <div class="mode-icon" aria-hidden="true">🚶‍♂️</div>
-      <h3>Walk Mode</h3>
-      <p>Human-pace exploration with ambient realism. Follow the camera as if you were there.</p>
-    </a>
-    <a href="{{ url_for('world_drive') }}" class="mode-card">
-      <div class="mode-icon" aria-hidden="true">🚗</div>
-      <h3>Drive Mode</h3>
-      <p>Smooth highway and city driving experiences for long-form, lean-back travel.</p>
-    </a>
-    <a href="{{ url_for('world_sit') }}" class="mode-card">
-      <div class="mode-icon" aria-hidden="true">🪑</div>
-      <h3>Sit Mode</h3>
-      <p>Stay in one cozy spot—balcony, café or bench—and soak in the real-life ambiance.</p>
-    </a>
-    <a href="{{ url_for('world_fly') }}" class="mode-card">
-      <div class="mode-icon" aria-hidden="true">✈️</div>
-      <h3>Fly Mode</h3>
-      <p>Aerial drone perspectives of cities, skylines and coastlines from above.</p>
-    </a>
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section class="section section-how" id="how-it-works" aria-labelledby="how-title">
-    <div class="section-header">
-      <h2 id="how-title">How ABTO Works</h2>
-      <p>ABTO converts real-world footage into a simple “press play and travel” experience.</p>
-      <p class="section-subline">NO HEADSET • NO CONTROLS TO LEARN • JUST PRESS PLAY</p>
-    </div>
-
-    <div class="how-grid">
-      <article class="how-step">
-        <div class="how-step-badge">01</div>
-        <h3>Upload real street footage</h3>
-        <p>Creators upload walking, driving, sitting or flying videos from any city using a simple web upload flow.</p>
-      </article>
-      <article class="how-step">
-        <div class="how-step-badge">02</div>
-        <h3>ABTO prepares the journey</h3>
-        <p>We process orientation, pacing and quality so viewers get a smooth, distraction-free travel session.</p>
-      </article>
-      <article class="how-step">
-        <div class="how-step-badge">03</div>
-        <h3>Viewers explore on demand</h3>
-        <p>Visitors pick a street, choose a mode (walk, drive, sit, fly) and drop into a real place in seconds.</p>
-      </article>
-    </div>
-
-    <div class="usecases-strip" aria-label="Popular ways people use ABTO">
-      <div class="usecase-pill">
-        <i class="fas fa-coffee"></i>
-        Ambient travel while working
-      </div>
-      <div class="usecase-pill">
-        <i class="fas fa-brain"></i>
-        Relaxing focus backgrounds
-      </div>
-      <div class="usecase-pill">
-        <i class="fas fa-plane-departure"></i>
-        Pre-trip neighborhood scouting
-      </div>
-      <div class="usecase-pill">
-        <i class="fas fa-city"></i>
-        Exploring cities you may never visit
-      </div>
-    </div>
-  </section>
-
-  <!-- 💸 TRIP PRICE CHECKER (NOW HITS /api/price) -->
-  <section class="section-price" id="trip-price" aria-labelledby="price-title">
-    <div class="price-header">
-      <h3 id="price-title">Check a Sample Trip Price</h3>
-      <p>
-        Type a simple route like <strong>Dubai → Taj Mahal</strong> to see a rough flight price range,
-        powered by live distance lookup. This is still an estimate only.
-      </p>
-      <p class="price-subline">EXPERIMENTAL • DISTANCE-BASED PRICING ONLY</p>
-    </div>
-
-    <div class="price-checker">
-      <form id="priceCheckForm" autocomplete="off">
-        <div class="price-input-row">
-          <div class="price-input-group">
-            <label for="priceFrom">From</label>
-            <input
-              type="text"
-              id="priceFrom"
-              class="price-input"
-              placeholder="Dubai, UAE"
+        <div class="hero-screenshots">
+          <!-- Left: big screenshot -->
+          <div class="hero-screenshot-main">
+            <img
+              src="{{ url_for('static', filename='img/main.png') }}"
+              alt="ABTO main street view interface"
+              loading="eager"
+              decoding="async"
+              width="960"
+              height="540"
             >
           </div>
-          <div class="price-input-group">
-            <label for="priceTo">To</label>
+
+          <!-- Right: two stacked screenshots -->
+          <div class="hero-screenshot-column">
+            <div class="hero-screenshot-small-top">
+              <img
+                src="{{ url_for('static', filename='img/top.png') }}"
+                alt="ABTO top view and navigation controls"
+                loading="lazy"
+                decoding="async"
+                width="480"
+                height="260"
+              >
+            </div>
+            <div class="hero-screenshot-small-right">
+              <img
+                src="{{ url_for('static', filename='img/right.png') }}"
+                alt="ABTO right side walk & drive mode preview"
+                loading="lazy"
+                decoding="async"
+                width="480"
+                height="260"
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scroll-indicator" aria-hidden="true">
+        <span>SCROLL TO STREETS</span>
+        <div class="scroll-indicator-dot"></div>
+      </div>
+    </section>
+
+    <!-- MODES SECTION -->
+    <section class="modes" aria-label="Exploration modes">
+      <a href="{{ url_for('world_walk') }}" class="mode-card">
+        <div class="mode-icon" aria-hidden="true">🚶‍♂️</div>
+        <h3>Walk Mode</h3>
+        <p>Human-pace exploration with ambient realism. Follow the camera as if you were there.</p>
+      </a>
+      <a href="{{ url_for('world_drive') }}" class="mode-card">
+        <div class="mode-icon" aria-hidden="true">🚗</div>
+        <h3>Drive Mode</h3>
+        <p>Smooth highway and city driving experiences for long-form, lean-back travel.</p>
+      </a>
+      <a href="{{ url_for('world_sit') }}" class="mode-card">
+        <div class="mode-icon" aria-hidden="true">🪑</div>
+        <h3>Sit Mode</h3>
+        <p>Stay in one cozy spot—balcony, café or bench—and soak in the real-life ambiance.</p>
+      </a>
+      <a href="{{ url_for('world_fly') }}" class="mode-card">
+        <div class="mode-icon" aria-hidden="true">✈️</div>
+        <h3>Fly Mode</h3>
+        <p>Aerial drone perspectives of cities, skylines and coastlines from above.</p>
+      </a>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="section section-how" id="how-it-works" aria-labelledby="how-title">
+      <div class="section-header">
+        <h2 id="how-title">How ABTO Works</h2>
+        <p>ABTO converts real-world footage into a simple “press play and travel” experience.</p>
+        <p class="section-subline">NO HEADSET • NO CONTROLS TO LEARN • JUST PRESS PLAY</p>
+      </div>
+
+      <div class="how-grid">
+        <article class="how-step">
+          <div class="how-step-badge">01</div>
+          <h3>Upload real street footage</h3>
+          <p>Creators upload walking, driving, sitting or flying videos from any city using a simple web upload flow.</p>
+        </article>
+        <article class="how-step">
+          <div class="how-step-badge">02</div>
+          <h3>ABTO prepares the journey</h3>
+          <p>We process orientation, pacing and quality so viewers get a smooth, distraction-free travel session.</p>
+        </article>
+        <article class="how-step">
+          <div class="how-step-badge">03</div>
+          <h3>Viewers explore on demand</h3>
+          <p>Visitors pick a street, choose a mode (walk, drive, sit, fly) and drop into a real place in seconds.</p>
+        </article>
+      </div>
+
+      <div class="usecases-strip" aria-label="Popular ways people use ABTO">
+        <div class="usecase-pill">
+          <i class="fas fa-coffee" aria-hidden="true"></i>
+          Ambient travel while working
+        </div>
+        <div class="usecase-pill">
+          <i class="fas fa-brain" aria-hidden="true"></i>
+          Relaxing focus backgrounds
+        </div>
+        <div class="usecase-pill">
+          <i class="fas fa-plane-departure" aria-hidden="true"></i>
+          Pre-trip neighborhood scouting
+        </div>
+        <div class="usecase-pill">
+          <i class="fas fa-city" aria-hidden="true"></i>
+          Exploring cities you may never visit
+        </div>
+      </div>
+    </section>
+
+    <!-- 💸 TRIP PRICE CHECKER (HITS /api/price) -->
+    <section class="section-price" id="trip-price" aria-labelledby="price-title">
+      <div class="price-header">
+        <h3 id="price-title">Check a Sample Trip Price</h3>
+        <p>
+          Type a simple route like <strong>Dubai → Taj Mahal</strong> to see a rough flight price range,
+          powered by live distance lookup. This is still an estimate only.
+        </p>
+        <p class="price-subline">EXPERIMENTAL • DISTANCE-BASED PRICING ONLY</p>
+      </div>
+
+      <div class="price-checker">
+        <form id="priceCheckForm" autocomplete="off">
+          <div class="price-input-row">
+            <div class="price-input-group">
+              <label for="priceFrom">From</label>
+              <input
+                type="text"
+                id="priceFrom"
+                class="price-input"
+                placeholder="Dubai, UAE"
+                required
+              >
+            </div>
+            <div class="price-input-group">
+              <label for="priceTo">To</label>
+              <input
+                type="text"
+                id="priceTo"
+                class="price-input"
+                placeholder="Taj Mahal, Agra"
+                required
+              >
+            </div>
+            <button type="submit" class="hero-cta price-cta" id="priceSubmitBtn">
+              <i class="fas fa-ticket-alt" aria-hidden="true"></i>
+              Check price
+            </button>
+          </div>
+        </form>
+
+        <div class="price-result" id="priceResult" aria-live="polite">
+          <p class="price-result-placeholder">
+            Try <strong>Dubai, UAE</strong> to <strong>Taj Mahal, Agra</strong> to see a sample distance and price range.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 💡 BEST TOUR PLACES ROW WITH SEARCH & FILTERS -->
+    {% set effective_tour_streets = tour_streets if tour_streets is defined
+         else (streets|selectattr('is_tour')|list if streets else []) %}
+
+    <section class="section-tour" id="tour-preview" aria-labelledby="tour-title">
+      <div class="tour-header">
+        <h3 id="tour-title">Best Tour Places — Visit Here Before You Go</h3>
+        <p>
+          Search real streets from popular tourist spots and preview the vibe before you book tickets.
+        </p>
+        <p class="tour-subline">TYPE A CITY • COUNTRY • OR STREET NAME • FILTER BY COUNTRY & TYPE</p>
+      </div>
+
+      {% if effective_tour_streets and effective_tour_streets|length > 0 %}
+        <div class="tour-filters" aria-label="Filter tour places">
+          <!-- Text search -->
+          <div class="tour-search-wrap">
+            <i class="fas fa-search" aria-hidden="true"></i>
             <input
               type="text"
-              id="priceTo"
-              class="price-input"
-              placeholder="Taj Mahal, Agra"
+              id="tourSearch"
+              class="tour-search-input"
+              placeholder="Search Dubai Marina, Paris, New York..."
+              autocomplete="off"
             >
           </div>
-          <button type="submit" class="hero-cta price-cta" id="priceSubmitBtn">
-            <i class="fas fa-ticket-alt" aria-hidden="true"></i>
-            Check price
-          </button>
-        </div>
-      </form>
 
-      <div class="price-result" id="priceResult" aria-live="polite">
-        <p class="price-result-placeholder">
-          Try <strong>Dubai, UAE</strong> to <strong>Taj Mahal, Agra</strong> to see a sample distance and price range.
+          <!-- Country filter (populated from data via JS) -->
+          <select
+            id="tourCountryFilter"
+            class="tour-filter-select"
+            aria-label="Filter by country"
+          >
+            <option value="">All countries</option>
+          </select>
+
+          <!-- Category / type filter (populated from data via JS) -->
+          <select
+            id="tourCategoryFilter"
+            class="tour-filter-select"
+            aria-label="Filter by tour type"
+          >
+            <option value="">All types</option>
+          </select>
+        </div>
+
+        <div class="tour-grid" id="tourGrid">
+          {% for st in effective_tour_streets[:8] %}
+            {% if st.videos and st.videos|length > 0 and st.videos[0].url %}
+              {% set thumb_url_tour = st.videos[0].url|replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_400,c_fill,g_center') %}
+              {% set is_placeholder_tour = False %}
+            {% else %}
+              {% set thumb_url_tour = url_for('static', filename='images/placeholder-street.jpg') %}
+              {% set is_placeholder_tour = True %}
+            {% endif %}
+            <a
+              href="{{ url_for('world', street_id=st._id) }}"
+              class="card tour-card"
+              data-search="{{ (st.name ~ ' ' ~ (st.city or '') ~ ' ' ~ (st.country or '') ~ ' ' ~ (st.tour_category or '') ~ ' ' ~ (st.tour_best_time or ''))|lower }}"
+              data-country="{{ (st.country or '')|lower }}"
+              data-category="{{ (st.tour_category or '')|lower }}"
+            >
+              <div class="thumb" style="background-image: url('{{ thumb_url_tour }}')">
+                {% if is_placeholder_tour %}
+                  <div class="thumb-placeholder">
+                    <i class="fas fa-map-marked-alt" aria-hidden="true"></i>
+                  </div>
+                {% endif %}
+              </div>
+              <div class="card-body">
+                <h4 title="{{ st.name }}">
+                  {{ st.name[:50] }}{% if st.name|length > 50 %}...{% endif %}
+                </h4>
+                <div class="card-location">
+                  <i class="fas fa-location-dot" aria-hidden="true"></i>
+                  <span>{{ st.city or 'Unknown' }}, {{ st.country or 'Unknown' }}</span>
+                </div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+
+        <p class="tour-note">
+          Type any city or country, then narrow by country / type to quickly find streets in your next tour destination.
+        </p>
+      {% else %}
+        <div class="empty-state" style="padding-top: 40px;">
+          <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+          <h3>Best tour places coming soon</h3>
+          <p>Upload your first tour street (with “Tour / Trip Preview” enabled) to see it here.</p>
+        </div>
+      {% endif %}
+    </section>
+
+    <!-- FEATURED STREETS -->
+    <section class="section" id="streets" aria-labelledby="featured-streets-title">
+      <div class="section-header">
+        <h2 id="featured-streets-title">Featured Streets</h2>
+        <p>Handpicked immersive locations from around the world, ready to walk, drive, sit or fly through.</p>
+        <p class="section-subline">
+          {{ streets|length if streets else 0 }} AVAILABLE • CONTINUOUSLY GROWING
         </p>
       </div>
-    </div>
-  </section>
 
-  <!-- 💡 NEW: BEST TOUR PLACES ROW WITH SEARCH -->
-  {# Use backend-tour list if provided, otherwise fall back to computing from streets #}
-  {% set effective_tour_streets = tour_streets if tour_streets is defined 
-       else (streets|selectattr('is_tour')|list if streets else []) %}
-
-  <section class="section-tour" id="tour-preview" aria-labelledby="tour-title">
-    <div class="tour-header">
-      <h3 id="tour-title">Best Tour Places — Visit Here Before You Go</h3>
-      <p>
-        Search real streets from popular tourist spots and preview the vibe before you book tickets.
-      </p>
-      <p class="tour-subline">TYPE A CITY • COUNTRY • OR STREET NAME</p>
-    </div>
-
-    {% if effective_tour_streets and effective_tour_streets|length > 0 %}
-      <div class="tour-filters" aria-label="Filter tour places">
-        <div class="tour-search-wrap">
-          <i class="fas fa-search" aria-hidden="true"></i>
-          <input
-            type="text"
-            id="tourSearch"
-            class="tour-search-input"
-            placeholder="Search Dubai Marina, Paris, New York..."
-            autocomplete="off"
-          >
+      {% if streets and streets|length > 0 %}
+        <!-- Simple search for featured streets -->
+        <div class="streets-filters" aria-label="Search streets">
+          <div class="streets-search-wrap">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            <input
+              type="text"
+              id="streetsSearch"
+              class="streets-search-input"
+              placeholder="Search any street, city or country..."
+              autocomplete="off"
+            >
+          </div>
         </div>
-      </div>
 
-      <div class="tour-grid" id="tourGrid">
-        {# Show up to 8 marked tour places as a “best tour places” row #}
-        {% for st in effective_tour_streets[:8] %}
-          {% if st.videos and st.videos|length > 0 and st.videos[0].url %}
-            {% set thumb_url_tour = st.videos[0].url|replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_400,c_fill,g_center') %}
-            {% set is_placeholder_tour = False %}
-          {% else %}
-            {% set thumb_url_tour = url_for('static', filename='images/placeholder-street.jpg') %}
-            {% set is_placeholder_tour = True %}
-          {% endif %}
-          <a
-            href="{{ url_for('world', street_id=st._id) }}"
-            class="card tour-card"
-            data-search="{{ (st.name ~ ' ' ~ (st.city or '') ~ ' ' ~ (st.country or '') ~ ' ' ~ (st.tour_category or '') ~ ' ' ~ (st.tour_best_time or ''))|lower }}"
-          >
-            <div class="thumb" style="background-image: url('{{ thumb_url_tour }}')">
-              {% if is_placeholder_tour %}
-                <div class="thumb-placeholder">
-                  <i class="fas fa-map-marked-alt" aria-hidden="true"></i>
-                </div>
-              {% endif %}
-            </div>
-            <div class="card-body">
-              <h4 title="{{ st.name }}">
-                {{ st.name[:50] }}{% if st.name|length > 50 %}...{% endif %}
-              </h4>
-              <div class="card-location">
-                <i class="fas fa-location-dot" aria-hidden="true"></i>
-                <span>{{ st.city or 'Unknown' }}, {{ st.country or 'Unknown' }}</span>
+        <div class="grid" id="streetsGrid">
+          {% for st in streets %}
+            {% if st.videos and st.videos|length > 0 and st.videos[0].url %}
+              {% set thumb_url = st.videos[0].url|replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_400,c_fill,g_center') %}
+              {% set is_placeholder = False %}
+            {% else %}
+              {% set thumb_url = url_for('static', filename='images/placeholder-street.jpg') %}
+              {% set is_placeholder = True %}
+            {% endif %}
+            <a
+              href="{{ url_for('world', street_id=st._id) }}"
+              class="card street-card"
+              data-search="{{ (st.name ~ ' ' ~ (st.city or '') ~ ' ' ~ (st.country or ''))|lower }}"
+            >
+              <div class="thumb" style="background-image: url('{{ thumb_url }}')">
+                {% if is_placeholder %}
+                  <div class="thumb-placeholder">
+                    <i class="fas fa-map-marked-alt" aria-hidden="true"></i>
+                  </div>
+                {% endif %}
               </div>
-            </div>
-          </a>
-        {% endfor %}
-      </div>
-
-      <p class="tour-note">
-        Try searching for city names (e.g. “Dubai”, “Paris”) to quickly preview streets in your next tour destination.
-      </p>
-    {% else %}
-      <div class="empty-state" style="padding-top: 40px;">
-        <i class="fas fa-map-location-dot" aria-hidden="true"></i>
-        <h3>Best tour places coming soon</h3>
-        <p>Upload your first tour street (with “Tour / Trip Preview” enabled) to see it here.</p>
-      </div>
-    {% endif %}
-  </section>
-
-  <!-- FEATURED STREETS -->
-  <section class="section" id="streets" aria-labelledby="featured-streets-title">
-    <div class="section-header">
-      <h2 id="featured-streets-title">Featured Streets</h2>
-      <p>Handpicked immersive locations from around the world, ready to walk, drive, sit or fly through.</p>
-      <p class="section-subline">
-        {{ streets|length if streets else 0 }} AVAILABLE • CONTINUOUSLY GROWING
-      </p>
-    </div>
-
-    {% if streets and streets|length > 0 %}
-      <div class="grid" id="streetsGrid">
-        {% for st in streets %}
-          {% if st.videos and st.videos|length > 0 and st.videos[0].url %}
-            {% set thumb_url = st.videos[0].url|replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_400,c_fill,g_center') %}
-            {% set is_placeholder = False %}
-          {% else %}
-            {% set thumb_url = url_for('static', filename='images/placeholder-street.jpg') %}
-            {% set is_placeholder = True %}
-          {% endif %}
-          <a href="{{ url_for('world', street_id=st._id) }}" class="card">
-            <div class="thumb" style="background-image: url('{{ thumb_url }}')">
-              {% if is_placeholder %}
-                <div class="thumb-placeholder">
-                  <i class="fas fa-map-marked-alt" aria-hidden="true"></i>
+              <div class="card-body">
+                <h4 title="{{ st.name }}">
+                  {{ st.name[:50] }}{% if st.name|length > 50 %}...{% endif %}
+                </h4>
+                <div class="card-location">
+                  <i class="fas fa-location-dot" aria-hidden="true"></i>
+                  <span>{{ st.city or 'Unknown' }}, {{ st.country or 'Unknown' }}</span>
                 </div>
-              {% endif %}
-            </div>
-            <div class="card-body">
-              <h4 title="{{ st.name }}">{{ st.name[:50] }}{% if st.name|length > 50 %}...{% endif %}</h4>
-              <div class="card-location">
-                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
-                <span>{{ st.city or 'Unknown' }}, {{ st.country or 'Unknown' }}</span>
               </div>
-            </div>
-          </a>
-        {% endfor %}
-      </div>
+            </a>
+          {% endfor %}
+        </div>
 
-      {% if streets|length > 12 %}
-        <div style="text-align: center; margin-top: 50px">
-          <a href="{{ url_for('dashboard') }}" class="hero-cta" style="font-size: 17px; padding: 16px 36px">
-            <i class="fas fa-th-large" aria-hidden="true"></i> View All Streets
+        {% if streets|length > 12 %}
+          <div style="text-align: center; margin-top: 50px">
+            <a href="{{ url_for('dashboard') }}" class="hero-cta" style="font-size: 17px; padding: 16px 36px">
+              <i class="fas fa-th-large" aria-hidden="true"></i> View All Streets
+            </a>
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="empty-state">
+          <i class="fas fa-map" aria-hidden="true"></i>
+          <h3>No streets available yet</h3>
+          <p>Be the first to upload and explore real streets around the world.</p>
+          <a href="{{ url_for('upload') }}" class="hero-cta" style="margin-top: 30px; font-size: 17px">
+            <i class="fas fa-upload" aria-hidden="true"></i> Upload First Street
           </a>
         </div>
       {% endif %}
-    {% else %}
-      <div class="empty-state">
-        <i class="fas fa-map" aria-hidden="true"></i>
-        <h3>No streets available yet</h3>
-        <p>Be the first to upload and explore real streets around the world.</p>
-        <a href="{{ url_for('upload') }}" class="hero-cta" style="margin-top: 30px; font-size: 17px">
-          <i class="fas fa-upload" aria-hidden="true"></i> Upload First Street
+    </section>
+
+    <!-- CREATOR CTA STRIP -->
+    <section class="section section-cta" aria-label="Become an early ABTO creator">
+      <div class="section-cta-inner">
+        <div>
+          <div class="section-cta-title">
+            Become an early ABTO creator and put your city on the map.
+          </div>
+          <div class="section-cta-sub">
+            Upload a single walk, drive, sit or fly video and see it live on ABTO.
+          </div>
+        </div>
+        <a href="{{ url_for('upload') }}" class="hero-cta" style="padding: 12px 26px; font-size: 15px;">
+          <i class="fas fa-upload" aria-hidden="true"></i>
+          Start uploading
         </a>
       </div>
-    {% endif %}
-  </section>
+    </section>
+  </main>
 
-  <!-- CREATOR CTA STRIP -->
-  <section class="section section-cta" aria-label="Become an early ABTO creator">
-    <div class="section-cta-inner">
-      <div>
-        <div class="section-cta-title">
-          Become an early ABTO creator and put your city on the map.
-        </div>
-        <div class="section-cta-sub">
-          Upload a single walk, drive, sit or fly video and see it live on ABTO.
-        </div>
-      </div>
-      <a href="{{ url_for('upload') }}" class="hero-cta" style="padding: 12px 26px; font-size: 15px;">
-        <i class="fas fa-upload" aria-hidden="true"></i>
-        Start uploading
-      </a>
-    </div>
-  </section>
-</main>
+  <!-- ========================================================================
+       FOOTER
+       ====================================================================== -->
+  <footer>
+    <p style="font-size: 18px; margin-bottom: 6px">
+      &copy; 2025
+      <span style="
+        font-weight: 900;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: .08em;
+        font-size: 1.4em;
+        text-transform: uppercase;
+      ">
+        ABTO
+      </span>
+    </p>
+    <p style="font-size: 14px; opacity: .85; margin-top: 4px">
+      A Better Travel Observer • Walk • Drive • Sit • Fly
+    </p>
+  </footer>
 
-<!-- ==========================================================================
-   FOOTER
-   ========================================================================== -->
-<footer>
-  <p style="font-size: 18px; margin-bottom: 6px">
-    &copy; 2025
-    <span style="
-      font-weight: 900;
-      background: var(--gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: .08em;
-      font-size: 1.4em;
-      text-transform: uppercase;
-    ">
-      ABTO
-    </span>
-  </p>
-  <p style="font-size: 14px; opacity: .85; margin-top: 4px">
-    A Better Travel Observer • Walk • Drive • Sit • Fly
-  </p>
-</footer>
+  <!-- ========================================================================
+       FLOATING ACTIONS
+       ====================================================================== -->
+  <a href="{{ url_for('upload') }}" class="floating-upload-pill">
+    <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+    <span>Upload a new street</span>
+  </a>
 
-<!-- ==========================================================================
-   FLOATING ACTIONS
-   ========================================================================== -->
-<a href="{{ url_for('upload') }}" class="floating-upload-pill">
-  <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
-  <span>Upload a new street</span>
-</a>
+  <button type="button" class="back-to-top" id="backToTop" aria-label="Back to top">
+    <i class="fas fa-arrow-up" aria-hidden="true"></i>
+  </button>
 
-<button type="button" class="back-to-top" id="backToTop" aria-label="Back to top">
-  <i class="fas fa-arrow-up" aria-hidden="true"></i>
-</button>
+  <!-- ========================================================================
+       ENHANCED JAVASCRIPT
+       ====================================================================== -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Preloader (max ~1.2s) with guard
+      const preloader = document.getElementById('preloader');
+      let preloaderHidden = false;
+      const hidePreloader = () => {
+        if (!preloader || preloaderHidden) return;
+        preloaderHidden = true;
+        preloader.style.opacity = '0';
+        preloader.style.transform = 'scale(0.96)';
+        setTimeout(() => { preloader.style.display = 'none'; }, 280);
+      };
 
-<!-- ==========================================================================
-   ENHANCED JAVASCRIPT
-   ========================================================================== -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Preloader (max ~1.2s)
-  const preloader = document.getElementById('preloader');
-  const hidePreloader = () => {
-    if (!preloader) return;
-    preloader.style.opacity = '0';
-    preloader.style.transform = 'scale(0.96)';
-    setTimeout(() => { preloader.style.display = 'none'; }, 280);
-  };
-  
-  // Hide when hero becomes visible
-  const heroEl = document.querySelector('.hero');
-  if (heroEl && 'IntersectionObserver' in window) {
-    const heroObserver = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
-        hidePreloader();
-        heroObserver.disconnect();
-      }
-    }, { threshold: 0.2 });
-    heroObserver.observe(heroEl);
-  } else {
-    // Fallback if IO not supported
-    hidePreloader();
-  }
-  
-  // Fallback timeout
-  setTimeout(hidePreloader, 1200);
+      const heroEl = document.querySelector('.hero');
 
-  // Navbar scroll effect
-  const navbar = document.getElementById('navbar');
-  window.addEventListener('scroll', () => {
-    if (!navbar) return;
-    navbar.classList.toggle('scrolled', window.scrollY > 50);
-  });
-
-  // Mobile menu
-  const mobileToggle = document.getElementById('mobileToggle');
-  const navLinks = document.getElementById('navLinks');
-  if (mobileToggle && navLinks) {
-    mobileToggle.addEventListener('click', () => {
-      const isActive = navLinks.classList.toggle('active');
-      mobileToggle.classList.toggle('open');
-      document.body.style.overflow = isActive ? 'hidden' : '';
-      mobileToggle.setAttribute('aria-expanded', isActive ? 'true' : 'false');
-    });
-    
-    document.querySelectorAll('.nav-link').forEach(link => {
-      link.addEventListener('click', (e) => {
-        // Only close menu for in-page or same-site navigation
-        if (link.getAttribute('href')?.startsWith('#') || link.href === window.location.href) {
-          navLinks.classList.remove('active');
-          mobileToggle.classList.remove('open');
-          document.body.style.overflow = '';
-          mobileToggle.setAttribute('aria-expanded', 'false');
-        }
-      });
-    });
-  }
-
-  // Smooth scroll for hero CTA -> streets
-  const heroCta = document.querySelector('.hero-cta[href="#streets"]');
-  const streetsSection = document.getElementById('streets');
-  if (heroCta && streetsSection) {
-    heroCta.addEventListener('click', (e) => {
-      e.preventDefault();
-      streetsSection.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      });
-    });
-  }
-
-  // Back to top button behaviour
-  const backToTop = document.getElementById('backToTop');
-  if (backToTop) {
-    backToTop.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 400) {
-        backToTop.classList.add('visible');
+      // Hide when hero becomes visible
+      if (heroEl && 'IntersectionObserver' in window) {
+        const heroObserver = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting) {
+            hidePreloader();
+            heroObserver.disconnect();
+          }
+        }, { threshold: 0.2 });
+        heroObserver.observe(heroEl);
       } else {
-        backToTop.classList.remove('visible');
+        // Fallback if IO not supported
+        hidePreloader();
       }
-    });
-  }
 
-  // Street count formatting
-  const streetCount = document.getElementById('streetCount');
-  if (streetCount) {
-    const countMatch = streetCount.textContent.match(/(\d+)/);
-    if (countMatch) {
-      const formatted = parseInt(countMatch[1], 10).toLocaleString('en-US');
-      streetCount.textContent = `${formatted}+ Real Streets`;
-    }
-  }
+      // Fallback timeout
+      setTimeout(hidePreloader, 1200);
 
-  // Hero visible state (safety)
-  if (heroEl) {
-    heroEl.style.opacity = '1';
-    heroEl.style.transform = 'none';
-    heroEl.style.position = 'relative';
-  }
+      // Navbar scroll effect
+      const navbar = document.getElementById('navbar');
+      window.addEventListener('scroll', () => {
+        if (!navbar) return;
+        navbar.classList.toggle('scrolled', window.scrollY > 50);
+      });
 
-  // 💡 Tour search filter
-  const tourSearch = document.getElementById('tourSearch');
-  const tourGrid = document.getElementById('tourGrid');
-  if (tourSearch && tourGrid) {
-    const tourCards = Array.from(tourGrid.querySelectorAll('.tour-card'));
-    tourSearch.addEventListener('input', () => {
-      const q = tourSearch.value.trim().toLowerCase();
-      tourCards.forEach(card => {
-        const text = (card.dataset.search || '').toLowerCase();
-        if (!q || text.includes(q)) {
-          card.classList.remove('tour-card-hidden');
-        } else {
-          card.classList.add('tour-card-hidden');
+      // Mobile menu
+      const mobileToggle = document.getElementById('mobileToggle');
+      const navLinks = document.getElementById('navLinks');
+      if (mobileToggle && navLinks) {
+        mobileToggle.addEventListener('click', () => {
+          const isActive = navLinks.classList.toggle('active');
+          mobileToggle.classList.toggle('open');
+          document.body.style.overflow = isActive ? 'hidden' : '';
+          mobileToggle.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+        });
+
+        // Close menu on link click (for in-page or same-page links)
+        document.querySelectorAll('.nav-link').forEach(link => {
+          link.addEventListener('click', () => {
+            if (navLinks.classList.contains('active')) {
+              navLinks.classList.remove('active');
+              mobileToggle.classList.remove('open');
+              document.body.style.overflow = '';
+              mobileToggle.setAttribute('aria-expanded', 'false');
+            }
+          });
+        });
+
+        // Close menu on ESC
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && navLinks.classList.contains('active')) {
+            navLinks.classList.remove('active');
+            mobileToggle.classList.remove('open');
+            document.body.style.overflow = '';
+            mobileToggle.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
+
+      // Smooth scroll for hero CTA -> streets
+      const heroCta = document.querySelector('.hero-cta[href="#streets"]');
+      const streetsSection = document.getElementById('streets');
+      if (heroCta && streetsSection) {
+        heroCta.addEventListener('click', (e) => {
+          e.preventDefault();
+          streetsSection.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        });
+      }
+
+      // Back to top button behaviour
+      const backToTop = document.getElementById('backToTop');
+      if (backToTop) {
+        backToTop.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        window.addEventListener('scroll', () => {
+          if (window.scrollY > 400) {
+            backToTop.classList.add('visible');
+          } else {
+            backToTop.classList.remove('visible');
+          }
+        });
+      }
+
+      // Street count formatting from data attribute
+      const streetCount = document.getElementById('streetCount');
+      if (streetCount) {
+        const rawVal = streetCount.dataset.count || '0';
+        const val = parseInt(rawVal, 10);
+        if (!isNaN(val)) {
+          streetCount.textContent = `${val.toLocaleString('en-US')}+ Real Streets`;
         }
-      });
-    });
-  }
-
-  // 💸 Trip price checker -> calls Flask /api/price
-  const priceForm      = document.getElementById('priceCheckForm');
-  const priceFrom      = document.getElementById('priceFrom');
-  const priceTo        = document.getElementById('priceTo');
-  const priceResult    = document.getElementById('priceResult');
-  const priceSubmitBtn = document.getElementById('priceSubmitBtn');
-
-  async function runPriceCheck(event) {
-    if (event) event.preventDefault();
-    if (!priceFrom || !priceTo || !priceResult || !priceSubmitBtn) return;
-
-    const origin      = priceFrom.value.trim();
-    const destination = priceTo.value.trim();
-
-    if (!origin || !destination) {
-      priceResult.innerHTML = `
-        <div class="price-result-card">
-          <h4>Please enter both places</h4>
-          <p>Example: try <strong>Dubai, UAE</strong> to <strong>Taj Mahal, Agra</strong> to see a sample distance + price estimate.</p>
-        </div>`;
-      return;
-    }
-
-    const originalLabel = priceSubmitBtn.innerHTML;
-    priceSubmitBtn.disabled = true;
-    priceSubmitBtn.innerHTML = `<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>&nbsp;Checking...`;
-    priceResult.innerHTML = `<p>Calculating distance and rough price estimate...</p>`;
-
-    try {
-      const resp = await fetch("{{ url_for('api_price') }}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ origin, destination })
-      });
-
-      const data = await resp.json();
-
-      if (!resp.ok) {
-        const msg = data && data.error ? data.error : 'Something went wrong on the server.';
-        priceResult.innerHTML = `
-          <div class="price-result-card">
-            <h4>Could not fetch estimate</h4>
-            <p>${msg}</p>
-          </div>`;
-        return;
       }
 
-      const originLabel = data.origin_formatted || origin;
-      const destLabel   = data.destination_formatted || destination;
+      // Hero visible state (safety)
+      if (heroEl) {
+        heroEl.style.opacity = '1';
+        heroEl.style.transform = 'none';
+        heroEl.style.position = 'relative';
+      }
 
-      const distanceText = data.distance_text || '';
-      const priceText    = data.price_text    || '';
+      // 💡 Tour search + filters
+      const tourSearch         = document.getElementById('tourSearch');
+      const tourGrid           = document.getElementById('tourGrid');
+      const tourCountryFilter  = document.getElementById('tourCountryFilter');
+      const tourCategoryFilter = document.getElementById('tourCategoryFilter');
 
-      priceResult.innerHTML = `
-        <div class="price-result-card">
-          <h4>${originLabel} → ${destLabel}</h4>
-          ${distanceText ? `<p>${distanceText}</p>` : ''}
-          ${priceText ? `<p class="price-tag">${priceText}</p>` : ''}
-          <p class="price-disclaimer">
-            This is an automatic estimate based on distance only. Real ticket prices change with airline,
-            season, date, offers and how early you book.
-          </p>
-        </div>`;
-    } catch (err) {
-      console.error(err);
-      priceResult.innerHTML = `
-        <div class="price-result-card">
-          <h4>Network error</h4>
-          <p>We couldn't reach the pricing service. Please check your connection and try again.</p>
-        </div>`;
-    } finally {
-      priceSubmitBtn.disabled = false;
-      priceSubmitBtn.innerHTML = originalLabel;
-    }
-  }
+      if (tourGrid) {
+        const tourCards = Array.from(tourGrid.querySelectorAll('.tour-card'));
+        const countrySet = new Set();
+        const categorySet = new Set();
 
-  if (priceForm) {
-    priceForm.addEventListener('submit', runPriceCheck);
-  }
-});
-</script>
+        // Collect unique countries & categories from data attributes
+        tourCards.forEach(card => {
+          const c   = (card.dataset.country || '').trim();
+          const cat = (card.dataset.category || '').trim();
+          if (c) countrySet.add(c);
+          if (cat) categorySet.add(cat);
+        });
 
+        // Helper to title-case simple strings
+        const toLabel = (str) => {
+          if (!str) return '';
+          return str.split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+        };
+
+        // Populate country select
+        if (tourCountryFilter && countrySet.size) {
+          Array.from(countrySet).sort().forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = toLabel(c);
+            tourCountryFilter.appendChild(opt);
+          });
+        }
+
+        // Populate category select
+        if (tourCategoryFilter && categorySet.size) {
+          Array.from(categorySet).sort().forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            opt.textContent = toLabel(cat);
+            tourCategoryFilter.appendChild(opt);
+          });
+        }
+
+        let tourSearchTimeout;
+
+        function applyTourFilters() {
+          const q         = (tourSearch?.value || '').trim().toLowerCase();
+          const country   = (tourCountryFilter?.value || '').trim();
+          const category  = (tourCategoryFilter?.value || '').trim();
+
+          tourCards.forEach(card => {
+            const text        = (card.dataset.search || '');
+            const cardCountry = (card.dataset.country || '');
+            const cardCat     = (card.dataset.category || '');
+
+            const matchesText     = !q || text.includes(q);
+            const matchesCountry  = !country || cardCountry === country;
+            const matchesCategory = !category || cardCat === category;
+
+            const show = matchesText && matchesCountry && matchesCategory;
+            if (show) {
+              card.classList.remove('tour-card-hidden');
+            } else {
+              card.classList.add('tour-card-hidden');
+            }
+          });
+        }
+
+        if (tourSearch) {
+          tourSearch.addEventListener('input', () => {
+            clearTimeout(tourSearchTimeout);
+            tourSearchTimeout = setTimeout(applyTourFilters, 150);
+          });
+        }
+
+        if (tourCountryFilter) {
+          tourCountryFilter.addEventListener('change', applyTourFilters);
+        }
+
+        if (tourCategoryFilter) {
+          tourCategoryFilter.addEventListener('change', applyTourFilters);
+        }
+      }
+
+      // 💡 Featured streets search
+      const streetsSearch = document.getElementById('streetsSearch');
+      const streetsGridEl = document.getElementById('streetsGrid');
+      if (streetsSearch && streetsGridEl) {
+        const streetCards = Array.from(streetsGridEl.querySelectorAll('.street-card'));
+
+        streetsSearch.addEventListener('input', () => {
+          const q = streetsSearch.value.trim().toLowerCase();
+          streetCards.forEach(card => {
+            const text = (card.dataset.search || '');
+            const show = !q || text.includes(q);
+            card.style.display = show ? '' : 'none';
+          });
+        });
+      }
+
+      // 💸 Trip price checker -> calls Flask /api/price
+      const priceForm      = document.getElementById('priceCheckForm');
+      const priceFrom      = document.getElementById('priceFrom');
+      const priceTo        = document.getElementById('priceTo');
+      const priceResult    = document.getElementById('priceResult');
+      const priceSubmitBtn = document.getElementById('priceSubmitBtn');
+
+      async function runPriceCheck(event) {
+        if (event) event.preventDefault();
+        if (!priceFrom || !priceTo || !priceResult || !priceSubmitBtn) return;
+
+        const origin      = priceFrom.value.trim();
+        const destination = priceTo.value.trim();
+
+        if (!origin || !destination) {
+          priceResult.innerHTML = `
+            <div class="price-result-card">
+              <h4>Please enter both places</h4>
+              <p>Example: try <strong>Dubai, UAE</strong> to <strong>Taj Mahal, Agra</strong> to see a sample distance + price estimate.</p>
+            </div>`;
+          return;
+        }
+
+        const originalLabel = priceSubmitBtn.innerHTML;
+        priceSubmitBtn.disabled = true;
+        priceSubmitBtn.innerHTML = `<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>&nbsp;Checking...`;
+        priceResult.innerHTML = `<p>Calculating distance and rough price estimate...</p>`;
+
+        try {
+          const resp = await fetch("{{ url_for('api_price') }}", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ origin, destination })
+          });
+
+          const data = await resp.json();
+
+          if (!resp.ok) {
+            const msg = data && data.error ? data.error : 'Something went wrong on the server.';
+            priceResult.innerHTML = `
+              <div class="price-result-card">
+                <h4>Could not fetch estimate</h4>
+                <p>${msg}</p>
+              </div>`;
+            return;
+          }
+
+          const originLabel = data.origin_formatted || origin;
+          const destLabel   = data.destination_formatted || destination;
+
+          const distanceText = data.distance_text || '';
+          const priceText    = data.price_text    || '';
+
+          priceResult.innerHTML = `
+            <div class="price-result-card">
+              <h4>${originLabel} → ${destLabel}</h4>
+              ${distanceText ? `<p>${distanceText}</p>` : ''}
+              ${priceText ? `<p class="price-tag">${priceText}</p>` : ''}
+              <p class="price-disclaimer">
+                This is an automatic estimate based on distance only. Real ticket prices change with airline,
+                season, date, offers and how early you book.
+              </p>
+            </div>`;
+        } catch (err) {
+          console.error(err);
+          priceResult.innerHTML = `
+            <div class="price-result-card">
+              <h4>Network error</h4>
+              <p>We couldn't reach the pricing service. Please check your connection and try again.</p>
+            </div>`;
+        } finally {
+          priceSubmitBtn.disabled = false;
+          priceSubmitBtn.innerHTML = originalLabel;
+        }
+      }
+
+      if (priceForm) {
+        priceForm.addEventListener('submit', runPriceCheck);
+      }
+    });
+  </script>
 </body>
 </html>
