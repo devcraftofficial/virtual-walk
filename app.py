@@ -297,8 +297,21 @@ def make_admin():
 # --------------------------------------------------------
 @app.route("/")
 def index():
+    # All published, not-deleted streets (for Featured Streets)
     streets = list_with_str_id(streets_collection.find(published_not_deleted()))
-    return render_template("index.html", streets=streets, map_style_url=MAP_STYLE_URL)
+
+    # Best tour places: only published, not-deleted VIDEO streets where is_tour = True
+    tour_cursor = streets_collection.find(
+        published_not_deleted({"type": "video", "is_tour": True})
+    ).sort("createdAt", -1).limit(8)
+    tour_streets = list_with_str_id(tour_cursor)
+
+    return render_template(
+        "index.html",
+        streets=streets,
+        tour_streets=tour_streets,
+        map_style_url=MAP_STYLE_URL,
+    )
 
 # --------------------------------------------------------
 # Generic World Page
@@ -801,6 +814,12 @@ def upload():
             if mode not in ["walk", "drive", "fly", "sit"]:
                 mode = "walk"
 
+            # ✅ Tour-related fields for video streets
+            is_tour_flag = request.form.get("is_tour")
+            is_tour = True if is_tour_flag in ("on", "true", "1") else False
+            tour_category = clean_text(request.form.get("tour_category"), 80)
+            tour_best_time = clean_text(request.form.get("tour_best_time"), 80)
+
             files = request.files.getlist("video")
             links_raw = request.form.get("video_links")
 
@@ -849,6 +868,10 @@ def upload():
                 "updatedAt": datetime.utcnow(),
                 "status": "published",
                 "deleted": False,
+                # ✅ Tour metadata
+                "is_tour": is_tour,
+                "tour_category": tour_category,
+                "tour_best_time": tour_best_time,
             }
 
         elif street_type == "3d":
@@ -991,6 +1014,17 @@ def edit_street(street_id):
             "category": clean_text(request.form.get("category"), 80),
             "description": clean_text(request.form.get("description"), 500),
         }
+
+        # ✅ Tour-related updates (only if present in the form)
+        if "is_tour" in request.form:
+            is_tour_flag = request.form.get("is_tour")
+            updated_fields["is_tour"] = True if is_tour_flag in ("on", "true", "1") else False
+
+        if "tour_category" in request.form:
+            updated_fields["tour_category"] = clean_text(request.form.get("tour_category"), 80)
+
+        if "tour_best_time" in request.form:
+            updated_fields["tour_best_time"] = clean_text(request.form.get("tour_best_time"), 80)
 
         try:
             lat = float(request.form.get("lat"))
