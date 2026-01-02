@@ -1663,6 +1663,55 @@ footer p {
     transform: translateY(2px);
   }
 }
+
+@media (max-width: 768px) {
+  /* ... keep all your existing styles above ... */
+
+  .section-price {
+    padding: 50px 16px 0; /* a bit tighter on mobile */
+  }
+
+  .price-checker {
+    padding: 16px 14px 14px;
+    border-radius: 20px;
+    margin: 0;            /* full-width inside section padding */
+  }
+
+  /* Stack all fields + button vertically */
+  .price-input-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .price-input-group {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .price-input {
+    width: 100%;
+    font-size: 14px;
+  }
+
+  .price-cta {
+    width: 100%;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 4px;
+    padding: 14px 16px;   /* nice big tap target */
+    font-size: 15px;
+  }
+
+  .price-result {
+    margin-top: 12px;
+    font-size: 13px;
+  }
+
+  /* ... keep all your other existing mobile styles below ... */
+}
+
 </style>
 </head>
 
