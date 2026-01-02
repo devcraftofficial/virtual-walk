@@ -3,6 +3,7 @@ os.environ["HTTPX_DISABLE_HTTP2"] = "1"  # Cloudinary upload fix on Windows
 
 import uuid
 import logging
+import math
 from datetime import datetime, timezone, timedelta
 
 from flask import (
@@ -261,6 +262,132 @@ def current_user():
         return None
 
 
+# ---------------- Trip price helpers ----------------
+
+def geocode_place(query: str):
+    """
+    Use OpenStreetMap Nominatim to geocode a free-text place name to lat/lng.
+    Returns dict {'lat': float, 'lng': float, 'display_name': str} or None.
+    """
+    if not query:
+        return None
+
+    base_url = os.getenv(
+        "NOMINATIM_BASE_URL",
+        "https://nominatim.openstreetmap.org/search",
+    )
+
+    params = {
+        "q": query,
+        "format": "json",
+        "limit": 1,
+    }
+
+    headers = {
+        # Add your own email/domain in NOMINATIM_USER_AGENT to be polite
+        "User-Agent": os.getenv(
+            "NOMINATIM_USER_AGENT",
+            "ABTOPriceDemo/1.0 (https://example.com/contact)",
+        )
+    }
+
+    try:
+        res = requests.get(base_url, params=params, headers=headers, timeout=10)
+        res.raise_for_status()
+    except Exception as exc:
+        logger.error("Nominatim geocode failed for %s: %s", query, exc)
+        raise
+
+    try:
+        results = res.json()
+    except Exception as exc:
+        logger.error("Nominatim bad JSON for %s: %s", query, exc)
+        raise
+
+    if not results:
+        return None
+
+    r = results[0]
+    try:
+        lat = float(r["lat"])
+        lon = float(r["lon"])
+    except (KeyError, ValueError, TypeError):
+        return None
+
+    return {
+        "lat": lat,
+        "lng": lon,
+        "display_name": r.get("display_name", query),
+    }
+
+
+def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """
+    Great-circle distance in km between two points.
+    """
+    R = 6371.0  # Earth radius in km
+
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    d_phi = math.radians(lat2 - lat1)
+    d_lambda = math.radians(lon2 - lon1)
+
+    a = math.sin(d_phi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(d_lambda / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    return R * c
+
+
+def estimate_price_aed(distance_km: float) -> dict:
+    """
+    Very rough one-way economy-flight budget in AED.
+    This is JUST a heuristic, not real airline pricing.
+
+    - Base fare: 200 AED
+    - 0.45 AED / km for first 2,000 km
+    - 0.35 AED / km above 2,000 km
+    """
+    if distance_km <= 0:
+        approx = 400.0
+    else:
+        base = 200.0
+        if distance_km <= 2000:
+            variable = distance_km * 0.45
+        else:
+            variable = 2000 * 0.45 + (distance_km - 2000) * 0.35
+        approx = base + variable
+
+    low = round(approx * 0.8 / 10) * 10
+    high = round(approx * 1.2 / 10) * 10
+    mid = round(approx / 10) * 10
+
+    return {
+        "currency": "AED",
+        "low": float(low),
+        "high": float(high),
+        "mid": float(mid),
+    }
+
+
+def build_price_texts(distance_km: float, price_info: dict) -> tuple[str, str]:
+    """
+    Build human-readable distance_text and price_text strings for the UI.
+    """
+    distance_text = f"Distance: approx. {distance_km:,.1f} km (great-circle estimate)."
+
+    currency = price_info.get("currency", "AED")
+    low = price_info.get("low", 0.0)
+    high = price_info.get("high", 0.0)
+    mid = price_info.get("mid", 0.0)
+
+    price_text = (
+        f"Estimated one-way economy flight budget: "
+        f"{currency} {low:,.0f} – {currency} {high:,.0f} "
+        f"(typical ~ {currency} {mid:,.0f} per person)."
+    )
+
+    return distance_text, price_text
+
+
 @app.context_processor
 def inject_current_user():
     return {"current_user": current_user()}
@@ -275,7 +402,8 @@ def protect_protected_routes():
         None, "static", "index", "world", "world_walk", "world_drive",
         "world_fly", "world_sit", "walk", "drive", "fly", "sit",
         "login", "signup", "forgot_password", "reset_password",
-        "login_google", "auth_google_callback", "make_admin", "logout"
+        "login_google", "auth_google_callback", "make_admin", "logout",
+        "api_price",   # public API for trip price checker
     )
 
     if request.endpoint in public_endpoints:
@@ -1076,6 +1204,65 @@ def delete_street(street_id):
     return redirect(url_for("dashboard"))
 
 # --------------------------------------------------------
+# Trip Price API  (/api/price)
+# --------------------------------------------------------
+@app.route("/api/price", methods=["POST"])
+def api_price():
+    """
+    Takes JSON: { "origin": "...", "destination": "..." }
+    (also accepts "from"/"to" as fallback keys)
+
+    - Geocodes both places via OpenStreetMap Nominatim
+    - Computes distance using haversine
+    - Returns a very rough one-way flight budget in AED
+
+    Used by the Trip Price Checker on index.html.
+    """
+    payload = request.get_json(silent=True) or {}
+
+    origin = clean_text(
+        payload.get("origin") or payload.get("from"), 100
+    )
+    destination = clean_text(
+        payload.get("destination") or payload.get("to"), 100
+    )
+
+    if not origin or not destination:
+        return {
+            "error": "Please enter both origin and destination.",
+        }, 400
+
+    try:
+        geo_from = geocode_place(origin)
+        geo_to = geocode_place(destination)
+    except Exception:
+        logger.exception("api_price: geocoding failed")
+        return {
+            "error": "Could not reach the distance service. Please try again in a moment.",
+        }, 502
+
+    if not geo_from or not geo_to:
+        return {
+            "error": "We couldn't find one of those places. Try using a nearby big city or airport.",
+        }, 404
+
+    distance_km = haversine_km(
+        geo_from["lat"], geo_from["lng"],
+        geo_to["lat"], geo_to["lng"],
+    )
+
+    price_info = estimate_price_aed(distance_km)
+    distance_text, price_text = build_price_texts(distance_km, price_info)
+
+    return {
+        "origin_formatted": geo_from.get("display_name", origin),
+        "destination_formatted": geo_to.get("display_name", destination),
+        "distance_km": round(distance_km, 1),
+        "distance_text": distance_text,
+        "price_text": price_text,
+    }
+
+# --------------------------------------------------------
 # Activity Logging API
 # --------------------------------------------------------
 @app.route("/api/activity", methods=["POST"])
@@ -1136,3 +1323,4 @@ def like_street(street_id):
 # --------------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
