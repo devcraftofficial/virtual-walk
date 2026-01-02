@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Virtual Street Walk – Avatar Demo | ABTO</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
   <!-- MODEL-VIEWER -->
   <script type="module" src="{{ url_for('static', filename='js/model-viewer.min.js') }}"></script>
@@ -21,6 +21,12 @@
     }
     *, *::before, *::after { box-sizing: border-box; }
 
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
     body {
       margin: 0;
       background: radial-gradient(circle at top, #020617, #000 80%);
@@ -32,6 +38,7 @@
     .viewer-panel {
       width: 100%;
       height: 100vh;
+      height: 100dvh; /* better on mobile */
       position: relative;
     }
     .viewer-canvas {
@@ -67,6 +74,7 @@
       justify-content: center;
       align-items: center;
       z-index: 200;
+      padding: 20px;
     }
     #fullMapContainer {
       width: 90%;
@@ -75,6 +83,7 @@
       border-radius: var(--radius-lg);
       border: 1px solid rgba(148,163,184,0.5);
       overflow: hidden;
+      box-shadow: 0 25px 70px rgba(0,0,0,0.9);
     }
     #closeMapBtn {
       position: absolute;
@@ -89,6 +98,8 @@
       cursor: pointer;
       font-size: 22px;
       z-index: 500;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
     }
 
     .gender-row {
@@ -161,6 +172,7 @@
       z-index: 2;
     }
 
+    /* ===== AVATAR SHADOW + WRAPPER ===== */
     #avatarShadow {
       position: absolute;
       bottom: 20px;
@@ -173,15 +185,24 @@
       z-index: 7;
       transition: transform 0.12s ease-out;
     }
-    #avatarMV {
+
+    #avatarWrapper {
       position: absolute;
       bottom: -15px;
       left: 50%;
       transform: translateX(-50%);
-      width: 240px;
+      width: 220px;
       height: 440px;
       z-index: 10;
       pointer-events: none;
+    }
+
+    #avatarMV {
+      width: 100%;
+      height: 100%;
+      display: block;
+      /* temporary debug so we know the slot is there */
+      /* background: rgba(255,255,255,0.02); */
     }
 
     #avatarSpeech, #streetSpeech {
@@ -498,10 +519,107 @@
       font-size: 10px;
       color: #7dd3fc;
     }
+
+    /* FULLSCREEN BUTTON (mobile focus) */
+    .fullscreen-btn {
+      position: absolute;
+      right: 20px;
+      bottom: 130px;
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.7);
+      background: rgba(15,23,42,0.9);
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      z-index: 75;
+      box-shadow: 0 14px 32px rgba(0,0,0,0.9);
+      backdrop-filter: blur(8px);
+    }
+    @media (max-width: 768px) {
+      .fullscreen-btn {
+        bottom: 190px;
+      }
+    }
+    @media (min-width: 1024px) {
+      .fullscreen-btn {
+        display: none;
+      }
+    }
+
+    /* ORIENTATION GATE (mobile portrait) */
+    .orientation-gate {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, #020617, #000 80%);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 24px;
+      z-index: 300;
+    }
+    .orientation-inner {
+      max-width: 340px;
+    }
+    .orientation-icon {
+      font-size: 46px;
+      margin-bottom: 18px;
+      display: inline-block;
+      animation: rotateHint 1.8s ease-in-out infinite;
+    }
+    .orientation-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .orientation-text {
+      font-size: 14px;
+      color: #9ca3af;
+    }
+    @keyframes rotateHint {
+      0%, 100% { transform: rotate(0deg); }
+      50%      { transform: rotate(90deg); }
+    }
+    @media (max-width: 768px) and (orientation: portrait) {
+      .orientation-gate {
+        display: flex;
+      }
+    }
+
+    /* ===== MOBILE: smaller avatar & shadow ===== */
+    @media (max-width: 900px) {
+      #avatarWrapper {
+        bottom: -4px;
+        height: min(55vh, 300px);
+      }
+
+      #avatarShadow {
+        bottom: 10px;
+        width: 160px;
+        height: 36px;
+      }
+    }
   </style>
 </head>
 
 <body>
+  <!-- Orientation gate -->
+  <div id="orientationGate" class="orientation-gate">
+    <div class="orientation-inner">
+      <div class="orientation-icon">📱</div>
+      <div class="orientation-title">Rotate your phone for Walk Mode</div>
+      <p class="orientation-text">
+        Avatar Walk Mode is best experienced in <strong>landscape</strong>.<br>
+        Please rotate your phone sideways to see the full street view.
+      </p>
+    </div>
+  </div>
+
   <div id="fullMapOverlay">
     <div id="fullMapContainer"></div>
     <button id="closeMapBtn">✕</button>
@@ -546,13 +664,16 @@
       <div id="nightOverlay"></div>
 
       <div id="avatarShadow"></div>
-      <model-viewer id="avatarMV"
-        src="/static/avatars/male/idle.glb"
-        autoplay
-        shadow-intensity="1"
-        disable-zoom
-        disable-pan>
-      </model-viewer>
+      <div id="avatarWrapper">
+        <model-viewer id="avatarMV"
+          src="/static/avatars/male/idle.glb"
+          autoplay
+          shadow-intensity="1"
+          orientation="0deg 0deg 180deg"
+          disable-zoom
+          disable-pan>
+        </model-viewer>
+      </div>
 
       <div id="avatarSpeech"></div>
       <div id="streetSpeech"></div>
@@ -563,6 +684,9 @@
 
       <!-- Auto walk floating button -->
       <button id="autoWalkBtn" aria-label="Toggle auto walk">▶</button>
+
+      <!-- Fullscreen button (mobile) -->
+      <button id="fullscreenBtn" class="fullscreen-btn" aria-label="Enter full screen">⤢</button>
 
       <div id="settingsPanel" aria-label="View settings">
         <h3 style="margin:0 0 6px 0;font-size:13px;">View settings</h3>
@@ -680,6 +804,7 @@
     const video = document.getElementById("streetVideo");
     const vsrc = document.getElementById("videoSource");
     const avatar = document.getElementById("avatarMV");
+    const avatarWrapper = document.getElementById("avatarWrapper");
     const shadowEl = document.getElementById("avatarShadow");
     const fadeLayer = document.getElementById("fadeLayer");
     const nightOverlay = document.getElementById("nightOverlay");
@@ -708,14 +833,15 @@
 
     const fullMapOverlay = document.getElementById("fullMapOverlay");
 
+    const orientationGate = document.getElementById("orientationGate");
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
+
     let hasStartedWalking = false;
 
     let currentIndex = -1;
     let currentVideos = [];
     let currentVideoIndex = 0;
     let currentGender = "male";
-    let yawCurrent = 180;
-    let yawTarget = 180;
     let currentDir = 0;
     let reversePlaying = false;
     let headBob = 0;
@@ -995,10 +1121,13 @@
     }
 
     function setAvatarState() {
+      if (!avatar) return;
       const state = currentDir === 0 ? "idle" : "walk";
       const srcSet = avatarSources[currentGender] || avatarSources.male;
       const src = srcSet[state];
-      if (src && avatar.src !== src) avatar.src = src;
+      if (src && avatar.getAttribute("src") !== src) {
+        avatar.setAttribute("src", src);
+      }
     }
 
     function updateFootsteps() {
@@ -1092,10 +1221,6 @@
         return requestAnimationFrame(tick);
       }
 
-      // Smooth yaw + correct axis (Z-axis like your old version)
-      yawCurrent += (yawTarget - yawCurrent) * 0.18;
-      avatar.orientation = `0deg 0deg ${yawCurrent}deg`;
-
       motionMomentum *= 0.92;
       if (motionMomentum < 0.02) motionMomentum = 0;
 
@@ -1121,7 +1246,12 @@
       video.style.transform =
         `translate(${strafeOffset * 0.25 + swayX * walkIntensity}px, ` +
         `${headBob * 1.4 + swayY * walkIntensity}px) scale(1.02)`;
-      avatar.style.transform = `translate(calc(-50% + ${strafeOffset}px), -15px)`;
+
+      // Slide avatar wrapper slightly left/right with strafe
+      if (avatarWrapper) {
+        avatarWrapper.style.transform =
+          `translate(calc(-50% + ${strafeOffset}px), 0px)`;
+      }
 
       const shadowScale = 1 + Math.abs(headBob) * 0.04;
       shadowEl.style.transform = `translateX(-50%) scale(${shadowScale})`;
@@ -1168,10 +1298,10 @@
 
       if (k === "arrowleft" || k === "a") {
         cancelAutoWalkIfUserMoves();
-        yawTarget -= 10;
+        strafe = -1;
       } else if (k === "arrowright" || k === "d") {
         cancelAutoWalkIfUserMoves();
-        yawTarget += 10;
+        strafe = 1;
       } else if (k === "arrowup" || k === "w") {
         cancelAutoWalkIfUserMoves();
         const wasStopped = currentDir === 0;
@@ -1186,12 +1316,6 @@
         playReverse();
         setAvatarState();
         updateFootsteps();
-      } else if (k === "q") {
-        cancelAutoWalkIfUserMoves();
-        strafe = -1;
-      } else if (k === "e") {
-        cancelAutoWalkIfUserMoves();
-        strafe = 1;
       }
     });
 
@@ -1205,7 +1329,9 @@
         setAvatarState();
         updateFootsteps();
       }
-      if (k === "q" || k === "e") strafe = 0;
+      if (k === "arrowleft" || k === "a" || k === "arrowright" || k === "d") {
+        strafe = 0;
+      }
     });
 
     document.querySelectorAll(".gender-buttons button").forEach(btn => {
@@ -1325,7 +1451,7 @@
 
     function applyAvatarVisibility() {
       const hide = setHideAvatar.checked || setWalkNoAvatar.checked;
-      avatar.style.display = hide ? "none" : "block";
+      if (avatarWrapper) avatarWrapper.style.display = hide ? "none" : "block";
       shadowEl.style.display = hide ? "none" : "block";
     }
     setHideAvatar.addEventListener("change", () => {
@@ -1339,6 +1465,9 @@
     setNightMode.addEventListener("change", () => {
       nightOverlay.style.opacity = setNightMode.checked ? "1" : "0";
     });
+
+    // Apply visibility once on load (in case browser remembers checkbox state)
+    applyAvatarVisibility();
 
     function updateMapMarkerHighlight() {
       markerEls.forEach(({ el, index }) => {
@@ -1442,6 +1571,64 @@
       loadStreetByIndex(idx !== -1 ? idx : 0);
     } else if (Array.isArray(STREETS) && STREETS.length > 0) {
       loadStreetByIndex(0);
+    }
+
+    // ---------- Orientation gate (JS fallback) ----------
+    function updateOrientationGate() {
+      if (!orientationGate) return;
+      const isMobile = window.innerWidth <= 768;
+      const isPortrait = window.innerHeight >= window.innerWidth;
+      orientationGate.style.display = (isMobile && isPortrait) ? "flex" : "none";
+    }
+
+    updateOrientationGate();
+    window.addEventListener("resize", updateOrientationGate);
+    window.addEventListener("orientationchange", updateOrientationGate);
+
+    // ---------- Fullscreen handling ----------
+    function isFullscreen() {
+      return document.fullscreenElement ||
+             document.webkitFullscreenElement ||
+             document.msFullscreenElement;
+    }
+
+    function updateFullscreenIcon() {
+      if (!fullscreenBtn) return;
+      if (isFullscreen()) {
+        fullscreenBtn.textContent = "⤡";
+        fullscreenBtn.setAttribute("aria-label", "Exit full screen");
+      } else {
+        fullscreenBtn.textContent = "⤢";
+        fullscreenBtn.setAttribute("aria-label", "Enter full screen");
+      }
+    }
+
+    if (fullscreenBtn) {
+      fullscreenBtn.addEventListener("click", async () => {
+        try {
+          if (!isFullscreen()) {
+            const el = document.documentElement; // could be viewerCanvas instead
+            if (el.requestFullscreen) {
+              await el.requestFullscreen();
+            } else if (el.webkitRequestFullscreen) {
+              el.webkitRequestFullscreen();
+            }
+          } else {
+            if (document.exitFullscreen) {
+              await document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+              document.webkitExitFullscreen();
+            }
+          }
+          updateFullscreenIcon();
+        } catch (err) {
+          console.log("Fullscreen error:", err);
+        }
+      });
+
+      document.addEventListener("fullscreenchange", updateFullscreenIcon);
+      document.addEventListener("webkitfullscreenchange", updateFullscreenIcon);
+      updateFullscreenIcon();
     }
   </script>
 </body>
