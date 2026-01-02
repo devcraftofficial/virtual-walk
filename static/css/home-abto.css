@@ -74,6 +74,25 @@ body::after {
   z-index: -1;
 }
 
+/* Skip link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 16px;
+  padding: 8px 14px;
+  background: #111827;
+  color: #f9fafb;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 13px;
+  z-index: 11000;
+  box-shadow: 0 10px 30px rgba(0,0,0,.6);
+  transition: var(--ease-fast);
+}
+.skip-link:focus-visible {
+  top: 10px;
+}
+
 /* Focus styles */
 a,
 button {
@@ -291,6 +310,11 @@ nav.scrolled {
   background: rgba(15,23,42,.9);
   border-color: var(--border-subtle);
   transform: translateY(-1px);
+}
+
+.nav-link[aria-current="page"] {
+  background: rgba(15,23,42,.98);
+  border-color: var(--border-accent);
 }
 
 .nav-link.primary {
@@ -870,7 +894,7 @@ nav.scrolled {
 }
 
 /* ==========================================================================
-   NEW: TRIP PRICE CHECKER
+   TRIP PRICE CHECKER
    ========================================================================== */
 .section-price {
   padding: clamp(70px, 11vw, 110px) max(32px, 6vw) 0;
@@ -1010,7 +1034,7 @@ nav.scrolled {
 }
 
 /* ==========================================================================
-   NEW: BEST TOUR PLACES SECTION
+   BEST TOUR PLACES SECTION
    ========================================================================== */
 .section-tour {
   padding: clamp(70px, 11vw, 110px) max(32px, 6vw) 0;
@@ -1087,7 +1111,35 @@ nav.scrolled {
   color: #6b7280;
 }
 
-/* Tour grid and cards */
+/* NEW: tour country & category selects */
+.tour-filter-select {
+  flex: 0 0 150px;
+  min-width: 140px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(15,23,42,.96);
+  color: #e5e7eb;
+  padding: 9px 40px 9px 14px;
+  font-size: 13px;
+  outline: none;
+  appearance: none;
+  position: relative;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-dim) 50%),
+    linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) 50%,
+    calc(100% - 11px) 50%;
+  background-size: 7px 7px, 7px 7px;
+  background-repeat: no-repeat;
+}
+
+.tour-filter-select:focus-visible,
+.tour-filter-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(93,94,255,.4);
+}
+
 .tour-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -1240,6 +1292,51 @@ nav.scrolled {
 
 .card-location i {
   color: var(--accent);
+}
+
+/* NEW: Streets search bar above featured grid */
+.streets-filters {
+  max-width: 480px;
+  margin: 0 auto 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.streets-search-wrap {
+  flex: 1 1 260px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(15,23,42,.96);
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  padding: 10px 16px;
+  box-shadow: 0 12px 30px rgba(15,23,42,.9);
+}
+
+.streets-search-wrap i {
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.streets-search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #e5e7eb;
+  font-size: 13px;
+  width: 100%;
+}
+
+.streets-search-input::placeholder {
+  color: #6b7280;
+}
+
+/* Optional: cursor for featured street cards */
+.street-card {
+  cursor: pointer;
 }
 
 /* ==========================================================================
@@ -1400,7 +1497,7 @@ footer p {
 @media (max-width: 1200px) {
   .hero {
     grid-template-columns: minmax(0, 1fr);
-    gap: 56px;
+    gap: 60px;
     padding: var(--hero-badge-top) 40px 48px;
   }
   .hero-content {
@@ -1525,7 +1622,7 @@ footer p {
   }
 
   .section-price {
-    padding: 60px 20px 0;
+    padding: 50px 16px 0;
   }
 
   .grid {
@@ -1558,14 +1655,54 @@ footer p {
     bottom: 70px;
   }
 
+  .price-checker {
+    padding: 16px 14px 14px;
+    border-radius: 20px;
+    margin: 0;
+  }
+
   .price-input-row {
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
+  }
+
+  .price-input-group {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .price-input {
+    width: 100%;
+    font-size: 14px;
   }
 
   .price-cta {
     width: 100%;
+    display: inline-flex;
     justify-content: center;
+    align-items: center;
+    margin-top: 4px;
+    padding: 14px 16px;
+    font-size: 15px;
+  }
+
+  .price-result {
+    margin-top: 12px;
+    font-size: 13px;
+  }
+
+  .streets-filters {
+    margin-bottom: 24px;
+    padding: 0;
+  }
+
+  .tour-filters {
+    max-width: 100%;
+  }
+
+  .tour-filter-select {
+    flex: 1 1 45%;
   }
 }
 
@@ -1633,52 +1770,4 @@ footer p {
   .hero:hover .hero-screenshot-small-right {
     transform: translateY(2px);
   }
-}
-
-@media (max-width: 768px) {
-  /* ... keep all your existing styles above ... */
-
-  .section-price {
-    padding: 50px 16px 0; /* a bit tighter on mobile */
-  }
-
-  .price-checker {
-    padding: 16px 14px 14px;
-    border-radius: 20px;
-    margin: 0;            /* full-width inside section padding */
-  }
-
-  /* Stack all fields + button vertically */
-  .price-input-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-
-  .price-input-group {
-    flex: 1 1 100%;
-    width: 100%;
-  }
-
-  .price-input {
-    width: 100%;
-    font-size: 14px;
-  }
-
-  .price-cta {
-    width: 100%;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 4px;
-    padding: 14px 16px;   /* nice big tap target */
-    font-size: 15px;
-  }
-
-  .price-result {
-    margin-top: 12px;
-    font-size: 13px;
-  }
-
-  /* ... keep all your other existing mobile styles below ... */
 }
