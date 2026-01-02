@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Sit Mode – Virtual Street Sit</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
   <!-- MAPLIBRE -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/maplibre-gl.css') }}">
@@ -22,8 +22,13 @@
 
     *, *::before, *::after { box-sizing: border-box; }
 
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
       background: radial-gradient(circle at top, #020617, #000 80%);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--text-main);
@@ -33,7 +38,8 @@
     .viewer-panel {
       position: relative;
       width: 100%;
-      height: 100vh;
+      height: 100vh;   /* fallback */
+      height: 100dvh;  /* proper mobile viewport */
       display: flex;
       justify-content: center;
       align-items: center;
@@ -275,6 +281,33 @@
       color: #0b1120;
     }
 
+    /* ---------- FULLSCREEN BUTTON (mobile focus) ---------- */
+    .fullscreen-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.7);
+      background: rgba(15,23,42,0.9);
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      z-index: 70;
+      box-shadow: 0 14px 32px rgba(0,0,0,0.9);
+      backdrop-filter: blur(8px);
+    }
+
+    @media (min-width: 1024px) {
+      .fullscreen-btn {
+        display: none;
+      }
+    }
+
     /* ---------- ORIENTATION GATE (mobile portrait) ---------- */
     .orientation-gate {
       position: fixed;
@@ -368,7 +401,7 @@
     <div class="orientation-icon">📱</div>
     <div class="orientation-title">Rotate your phone for Sit Mode</div>
     <p class="orientation-text">
-      Sit Mode is best experienced in <strong>landscape</strong>.  
+      Sit Mode is best experienced in <strong>landscape</strong>.<br>
       Please rotate your phone sideways to see the full street view.
     </p>
   </div>
@@ -405,6 +438,9 @@
       aria-label="Unmute ambience (press M)">
       <span>🔇</span>
     </button>
+
+    <!-- Fullscreen button (mobile) -->
+    <button id="fullscreenBtn" class="fullscreen-btn" aria-label="Enter full screen">⤢</button>
 
     <!-- Sit video -->
     <video
@@ -528,8 +564,8 @@
   const viewerCanvas = document.getElementById("viewerCanvas");
   const soundToggleBtn = document.getElementById("soundToggle");
   const soundIconSpan = soundToggleBtn?.querySelector("span");
-
   const orientationGate = document.getElementById("orientationGate");
+  const fullscreenBtn = document.getElementById("fullscreenBtn");
 
   let currentStreetIndex = -1;
   let currentVideos = [];
@@ -557,7 +593,6 @@
   function toggleSound() {
     if (!video) return;
     video.muted = !video.muted;
-    // Ensure playback continues after user gesture
     video.play().catch(() => {});
     updateSoundUI();
   }
@@ -606,7 +641,6 @@
     if (vsrc) vsrc.src = videoUrl;
     video.load();
     video.currentTime = 0;
-    // respect current mute state, just play
     safePlay();
 
     updateMiniMapForStreet(street);
@@ -637,7 +671,6 @@
       video.currentTime = 0;
       safePlay();
     } else {
-      // single video with no list: just loop
       video.currentTime = 0;
       safePlay();
     }
@@ -686,6 +719,52 @@
   updateOrientationGate();
   window.addEventListener("resize", updateOrientationGate);
   window.addEventListener("orientationchange", updateOrientationGate);
+
+  // ---------- Fullscreen handling ----------
+  function isFullscreen() {
+    return document.fullscreenElement ||
+           document.webkitFullscreenElement ||
+           document.msFullscreenElement;
+  }
+
+  function updateFullscreenIcon() {
+    if (!fullscreenBtn) return;
+    if (isFullscreen()) {
+      fullscreenBtn.textContent = "⤡";
+      fullscreenBtn.setAttribute("aria-label", "Exit full screen");
+    } else {
+      fullscreenBtn.textContent = "⤢";
+      fullscreenBtn.setAttribute("aria-label", "Enter full screen");
+    }
+  }
+
+  if (fullscreenBtn) {
+    fullscreenBtn.addEventListener("click", async () => {
+      try {
+        if (!isFullscreen()) {
+          const el = document.documentElement; // or viewerCanvas
+          if (el.requestFullscreen) {
+            await el.requestFullscreen();
+          } else if (el.webkitRequestFullscreen) {
+            el.webkitRequestFullscreen();
+          }
+        } else {
+          if (document.exitFullscreen) {
+            await document.exitFullscreen();
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          }
+        }
+        updateFullscreenIcon();
+      } catch (err) {
+        console.log("Fullscreen error:", err);
+      }
+    });
+
+    document.addEventListener("fullscreenchange", updateFullscreenIcon);
+    document.addEventListener("webkitfullscreenchange", updateFullscreenIcon);
+    updateFullscreenIcon();
+  }
 </script>
 
 </body>
