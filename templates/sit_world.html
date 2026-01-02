@@ -221,6 +221,7 @@
       transform: translate3d(0,0,0);
       backface-visibility: hidden;
     }
+
     #fadeLayer {
       position: absolute;
       inset: 0;
@@ -274,6 +275,53 @@
       color: #0b1120;
     }
 
+    /* ---------- ORIENTATION GATE (mobile portrait) ---------- */
+    .orientation-gate {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, #020617, #000 80%);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 24px;
+      z-index: 300;
+    }
+
+    .orientation-inner {
+      max-width: 340px;
+    }
+
+    .orientation-icon {
+      font-size: 46px;
+      margin-bottom: 18px;
+      display: inline-block;
+      animation: rotateHint 1.8s ease-in-out infinite;
+    }
+
+    .orientation-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .orientation-text {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    @keyframes rotateHint {
+      0%, 100% { transform: rotate(0deg); }
+      50%      { transform: rotate(90deg); }
+    }
+
+    /* Show orientation gate on small screens in PORTRAIT */
+    @media (max-width: 768px) and (orientation: portrait) {
+      .orientation-gate {
+        display: flex;
+      }
+    }
+
     @media (max-width: 900px) {
       .mini-map {
         width: 80px !important;
@@ -312,6 +360,18 @@
 <div id="fullMapOverlay" role="dialog" aria-modal="true" aria-label="Full map view">
   <div id="fullMapContainer" tabindex="0" aria-live="polite"></div>
   <button id="closeMapBtn" aria-label="Close full map">✕</button>
+</div>
+
+<!-- Orientation gate for mobile portrait -->
+<div id="orientationGate" class="orientation-gate">
+  <div class="orientation-inner">
+    <div class="orientation-icon">📱</div>
+    <div class="orientation-title">Rotate your phone for Sit Mode</div>
+    <p class="orientation-text">
+      Sit Mode is best experienced in <strong>landscape</strong>.  
+      Please rotate your phone sideways to see the full street view.
+    </p>
+  </div>
 </div>
 
 <div class="viewer-panel" role="main" aria-live="polite">
@@ -469,17 +529,17 @@
   const soundToggleBtn = document.getElementById("soundToggle");
   const soundIconSpan = soundToggleBtn?.querySelector("span");
 
+  const orientationGate = document.getElementById("orientationGate");
+
   let currentStreetIndex = -1;
   let currentVideos = [];
   let currentVideoIndex = 0;
 
-  // start muted for autoplay, user can unmute
   // start with sound ON by default
-if (video) {
-  video.muted = false;
-  video.volume = 1.0;
-}
-
+  if (video) {
+    video.muted = false;
+    video.volume = 1.0;
+  }
 
   function updateSoundUI() {
     if (!soundToggleBtn || !video) return;
@@ -610,6 +670,22 @@ if (video) {
   } else if (Array.isArray(STREETS) && STREETS.length > 0) {
     loadStreetByIndex(0);
   }
+
+  // ---------- JS fallback for orientation gate ----------
+  function updateOrientationGate() {
+    if (!orientationGate) return;
+    const isMobile = window.innerWidth <= 768;
+    const isPortrait = window.innerHeight >= window.innerWidth;
+    if (isMobile && isPortrait) {
+      orientationGate.style.display = "flex";
+    } else {
+      orientationGate.style.display = "none";
+    }
+  }
+
+  updateOrientationGate();
+  window.addEventListener("resize", updateOrientationGate);
+  window.addEventListener("orientationchange", updateOrientationGate);
 </script>
 
 </body>
