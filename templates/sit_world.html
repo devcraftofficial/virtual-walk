@@ -232,6 +232,48 @@
       user-select: none;
     }
 
+    /* ---------- Sound toggle button ---------- */
+    .sound-toggle {
+      position: absolute;
+      right: 18px;
+      bottom: 24px;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.7);
+      background: rgba(15,23,42,0.9);
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 60;
+      box-shadow: 0 14px 32px rgba(0,0,0,0.9);
+      transition:
+        background 0.16s ease,
+        border-color 0.16s ease,
+        transform 0.12s ease,
+        box-shadow 0.16s ease;
+    }
+
+    .sound-toggle span {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .sound-toggle:hover {
+      background: rgba(15,23,42,1);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: 0 18px 40px rgba(248,113,22,0.35);
+    }
+
+    .sound-toggle.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      border-color: rgba(248,250,252,0.8);
+      color: #0b1120;
+    }
+
     @media (max-width: 900px) {
       .mini-map {
         width: 80px !important;
@@ -253,6 +295,12 @@
       }
       .mode-location {
         max-width: 200px;
+      }
+      .sound-toggle {
+        right: 14px;
+        bottom: 18px;
+        width: 40px;
+        height: 40px;
       }
     }
   </style>
@@ -289,11 +337,19 @@
       <span class="category-pill" id="categoryLabel">Ambient view</span>
     </div>
 
+    <!-- Sound toggle -->
+    <button
+      type="button"
+      class="sound-toggle"
+      id="soundToggle"
+      aria-label="Unmute ambience (press M)">
+      <span>🔇</span>
+    </button>
+
     <!-- Sit video -->
     <video
       id="streetVideo"
       preload="auto"
-      muted
       playsinline
       disablepictureinpicture
       controlslist="nodownload nofullscreen noplaybackrate"
@@ -410,10 +466,52 @@
   const topLocationEl = document.getElementById("topLocationPill");
   const categoryEl = document.getElementById("categoryLabel");
   const viewerCanvas = document.getElementById("viewerCanvas");
+  const soundToggleBtn = document.getElementById("soundToggle");
+  const soundIconSpan = soundToggleBtn?.querySelector("span");
 
   let currentStreetIndex = -1;
   let currentVideos = [];
   let currentVideoIndex = 0;
+
+  // start muted for autoplay, user can unmute
+  // start with sound ON by default
+if (video) {
+  video.muted = false;
+  video.volume = 1.0;
+}
+
+
+  function updateSoundUI() {
+    if (!soundToggleBtn || !video) return;
+    if (video.muted) {
+      soundToggleBtn.classList.remove("active");
+      soundToggleBtn.setAttribute("aria-label", "Unmute ambience (press M)");
+      if (soundIconSpan) soundIconSpan.textContent = "🔇";
+    } else {
+      soundToggleBtn.classList.add("active");
+      soundToggleBtn.setAttribute("aria-label", "Mute ambience (press M)");
+      if (soundIconSpan) soundIconSpan.textContent = "🔊";
+    }
+  }
+
+  function toggleSound() {
+    if (!video) return;
+    video.muted = !video.muted;
+    // Ensure playback continues after user gesture
+    video.play().catch(() => {});
+    updateSoundUI();
+  }
+
+  soundToggleBtn?.addEventListener("click", toggleSound);
+
+  // Keyboard shortcut: M to mute/unmute
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "m" || e.key === "M") {
+      toggleSound();
+    }
+  });
+
+  updateSoundUI();
 
   function safePlay() {
     if (!video || !video.paused) return;
@@ -448,6 +546,7 @@
     if (vsrc) vsrc.src = videoUrl;
     video.load();
     video.currentTime = 0;
+    // respect current mute state, just play
     safePlay();
 
     updateMiniMapForStreet(street);
