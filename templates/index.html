@@ -899,6 +899,109 @@ nav.scrolled {
 }
 
 /* ==========================================================================
+   NEW: BEST TOUR PLACES SECTION
+   ========================================================================== */
+.section-tour {
+  padding: clamp(70px, 11vw, 110px) max(32px, 6vw) 0;
+  max-width: 1600px;
+  margin: auto;
+}
+
+.tour-header {
+  max-width: 900px;
+  margin: 0 auto 36px;
+  text-align: center;
+}
+
+.tour-header h3 {
+  margin: 0 0 8px;
+  font-size: clamp(26px, 5vw, 34px);
+  font-weight: 800;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.tour-header p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: clamp(14px, 2.3vw, 17px);
+}
+
+.tour-subline {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: .18em;
+}
+
+.tour-filters {
+  max-width: 540px;
+  margin: 0 auto 26px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.tour-search-wrap {
+  flex: 1 1 260px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(15,23,42,.96);
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  padding: 10px 16px;
+  box-shadow: 0 12px 30px rgba(15,23,42,.9);
+}
+
+.tour-search-wrap i {
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.tour-search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #e5e7eb;
+  font-size: 13px;
+  width: 100%;
+}
+
+.tour-search-input::placeholder {
+  color: #6b7280;
+}
+
+/* Tour grid and cards */
+.tour-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: clamp(20px, 3vw, 26px);
+  max-width: 1200px;
+  margin: 0 auto 32px;
+}
+
+.tour-card {
+  cursor: pointer;
+}
+
+.tour-card-hidden {
+  display: none !important;
+}
+
+.tour-note {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+  max-width: 520px;
+  margin: 0 auto 0;
+}
+
+/* ==========================================================================
    CARDS / GRID (FEATURED STREETS)
    ========================================================================== */
 .grid {
@@ -1306,9 +1409,17 @@ footer p {
     padding: 70px 20px;
   }
 
+  .section-tour {
+    padding: 60px 20px 0;
+  }
+
   .grid {
     grid-template-columns: 1fr;
     gap: 24px;
+  }
+
+  .tour-grid {
+    grid-template-columns: 1fr;
   }
 
   .modes {
@@ -1421,9 +1532,10 @@ footer p {
          alt="ABTO Logo" class="logo-img">
   </a>
 
-    <div class="nav-links" id="navLinks" aria-label="Main navigation">
+  <div class="nav-links" id="navLinks" aria-label="Main navigation">
     <a href="{{ url_for('index') }}" class="nav-link">Home</a>
     <a href="#how-it-works" class="nav-link">How it works</a>
+    <a href="#tour-preview" class="nav-link">Tour places</a>
     <a href="#streets" class="nav-link">Streets</a>
     <a href="{{ url_for('upload') }}" class="nav-link">Upload</a>
 
@@ -1442,7 +1554,6 @@ footer p {
     {% endif %}
   </div>
 
-  
   <button class="mobile-menu-toggle" id="mobileToggle" aria-label="Toggle navigation menu" aria-expanded="false">
     <span class="hamburger"></span>
     <span class="hamburger"></span>
@@ -1599,6 +1710,81 @@ footer p {
         Exploring cities you may never visit
       </div>
     </div>
+  </section>
+
+  <!-- 💡 NEW: BEST TOUR PLACES ROW WITH SEARCH -->
+  {# Use backend-tour list if provided, otherwise fall back to computing from streets #}
+  {% set effective_tour_streets = tour_streets if tour_streets is defined 
+       else (streets|selectattr('is_tour')|list if streets else []) %}
+
+  <section class="section-tour" id="tour-preview" aria-labelledby="tour-title">
+    <div class="tour-header">
+      <h3 id="tour-title">Best Tour Places — Visit Here Before You Go</h3>
+      <p>
+        Search real streets from popular tourist spots and preview the vibe before you book tickets.
+      </p>
+      <p class="tour-subline">TYPE A CITY • COUNTRY • OR STREET NAME</p>
+    </div>
+
+    {% if effective_tour_streets and effective_tour_streets|length > 0 %}
+      <div class="tour-filters" aria-label="Filter tour places">
+        <div class="tour-search-wrap">
+          <i class="fas fa-search" aria-hidden="true"></i>
+          <input
+            type="text"
+            id="tourSearch"
+            class="tour-search-input"
+            placeholder="Search Dubai Marina, Paris, New York..."
+            autocomplete="off"
+          >
+        </div>
+      </div>
+
+      <div class="tour-grid" id="tourGrid">
+        {# Show up to 8 marked tour places as a “best tour places” row #}
+        {% for st in effective_tour_streets[:8] %}
+          {% if st.videos and st.videos|length > 0 and st.videos[0].url %}
+            {% set thumb_url_tour = st.videos[0].url|replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_400,c_fill,g_center') %}
+            {% set is_placeholder_tour = False %}
+          {% else %}
+            {% set thumb_url_tour = url_for('static', filename='images/placeholder-street.jpg') %}
+            {% set is_placeholder_tour = True %}
+          {% endif %}
+          <a
+            href="{{ url_for('world', street_id=st._id) }}"
+            class="card tour-card"
+            data-search="{{ (st.name ~ ' ' ~ (st.city or '') ~ ' ' ~ (st.country or '') ~ ' ' ~ (st.tour_category or '') ~ ' ' ~ (st.tour_best_time or ''))|lower }}"
+          >
+            <div class="thumb" style="background-image: url('{{ thumb_url_tour }}')">
+              {% if is_placeholder_tour %}
+                <div class="thumb-placeholder">
+                  <i class="fas fa-map-marked-alt" aria-hidden="true"></i>
+                </div>
+              {% endif %}
+            </div>
+            <div class="card-body">
+              <h4 title="{{ st.name }}">
+                {{ st.name[:50] }}{% if st.name|length > 50 %}...{% endif %}
+              </h4>
+              <div class="card-location">
+                <i class="fas fa-location-dot" aria-hidden="true"></i>
+                <span>{{ st.city or 'Unknown' }}, {{ st.country or 'Unknown' }}</span>
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+
+      <p class="tour-note">
+        Try searching for city names (e.g. “Dubai”, “Paris”) to quickly preview streets in your next tour destination.
+      </p>
+    {% else %}
+      <div class="empty-state" style="padding-top: 40px;">
+        <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+        <h3>Best tour places coming soon</h3>
+        <p>Upload your first tour street (with “Tour / Trip Preview” enabled) to see it here.</p>
+      </div>
+    {% endif %}
   </section>
 
   <!-- FEATURED STREETS -->
@@ -1820,6 +2006,24 @@ document.addEventListener('DOMContentLoaded', function() {
     heroEl.style.opacity = '1';
     heroEl.style.transform = 'none';
     heroEl.style.position = 'relative';
+  }
+
+  // 💡 Tour search filter
+  const tourSearch = document.getElementById('tourSearch');
+  const tourGrid = document.getElementById('tourGrid');
+  if (tourSearch && tourGrid) {
+    const tourCards = Array.from(tourGrid.querySelectorAll('.tour-card'));
+    tourSearch.addEventListener('input', () => {
+      const q = tourSearch.value.trim().toLowerCase();
+      tourCards.forEach(card => {
+        const text = (card.dataset.search || '').toLowerCase();
+        if (!q || text.includes(q)) {
+          card.classList.remove('tour-card-hidden');
+        } else {
+          card.classList.add('tour-card-hidden');
+        }
+      });
+    });
   }
 });
 </script>
