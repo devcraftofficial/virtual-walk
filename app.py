@@ -447,21 +447,34 @@ def index():
 @app.route("/world")
 def world():
     street_id = request.args.get("street_id")
+
+    # All published, not-deleted streets (for sidebar + default)
     streets = list_with_str_id(streets_collection.find(published_not_deleted()))
 
+    # Default center = Dubai
     center = {"lat": 25.2048, "lng": 55.2708}
+    if streets:
+        try:
+            center = {"lat": streets[0]["lat"], "lng": streets[0]["lng"]}
+        except KeyError:
+            pass
+
+    selected_street = None
+    street_error = None  # "not_found" | "unavailable" | None
 
     if street_id:
-        selected_street = get_street_by_id(street_id)
-        if selected_street and (
-            selected_street.get("status") != "published"
-            or selected_street.get("deleted", False)
-        ):
-            selected_street = None
-    else:
-        selected_street = None
+        raw_doc = get_street_by_id(street_id)
 
-    # ✅ Route to correct template based on street MODE
+        if not raw_doc:
+            # ID is invalid / not found at all
+            street_error = "not_found"
+        elif raw_doc.get("status") != "published" or raw_doc.get("deleted", False):
+            # Exists but unpublished / deleted
+            street_error = "unavailable"
+        else:
+            selected_street = raw_doc
+
+    # ✅ If we have a selected street, route to correct template by MODE
     if selected_street:
         mode = selected_street.get("mode", "walk")
         template_map = {
@@ -477,27 +490,32 @@ def world():
             streets_collection.find(published_not_deleted({"mode": mode}))
         )
 
-        if streets:
-            center = {"lat": streets[0]["lat"], "lng": streets[0]["lng"]}
+        # Center on first street in this mode if available
+        if mode_streets:
+            try:
+                center = {"lat": mode_streets[0]["lat"], "lng": mode_streets[0]["lng"]}
+            except KeyError:
+                pass
 
         return render_template(
             template,
             streets=mode_streets,  # Same mode streets
             center=center,
             selected_street=selected_street,
+            street_error=street_error,
             mode=mode,  # Pass mode to template
             map_style_url=MAP_STYLE_URL,
         )
 
-    # No street selected - default to walk
+    # ❌ No street selected (or invalid ID) – default to walk world but pass street_error
     return render_template(
         "world.html",
         streets=streets,
         center=center,
-        selected_street=selected_street,
+        selected_street=None,
+        street_error=street_error,
         map_style_url=MAP_STYLE_URL,
     )
-
 
 # --------------------------------------------------------
 # WALK world
@@ -517,26 +535,42 @@ def world_walk():
 
     center = {"lat": 25.2048, "lng": 55.2708}
     if streets:
-        center = {"lat": streets[0]["lat"], "lng": streets[0]["lng"]}
+        try:
+            center = {"lat": streets[0]["lat"], "lng": streets[0]["lng"]}
+        except KeyError:
+            pass
 
     street_id = request.args.get("street_id")
-    selected_street = get_street_by_id(street_id)
+    selected_street = None
+    street_error = None
 
-    if selected_street and not (
-        selected_street.get("status") == "published"
-        and not selected_street.get("deleted", False)
-        and (
-            selected_street.get("type") == "3d"
-            or (selected_street.get("type") == "video" and selected_street.get("mode") == "walk")
-        )
-    ):
-        selected_street = None
+    if street_id:
+        candidate = get_street_by_id(street_id)
+        if not candidate:
+            street_error = "not_found"
+        else:
+            is_ok = (
+                candidate.get("status") == "published"
+                and not candidate.get("deleted", False)
+                and (
+                    candidate.get("type") == "3d"
+                    or (
+                        candidate.get("type") == "video"
+                        and candidate.get("mode") == "walk"
+                    )
+                )
+            )
+            if is_ok:
+                selected_street = candidate
+            else:
+                street_error = "unavailable"
 
     return render_template(
         "world.html",
         streets=streets,
         center=center,
         selected_street=selected_street,
+        street_error=street_error,
         map_style_url=MAP_STYLE_URL,
     )
 
@@ -740,23 +774,37 @@ def world_drive():
 
     center = {"lat": 25.2048, "lng": 55.2708}
     if streets:
-        center = {"lat": streets[0]["lat"], "lng": streets[0]["lng"]}
+        try:
+            center = {"lat": streets[0]["lat"], "lng": streets[0]["lng"]}
+        except KeyError:
+            pass
 
     street_id = request.args.get("street_id")
-    selected_street = get_street_by_id(street_id)
-    if selected_street and not (
-        selected_street.get("status") == "published"
-        and not selected_street.get("deleted", False)
-        and selected_street.get("type") == "video"
-        and selected_street.get("mode") == "drive"
-    ):
-        selected_street = None
+    selected_street = None
+    street_error = None
+
+    if street_id:
+        candidate = get_street_by_id(street_id)
+        if not candidate:
+            street_error = "not_found"
+        else:
+            is_ok = (
+                candidate.get("status") == "published"
+                and not candidate.get("deleted", False)
+                and candidate.get("type") == "video"
+                and candidate.get("mode") == "drive"
+            )
+            if is_ok:
+                selected_street = candidate
+            else:
+                street_error = "unavailable"
 
     return render_template(
         "drive_world.html",
         streets=streets,
         center=center,
         selected_street=selected_street,
+        street_error=street_error,
         map_style_url=MAP_STYLE_URL,
     )
 
@@ -773,23 +821,37 @@ def world_fly():
 
     center = {"lat": 25.2048, "lng": 55.2708}
     if streets:
-        center = {"lat": streets[0]["lat"], "lng": streets[0]["lng"]}
+        try:
+            center = {"lat": streets[0]["lat"], "lng": streets[0]["lng"]}
+        except KeyError:
+            pass
 
     street_id = request.args.get("street_id")
-    selected_street = get_street_by_id(street_id)
-    if selected_street and not (
-        selected_street.get("status") == "published"
-        and not selected_street.get("deleted", False)
-        and selected_street.get("type") == "video"
-        and selected_street.get("mode") == "fly"
-    ):
-        selected_street = None
+    selected_street = None
+    street_error = None
+
+    if street_id:
+        candidate = get_street_by_id(street_id)
+        if not candidate:
+            street_error = "not_found"
+        else:
+            is_ok = (
+                candidate.get("status") == "published"
+                and not candidate.get("deleted", False)
+                and candidate.get("type") == "video"
+                and candidate.get("mode") == "fly"
+            )
+            if is_ok:
+                selected_street = candidate
+            else:
+                street_error = "unavailable"
 
     return render_template(
         "fly_world.html",
         streets=streets,
         center=center,
         selected_street=selected_street,
+        street_error=street_error,
         map_style_url=MAP_STYLE_URL,
     )
 
@@ -806,23 +868,37 @@ def world_sit():
 
     center = {"lat": 25.2048, "lng": 55.2708}
     if streets:
-        center = {"lat": streets[0]["lat"], "lng": streets[0]["lng"]}
+        try:
+            center = {"lat": streets[0]["lat"], "lng": streets[0]["lng"]}
+        except KeyError:
+            pass
 
     street_id = request.args.get("street_id")
-    selected_street = get_street_by_id(street_id)
-    if selected_street and not (
-        selected_street.get("status") == "published"
-        and not selected_street.get("deleted", False)
-        and selected_street.get("type") == "video"
-        and selected_street.get("mode") == "sit"
-    ):
-        selected_street = None
+    selected_street = None
+    street_error = None
+
+    if street_id:
+        candidate = get_street_by_id(street_id)
+        if not candidate:
+            street_error = "not_found"
+        else:
+            is_ok = (
+                candidate.get("status") == "published"
+                and not candidate.get("deleted", False)
+                and candidate.get("type") == "video"
+                and candidate.get("mode") == "sit"
+            )
+            if is_ok:
+                selected_street = candidate
+            else:
+                street_error = "unavailable"
 
     return render_template(
         "sit_world.html",
         streets=streets,
         center=center,
         selected_street=selected_street,
+        street_error=street_error,
         map_style_url=MAP_STYLE_URL,
     )
 
