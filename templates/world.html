@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Virtual Street Walk – Avatar Demo | ABTO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
 
   <!-- MODEL-VIEWER -->
   <script type="module" src="{{ url_for('static', filename='js/model-viewer.min.js') }}"></script>
@@ -18,7 +19,11 @@
       --text-main: #e5e7eb;
       --accent: #38bdf8;
       --radius-lg: 18px;
+
+      /* real viewport height (set from JS for mobile) */
+      --vh: 1vh;
     }
+
     *, *::before, *::after { box-sizing: border-box; }
 
     html, body {
@@ -38,9 +43,11 @@
     .viewer-panel {
       width: 100%;
       height: 100vh;
-      height: 100dvh; /* better on mobile */
+      height: 100dvh;                 /* fallback */
+      height: calc(var(--vh) * 100);  /* real innerHeight on mobile */
       position: relative;
     }
+
     .viewer-canvas {
       position: relative;
       width: 100%;
@@ -844,6 +851,18 @@
   <script type="module">
     const DEBUG = false;
 
+    // ---- Real viewport height for mobile (fix misaligned buttons before fullscreen) ----
+    function setViewportHeightVar() {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+    setViewportHeightVar();
+    window.addEventListener('resize', setViewportHeightVar);
+    window.addEventListener('orientationchange', setViewportHeightVar);
+    document.addEventListener('fullscreenchange', setViewportHeightVar);
+    document.addEventListener('webkitfullscreenchange', setViewportHeightVar);
+    // ---------------------------------------------------------------------
+
     let audioUnlocked = false;
     let lastFrameTime = 0;
     let isVideoLoading = false;
@@ -1547,6 +1566,11 @@
 
     function loadMap() {
       if (fullMapReady) return;
+      if (typeof maplibregl === "undefined") {
+        console.warn("MapLibre GL not available");
+        return;
+      }
+
       fullMap = new maplibregl.Map({
         container: "fullMapContainer",
         style: "{{ map_style_url or 'https://api.maptiler.com/maps/streets/style.json?key=PqdU3M5vnOQK0dDQnkIq' }}",
