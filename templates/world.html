@@ -201,8 +201,6 @@
       width: 100%;
       height: 100%;
       display: block;
-      /* temporary debug so we know the slot is there */
-      /* background: rgba(255,255,255,0.02); */
     }
 
     #avatarSpeech, #streetSpeech {
@@ -591,6 +589,46 @@
       }
     }
 
+    /* ===== ERROR BANNER (street_error feedback) ===== */
+    .error-banner {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15,23,42,0.96);
+      border-radius: 999px;
+      border: 1px solid rgba(248,113,113,0.7);
+      color: #fecaca;
+      padding: 8px 14px;
+      font-size: 12px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      z-index: 500;
+      box-shadow: 0 18px 45px rgba(0,0,0,0.85);
+      backdrop-filter: blur(12px);
+      transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+    }
+    .error-banner-visible {
+      display: inline-flex;
+    }
+    .error-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f97316;
+      box-shadow: 0 0 12px #f97316;
+      flex-shrink: 0;
+    }
+    .error-banner button {
+      border: none;
+      background: transparent;
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 14px;
+      padding-left: 6px;
+    }
+
     /* ===== MOBILE: smaller avatar & shadow ===== */
     @media (max-width: 900px) {
       #avatarWrapper {
@@ -618,6 +656,30 @@
         Please rotate your phone sideways to see the full street view.
       </p>
     </div>
+  </div>
+
+  {# Error banner for invalid / unavailable street links #}
+  {% set _street_error = street_error|default('') %}
+  <div id="errorBanner"
+       class="error-banner{% if _street_error %} error-banner-visible{% endif %}"
+       data-error="{{ _street_error }}">
+    <span class="error-dot"></span>
+    <span>
+      {% if _street_error == 'not_found' %}
+        Street link is broken or no longer exists. Showing default Walk Mode instead.
+      {% elif _street_error == 'unavailable' %}
+        This street is unpublished or deleted. Showing default Walk Mode instead.
+      {% elif _street_error %}
+        Street link could not be opened. Showing default view instead.
+      {% endif %}
+      {% if _street_error %}
+        <a href="{{ url_for('world') }}"
+           style="margin-left:6px;color:#bfdbfe;text-decoration:underline;font-size:11px;">
+          Back to world map
+        </a>
+      {% endif %}
+    </span>
+    <button id="errorBannerClose" aria-label="Dismiss message">✕</button>
   </div>
 
   <div id="fullMapOverlay">
@@ -835,6 +897,9 @@
 
     const orientationGate = document.getElementById("orientationGate");
     const fullscreenBtn = document.getElementById("fullscreenBtn");
+
+    const errorBanner = document.getElementById("errorBanner");
+    const errorBannerClose = document.getElementById("errorBannerClose");
 
     let hasStartedWalking = false;
 
@@ -1275,6 +1340,11 @@
     window.addEventListener("pointerdown", unlockAudio, { once: true });
     window.addEventListener("keydown", unlockAudio, { once: true });
 
+    // On any first tap, try auto-fullscreen if mobile + landscape
+    window.addEventListener("pointerdown", () => {
+      autoFullscreenIfMobileLandscape();
+    });
+
     function cancelAutoWalkIfUserMoves() {
       if (!autoWalkEnabled) return;
       setAutoWalk(false);
@@ -1479,7 +1549,7 @@
       if (fullMapReady) return;
       fullMap = new maplibregl.Map({
         container: "fullMapContainer",
-        style: "https://api.maptiler.com/maps/streets/style.json?key=PqdU3M5vnOQK0dDQnkIq",
+        style: "{{ map_style_url or 'https://api.maptiler.com/maps/streets/style.json?key=PqdU3M5vnOQK0dDQnkIq' }}",
         center: [0, 20],
         zoom: 2,
         pitch: 45,
@@ -1582,14 +1652,48 @@
     }
 
     updateOrientationGate();
-    window.addEventListener("resize", updateOrientationGate);
-    window.addEventListener("orientationchange", updateOrientationGate);
+    window.addEventListener("resize", () => {
+      updateOrientationGate();
+      autoFullscreenIfMobileLandscape();
+    });
+    window.addEventListener("orientationchange", () => {
+      updateOrientationGate();
+      autoFullscreenIfMobileLandscape();
+    });
 
     // ---------- Fullscreen handling ----------
     function isFullscreen() {
       return document.fullscreenElement ||
              document.webkitFullscreenElement ||
              document.msFullscreenElement;
+    }
+
+    function isMobileDevice() {
+      return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    }
+
+    function isLandscape() {
+      return window.innerWidth > window.innerHeight;
+    }
+
+    async function autoFullscreenIfMobileLandscape() {
+      if (!isMobileDevice()) return;
+      if (!isLandscape()) return;
+      if (isFullscreen()) return;
+
+      const el = document.documentElement; // or viewerCanvas if you prefer
+      try {
+        if (el.requestFullscreen) {
+          await el.requestFullscreen();
+        } else if (el.webkitRequestFullscreen) {
+          el.webkitRequestFullscreen();
+        } else if (el.msRequestFullscreen) {
+          el.msRequestFullscreen();
+        }
+        updateFullscreenIcon();
+      } catch (err) {
+        console.log("Auto fullscreen blocked by browser:", err);
+      }
     }
 
     function updateFullscreenIcon() {
@@ -1629,6 +1733,23 @@
       document.addEventListener("fullscreenchange", updateFullscreenIcon);
       document.addEventListener("webkitfullscreenchange", updateFullscreenIcon);
       updateFullscreenIcon();
+    }
+
+    // ---------- Error banner close / auto-hide ----------
+    if (errorBanner && errorBanner.dataset.error) {
+      if (errorBannerClose) {
+        errorBannerClose.addEventListener("click", () => {
+          errorBanner.style.opacity = "0";
+          errorBanner.style.pointerEvents = "none";
+          setTimeout(() => { errorBanner.style.display = "none"; }, 220);
+        });
+      }
+      // Auto-hide after a few seconds
+      setTimeout(() => {
+        errorBanner.style.opacity = "0";
+        errorBanner.style.pointerEvents = "none";
+        setTimeout(() => { errorBanner.style.display = "none"; }, 220);
+      }, 7000);
     }
   </script>
 </body>
