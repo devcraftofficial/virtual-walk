@@ -40,12 +40,14 @@
       overflow: hidden;
     }
 
+    /* Main panel locked to visual viewport */
     .viewer-panel {
-      width: 100%;
+      position: fixed;
+      inset: 0;
+      width: 100vw;
       height: 100vh;
-      height: 100dvh;                 /* fallback */
-      height: calc(var(--vh) * 100);  /* real innerHeight on mobile */
-      position: relative;
+      height: 100dvh;                 /* modern dynamic viewport */
+      height: calc(var(--vh) * 100);  /* JS-corrected viewport for mobile */
     }
 
     .viewer-canvas {
@@ -851,7 +853,7 @@
   <script type="module">
     const DEBUG = false;
 
-    // ---- Real viewport height for mobile (fix misaligned buttons before fullscreen) ----
+    // ---- Real viewport height for mobile (fix misaligned buttons) ----
     function setViewportHeightVar() {
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty('--vh', `${vh}px`);
