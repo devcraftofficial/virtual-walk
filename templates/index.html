@@ -53,13 +53,6 @@
   }
   </script>
 
-  <!-- =========================
-       FIXES INCLUDED ✅
-       1) Mobile page scroll works (no stuck scroll)
-       2) Sidebar drawer has CLOSE button
-       3) Mobile keeps 2 cards per row (no 1-column at 430px)
-       4) Drawer scrolls internally, page stays stable
-  ========================== -->
   
 </head>
 
@@ -88,7 +81,6 @@
     <nav id="navbar" role="navigation" aria-label="Main navigation">
       <div class="sidebar-inner">
 
-        <!-- ✅ drawer header with CLOSE -->
         <div class="drawer-header">
           <a href="{{ url_for('index') }}" class="logo" aria-label="ABTO Home">
             <div class="logo-badge" aria-hidden="true">
@@ -105,7 +97,19 @@
           </button>
         </div>
 
-        <!-- ✅ SCROLLABLE CONTENT AREA -->
+        <!-- ✅ optional: user in sidebar -->
+        {% if current_user %}
+          {% set USER_LABEL = current_user.name if current_user.name is defined and current_user.name
+              else (current_user.full_name if current_user.full_name is defined and current_user.full_name
+              else (current_user.email if current_user.email is defined and current_user.email else 'User')) %}
+          <div style="margin-top:10px; padding:0 6px;">
+            <div class="user-pill" style="width:100%; justify-content:flex-start;">
+              <i class="fas fa-user-circle" aria-hidden="true"></i>
+              <span title="{{ USER_LABEL }}">Hi, {{ USER_LABEL }}</span>
+            </div>
+          </div>
+        {% endif %}
+
         <div class="sidebar-scroll" id="navLinks">
           <div class="sidebar-section-label">Explore</div>
           <div class="nav-links">
@@ -158,7 +162,6 @@
           </div>
         </div>
 
-        <!-- ✅ NON-SCROLL FOOTER -->
         <div class="sidebar-footer">
           <div class="sidebar-pill">
             <span class="pill-dot"></span>
@@ -170,7 +173,6 @@
 
     <!-- MAIN -->
     <div class="app-main">
-      <!-- Sticky Topbar -->
       <div class="topbar-wrap">
         <header class="topbar" aria-label="Search and quick actions">
           <button class="mobile-open" id="openSidebar" type="button" aria-label="Open menu">
@@ -184,6 +186,16 @@
           </div>
 
           <div class="topbar-right">
+            {% if current_user %}
+              {% set USER_LABEL = current_user.name if current_user.name is defined and current_user.name
+                  else (current_user.full_name if current_user.full_name is defined and current_user.full_name
+                  else (current_user.email if current_user.email is defined and current_user.email else 'User')) %}
+              <div class="user-pill" title="{{ USER_LABEL }}">
+                <i class="fas fa-user-circle" aria-hidden="true"></i>
+                <span>{{ USER_LABEL }}</span>
+              </div>
+            {% endif %}
+
             <div class="chip">Live streets</div>
             <div class="meta">
               <span class="dot"></span>
@@ -304,7 +316,7 @@
 
         <!-- TOUR PLACES -->
         {% set effective_tour_streets = tour_streets if tour_streets is defined
-             else (streets|selectattr('is_tour')|list if streets else []) %}
+            else (streets|selectattr('is_tour')|list if streets else []) %}
 
         <section class="section" id="tour-preview" aria-labelledby="tour-title">
           <div class="section-header">
@@ -483,8 +495,8 @@
       const openBtn = document.getElementById('openSidebar');
       const closeBtn = document.getElementById('closeSidebar');
 
-      // ✅ Fix: keep scroll position when locking body
       let scrollY = 0;
+      let lastFocus = null;
 
       const lockBody = () => {
         scrollY = window.scrollY || 0;
@@ -493,30 +505,43 @@
       };
 
       const unlockBody = () => {
-        const y = scrollY;
         document.body.classList.remove('nav-open');
         document.body.style.top = '';
-        window.scrollTo(0, y);
+        window.scrollTo(0, scrollY);
       };
 
       const openSidebar = () => {
-        navbar?.classList.add('open');
-        overlay?.classList.add('show');
+        if (!navbar || !overlay) return;
+        lastFocus = document.activeElement;
+
+        navbar.classList.add('open');
+        overlay.classList.add('show');
         lockBody();
+
+        // focus close button for accessibility
+        if (closeBtn) closeBtn.focus();
       };
 
       const closeSidebar = () => {
-        navbar?.classList.remove('open');
-        overlay?.classList.remove('show');
+        if (!navbar || !overlay) return;
+
+        navbar.classList.remove('open');
+        overlay.classList.remove('show');
         unlockBody();
+
+        // restore focus
+        if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
       };
 
       openBtn?.addEventListener('click', openSidebar);
       closeBtn?.addEventListener('click', closeSidebar);
       overlay?.addEventListener('click', closeSidebar);
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSidebar(); });
 
-      // ✅ close drawer on click (mobile)
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && navbar?.classList.contains('open')) closeSidebar();
+      });
+
+      // Close drawer when clicking nav links (mobile)
       document.querySelectorAll('#navLinks a.nav-link').forEach(a => {
         a.addEventListener('click', () => {
           if (window.matchMedia('(max-width: 980px)').matches) closeSidebar();
