@@ -1,705 +1,548 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>ABTO - A Better Travel Observer</title>
 
   <!-- Viewport & Color Scheme -->
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="dark">
-  <meta name="theme-color" content="#0a0b15">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#071018" />
 
-  <!-- Primary Description -->
-  <meta name="description" content="ABTO - A Better Travel Observer. Explore real streets worldwide with immersive walk, drive, sit and fly modes.">
-
-  <!-- Canonical & URLs (Flask will render full external URLs) -->
-  <link rel="canonical" href="{{ url_for('index', _external=True) }}">
+  <meta name="description" content="ABTO - A Better Travel Observer. Explore real streets worldwide with immersive walk, drive, sit and fly modes." />
+  <link rel="canonical" href="{{ url_for('index', _external=True) }}" />
 
   <!-- Open Graph -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="ABTO - A Better Travel Observer">
-  <meta property="og:description" content="Explore real streets worldwide with immersive walk, drive, sit and fly modes.">
-  <meta property="og:url" content="{{ url_for('index', _external=True) }}">
-  <meta property="og:image" content="{{ url_for('static', filename='img/og-image.jpg', _external=True) }}">
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="ABTO - A Better Travel Observer" />
+  <meta property="og:description" content="Explore real streets worldwide with immersive walk, drive, sit and fly modes." />
+  <meta property="og:url" content="{{ url_for('index', _external=True) }}" />
+  <meta property="og:image" content="{{ url_for('static', filename='img/og-image.jpg', _external=True) }}" />
 
   <!-- Twitter Cards -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ABTO - A Better Travel Observer">
-  <meta name="twitter:description" content="Explore real streets worldwide with immersive walk, drive, sit and fly modes.">
-  <meta name="twitter:image" content="{{ url_for('static', filename='img/og-image.jpg', _external=True) }}">
-  <meta name="twitter:url" content="{{ url_for('index', _external=True) }}">
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ABTO - A Better Travel Observer" />
+  <meta name="twitter:description" content="Explore real streets worldwide with immersive walk, drive, sit and fly modes." />
+  <meta name="twitter:image" content="{{ url_for('static', filename='img/og-image.jpg', _external=True) }}" />
+  <meta name="twitter:url" content="{{ url_for('index', _external=True) }}" />
 
-  <!-- ✅ FAVICONS - ALL DEVICES -->
-  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-  <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/fav.png') }}">
-  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/fav.png') }}">
-  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/fav.png') }}">
+  <!-- Favicons -->
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}" />
+  <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}" />
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/fav.png') }}" />
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/fav.png') }}" />
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/fav.png') }}" />
 
   <!-- Fonts & Icons -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-  <!-- Preload hero main image for faster LCP -->
-  <link rel="preload" as="image" href="{{ url_for('static', filename='img/main.png') }}">
+  <!-- Preload -->
+  <link rel="preload" as="image" href="{{ url_for('static', filename='img/main.png') }}" />
+   <link rel="stylesheet" href="{{ url_for('static', filename='css/home-abto.css') }}">
 
-  <!-- JSON-LD basic structured data -->
+  <!-- JSON-LD -->
   <script type="application/ld+json">
   {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "ABTO - A Better Travel Observer",
-    "url": "{{ url_for('index', _external=True) }}"
+    "@context":"https://schema.org",
+    "@type":"WebSite",
+    "name":"ABTO - A Better Travel Observer",
+    "url":"{{ url_for('index', _external=True) }}"
   }
   </script>
 
-  <!-- Main Page Styles -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/home-abto.css') }}">
+  <!-- =========================
+       FIXES INCLUDED ✅
+       1) Mobile page scroll works (no stuck scroll)
+       2) Sidebar drawer has CLOSE button
+       3) Mobile keeps 2 cards per row (no 1-column at 430px)
+       4) Drawer scrolls internally, page stays stable
+  ========================== -->
+  
 </head>
 
-<body id="top">
-  <!-- Skip link -->
-  <a href="#hero-title" class="skip-link">Skip to main content</a>
+<body>
+  <a href="#main" class="skip-link">Skip to main content</a>
 
-  <!-- No-JS fallback -->
   <noscript>
-    <div style="background:#020617;color:#f9fafb;text-align:center;padding:8px 16px;font-size:14px;">
+    <div style="background:#00111a;color:#f9fafb;text-align:center;padding:8px 16px;font-size:14px;">
       ABTO works best with JavaScript enabled. Please enable it to explore real streets.
     </div>
   </noscript>
 
-  <!-- ========================================================================
-       PRELOADER
-       ====================================================================== -->
+  <!-- PRELOADER -->
   <div class="loading" id="preloader" aria-label="Loading ABTO" role="status">
     <div class="loading-inner">
-      <i class="fas fa-spinner" aria-hidden="true"></i>
+      <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
       <span>Loading streets...</span>
     </div>
   </div>
 
-  <!-- ========================================================================
-       NAVIGATION
-       ====================================================================== -->
-  <nav id="navbar" role="navigation" aria-label="Main navigation">
-    <a href="{{ url_for('index') }}" class="logo" aria-label="ABTO Home">
-      <img
-        src="{{ url_for('static', filename='img/logo.png') }}"
-        alt="ABTO Logo"
-        class="logo-img"
-        width="96"
-        height="96"
-      >
-    </a>
+  <!-- Mobile overlay -->
+  <div class="overlay" id="overlay" aria-hidden="true"></div>
 
-    <div class="nav-links" id="navLinks">
-      <a href="{{ url_for('index') }}" class="nav-link" aria-current="page">Home</a>
-      <a href="#how-it-works" class="nav-link">How it works</a>
-      <a href="#tour-preview" class="nav-link">Tour places</a>
-      <a href="#streets" class="nav-link">Streets</a>
-      <a href="{{ url_for('upload') }}" class="nav-link">Upload</a>
+  <div class="app-shell">
+    <!-- SIDEBAR -->
+    <nav id="navbar" role="navigation" aria-label="Main navigation">
+      <div class="sidebar-inner">
 
-      {% if current_user %}
-        <a href="{{ url_for('dashboard') }}" class="nav-link">
-          <i class="fas fa-tachometer-alt" aria-hidden="true"></i> Dashboard
-        </a>
-        <a href="{{ url_for('logout') }}" class="nav-link primary">
-          <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
-        </a>
-      {% else %}
-        <a href="{{ url_for('login') }}" class="nav-link">Login</a>
-        <a href="{{ url_for('signup') }}" class="nav-link primary">
-          <i class="fas fa-rocket" aria-hidden="true"></i> Get Started
-        </a>
-      {% endif %}
+        <!-- ✅ drawer header with CLOSE -->
+        <div class="drawer-header">
+          <a href="{{ url_for('index') }}" class="logo" aria-label="ABTO Home">
+            <div class="logo-badge" aria-hidden="true">
+              <img src="{{ url_for('static', filename='img/logo.png') }}" alt="" />
+            </div>
+            <div class="logo-text">
+              <span class="logo-title">ABTO</span>
+              <span class="logo-sub">A Better Travel Observer</span>
+            </div>
+          </a>
+
+          <button class="mobile-close" id="closeSidebar" type="button" aria-label="Close menu">
+            <i class="fas fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- ✅ SCROLLABLE CONTENT AREA -->
+        <div class="sidebar-scroll" id="navLinks">
+          <div class="sidebar-section-label">Explore</div>
+          <div class="nav-links">
+            <a href="{{ url_for('index') }}" class="nav-link" aria-current="page">
+              <i class="fas fa-compass" aria-hidden="true"></i><span>Explore</span>
+            </a>
+            <a href="#streets" class="nav-link">
+              <i class="fas fa-road" aria-hidden="true"></i><span>All streets</span>
+            </a>
+            <a href="#tour-preview" class="nav-link">
+              <i class="fas fa-location-dot" aria-hidden="true"></i><span>Tour places</span>
+            </a>
+            <a href="#how-it-works" class="nav-link">
+              <i class="fas fa-circle-info" aria-hidden="true"></i><span>How it works</span>
+            </a>
+            <a href="#trip-price" class="nav-link">
+              <i class="fas fa-ticket-alt" aria-hidden="true"></i><span>Trip price check</span>
+            </a>
+
+            <div class="sidebar-section-label">Modes</div>
+            <a href="{{ url_for('world_walk') }}" class="nav-link">
+              <i class="fas fa-person-walking" aria-hidden="true"></i><span>Walk</span>
+            </a>
+            <a href="{{ url_for('world_drive') }}" class="nav-link">
+              <i class="fas fa-car" aria-hidden="true"></i><span>Drive</span>
+            </a>
+            <a href="{{ url_for('world_sit') }}" class="nav-link">
+              <i class="fas fa-chair" aria-hidden="true"></i><span>Sit</span>
+            </a>
+            <a href="{{ url_for('world_fly') }}" class="nav-link">
+              <i class="fas fa-plane" aria-hidden="true"></i><span>Fly</span>
+            </a>
+
+            <div class="sidebar-section-label">Account</div>
+            {% if current_user %}
+              <a href="{{ url_for('dashboard') }}" class="nav-link">
+                <i class="fas fa-gauge-high" aria-hidden="true"></i><span>Dashboard</span>
+              </a>
+              <a href="{{ url_for('logout') }}" class="nav-link">
+                <i class="fas fa-sign-out-alt" aria-hidden="true"></i><span>Logout</span>
+              </a>
+            {% else %}
+              <a href="{{ url_for('login') }}" class="nav-link">
+                <i class="fas fa-right-to-bracket" aria-hidden="true"></i><span>Login</span>
+              </a>
+              <a href="{{ url_for('signup') }}" class="nav-link">
+                <i class="fas fa-rocket" aria-hidden="true"></i><span>Get started</span>
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- ✅ NON-SCROLL FOOTER -->
+        <div class="sidebar-footer">
+          <div class="sidebar-pill">
+            <span class="pill-dot"></span>
+            <span>Beta · Real street explorer</span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- MAIN -->
+    <div class="app-main">
+      <!-- Sticky Topbar -->
+      <div class="topbar-wrap">
+        <header class="topbar" aria-label="Search and quick actions">
+          <button class="mobile-open" id="openSidebar" type="button" aria-label="Open menu">
+            <i class="fas fa-bars"></i>
+          </button>
+
+          <div class="topbar-search">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            <input id="globalSearch" type="text" class="topbar-search-input"
+                   placeholder="Search streets, cities, countries..." autocomplete="off" />
+          </div>
+
+          <div class="topbar-right">
+            <div class="chip">Live streets</div>
+            <div class="meta">
+              <span class="dot"></span>
+              <span>{{ streets|length if streets else 0 }} locations</span>
+            </div>
+            <a href="{{ url_for('upload') }}" class="btn">
+              <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+              <span>Upload</span>
+            </a>
+          </div>
+        </header>
+      </div>
+
+      <main id="main">
+        <!-- HERO -->
+        <section class="banner" aria-label="ABTO hero">
+          <div>
+            <div class="hero-kicker">
+              <span class="pill">Live travel</span>
+              <span>Real streets • Real vibes</span>
+            </div>
+
+            <h1 class="hero-title">
+              Explore <span class="grad">Real Streets</span><br/>from anywhere
+            </h1>
+
+            <p class="hero-sub">
+              Walk, drive, sit or fly through real places around the world.
+              No games — just reality powered by real video footage.
+            </p>
+
+            <div class="hero-actions">
+              <a href="#streets" class="cta-primary">
+                <i class="fas fa-play" aria-hidden="true"></i>
+                Start exploring
+              </a>
+              <a href="{{ url_for('upload') }}" class="cta-secondary">
+                <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+                Upload a street
+              </a>
+            </div>
+          </div>
+
+          <div class="hero-right">
+            <div class="mini-map">
+              <img src="{{ url_for('static', filename='img/main.png') }}" alt="ABTO street preview" />
+              <div class="badge-float">
+                <span class="pin"></span>
+                <span id="streetCount" data-count="{{ streets|length if streets else 0 }}">
+                  {{ streets|length if streets else 0 }}+ Streets
+                </span>
+              </div>
+            </div>
+
+            <div class="hero-stats" aria-label="ABTO quick stats">
+              <div class="stat">
+                <strong>{{ streets|length if streets else 0 }}+</strong>
+                <span>Streets uploaded</span>
+              </div>
+              <div class="stat">
+                <strong>4</strong>
+                <span>Exploration modes</span>
+              </div>
+              <div class="stat">
+                <strong>Global</strong>
+                <span>Coverage growing</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CATEGORY TABS -->
+        <section class="controls" aria-label="Categories">
+          <div class="tabs" role="tablist" aria-label="Categories">
+            <button class="tab active" type="button" data-scroll="#streets">For you</button>
+            <button class="tab" type="button" data-scroll="#tour-preview">Tour</button>
+            <button class="tab" type="button" data-scroll="#streets">Night Walk</button>
+            <button class="tab" type="button" data-scroll="#streets">Driving</button>
+            <button class="tab" type="button" data-scroll="#streets">Beach</button>
+            <button class="tab" type="button" data-scroll="#streets">Mountains</button>
+            <button class="tab more" type="button" aria-label="More categories"><i class="fas fa-ellipsis-h"></i></button>
+          </div>
+        </section>
+
+        <!-- HOW IT WORKS -->
+        <section class="section" id="how-it-works" aria-labelledby="how-title">
+          <div class="section-header">
+            <h2 id="how-title">How ABTO Works</h2>
+            <p>ABTO converts real-world footage into a simple “press play and travel” experience.</p>
+            <p class="section-subline">NO HEADSET • NO CONTROLS • JUST PRESS PLAY</p>
+          </div>
+
+          <div class="how-grid">
+            <article class="how-step">
+              <div class="how-step-badge">01</div>
+              <h3>Upload real footage</h3>
+              <p>Creators upload walking, driving, sitting or flying videos from any city using a simple upload flow.</p>
+            </article>
+            <article class="how-step">
+              <div class="how-step-badge">02</div>
+              <h3>We optimize the session</h3>
+              <p>We prepare pacing and quality so viewers get smooth, distraction-free travel sessions.</p>
+            </article>
+            <article class="how-step">
+              <div class="how-step-badge">03</div>
+              <h3>Explore instantly</h3>
+              <p>Pick a street, choose a mode (walk/drive/sit/fly) and drop into a real place in seconds.</p>
+            </article>
+          </div>
+
+          <div class="usecases-strip" aria-label="Popular ways people use ABTO">
+            <div class="usecase-pill"><i class="fas fa-coffee" aria-hidden="true"></i> Ambient travel while working</div>
+            <div class="usecase-pill"><i class="fas fa-brain" aria-hidden="true"></i> Relaxing focus backgrounds</div>
+            <div class="usecase-pill"><i class="fas fa-plane-departure" aria-hidden="true"></i> Pre-trip scouting</div>
+            <div class="usecase-pill"><i class="fas fa-city" aria-hidden="true"></i> Explore cities you may never visit</div>
+          </div>
+        </section>
+
+        <!-- TOUR PLACES -->
+        {% set effective_tour_streets = tour_streets if tour_streets is defined
+             else (streets|selectattr('is_tour')|list if streets else []) %}
+
+        <section class="section" id="tour-preview" aria-labelledby="tour-title">
+          <div class="section-header">
+            <h3 id="tour-title">Best Tour Places</h3>
+            <p>Preview popular destinations before you book. Filter by country and type.</p>
+            <p class="section-subline">SEARCH • FILTER • EXPLORE</p>
+          </div>
+
+          {% if effective_tour_streets and effective_tour_streets|length > 0 %}
+            <div class="tour-filters" aria-label="Filter tour places">
+              <div class="tour-search-wrap">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="text" id="tourSearch" class="tour-search-input"
+                       placeholder="Search Dubai Marina, Paris, New York..." autocomplete="off" />
+              </div>
+
+              <select id="tourCountryFilter" class="tour-filter-select" aria-label="Filter by country">
+                <option value="">All countries</option>
+              </select>
+
+              <select id="tourCategoryFilter" class="tour-filter-select" aria-label="Filter by tour type">
+                <option value="">All types</option>
+              </select>
+            </div>
+
+            <div class="tour-grid" id="tourGrid">
+              {% for st in effective_tour_streets[:8] %}
+                {% if st.videos and st.videos|length > 0 and st.videos[0].url %}
+                  {% set thumb_url_tour = st.videos[0].url|replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_400,c_fill,g_center') %}
+                  {% set is_placeholder_tour = False %}
+                {% else %}
+                  {% set thumb_url_tour = url_for('static', filename='images/placeholder-street.jpg') %}
+                  {% set is_placeholder_tour = True %}
+                {% endif %}
+
+                <a href="{{ url_for('world', street_id=st._id) }}"
+                   class="card tour-card"
+                   data-search="{{ (st.name ~ ' ' ~ (st.city or '') ~ ' ' ~ (st.country or '') ~ ' ' ~ (st.tour_category or '') ~ ' ' ~ (st.tour_best_time or ''))|lower }}"
+                   data-country="{{ (st.country or '')|lower }}"
+                   data-category="{{ (st.tour_category or '')|lower }}">
+                  <div class="thumb" style="background-image:url('{{ thumb_url_tour }}')">
+                    <div class="thumb-tag"><span class="pin"></span> Tour</div>
+                    {% if is_placeholder_tour %}
+                      <div class="thumb-placeholder"><i class="fas fa-map-marked-alt" aria-hidden="true"></i></div>
+                    {% endif %}
+                  </div>
+                  <div class="card-body">
+                    <h4 title="{{ st.name }}">{{ st.name[:50] }}{% if st.name|length > 50 %}...{% endif %}</h4>
+                    <div class="card-location">
+                      <i class="fas fa-location-dot" aria-hidden="true"></i>
+                      <span>{{ st.city or 'Unknown' }}, {{ st.country or 'Unknown' }}</span>
+                    </div>
+                  </div>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state">
+              <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+              <h3>Tour places coming soon</h3>
+              <p>Upload your first tour street (mark as “Tour / Trip Preview”) to see it here.</p>
+            </div>
+          {% endif %}
+        </section>
+
+        <!-- TRIP PRICE CHECK -->
+        <section class="section" id="trip-price" aria-labelledby="price-title">
+          <div class="section-header">
+            <h3 id="price-title">Check a Sample Trip Price</h3>
+            <p>Type a route like <strong>Dubai → Taj Mahal</strong> for a rough distance-based estimate (experimental).</p>
+            <p class="section-subline">EXPERIMENTAL • DISTANCE-BASED ONLY</p>
+          </div>
+
+          <form id="priceCheckForm" autocomplete="off">
+            <div class="price-input-row">
+              <div class="price-input-group">
+                <label for="priceFrom">From</label>
+                <input type="text" id="priceFrom" class="price-input" placeholder="Dubai, UAE" required />
+              </div>
+              <div class="price-input-group">
+                <label for="priceTo">To</label>
+                <input type="text" id="priceTo" class="price-input" placeholder="Taj Mahal, Agra" required />
+              </div>
+              <button type="submit" class="price-cta" id="priceSubmitBtn">
+                <i class="fas fa-ticket-alt" aria-hidden="true"></i> Check price
+              </button>
+            </div>
+          </form>
+
+          <div class="price-result" id="priceResult" aria-live="polite" style="margin-top:12px;">
+            <p>Try <strong>Dubai, UAE</strong> to <strong>Taj Mahal, Agra</strong> to see a sample.</p>
+          </div>
+        </section>
+
+        <!-- FEATURED STREETS -->
+        <section class="section" id="streets" aria-labelledby="featured-streets-title">
+          <div class="section-header">
+            <h2 id="featured-streets-title">Featured Streets</h2>
+            <p>Handpicked immersive locations from around the world, ready to walk, drive, sit or fly through.</p>
+            <p class="section-subline">{{ streets|length if streets else 0 }} AVAILABLE • GROWING</p>
+          </div>
+
+          {% if streets and streets|length > 0 %}
+            <div class="streets-search-wrap" aria-label="Search streets">
+              <i class="fas fa-search" aria-hidden="true"></i>
+              <input type="text" id="streetsSearch" class="streets-search-input"
+                     placeholder="Search any street, city or country..." autocomplete="off" />
+            </div>
+
+            <div class="grid" id="streetsGrid">
+              {% for st in streets %}
+                {% if st.videos and st.videos|length > 0 and st.videos[0].url %}
+                  {% set thumb_url = st.videos[0].url|replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_400,c_fill,g_center') %}
+                  {% set is_placeholder = False %}
+                {% else %}
+                  {% set thumb_url = url_for('static', filename='images/placeholder-street.jpg') %}
+                  {% set is_placeholder = True %}
+                {% endif %}
+
+                <a href="{{ url_for('world', street_id=st._id) }}"
+                   class="card street-card"
+                   data-search="{{ (st.name ~ ' ' ~ (st.city or '') ~ ' ' ~ (st.country or ''))|lower }}">
+                  <div class="thumb" style="background-image:url('{{ thumb_url }}')">
+                    <div class="thumb-tag"><span class="pin"></span> Street</div>
+                    {% if is_placeholder %}
+                      <div class="thumb-placeholder"><i class="fas fa-map-marked-alt" aria-hidden="true"></i></div>
+                    {% endif %}
+                  </div>
+                  <div class="card-body">
+                    <h4 title="{{ st.name }}">{{ st.name[:50] }}{% if st.name|length > 50 %}...{% endif %}</h4>
+                    <div class="card-location">
+                      <i class="fas fa-location-dot" aria-hidden="true"></i>
+                      <span>{{ st.city or 'Unknown' }}, {{ st.country or 'Unknown' }}</span>
+                    </div>
+                  </div>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state">
+              <i class="fas fa-map" aria-hidden="true"></i>
+              <h3>No streets available yet</h3>
+              <p>Be the first to upload and explore real streets around the world.</p>
+              <p style="margin-top:12px;">
+                <a class="btn" href="{{ url_for('upload') }}">
+                  <i class="fas fa-upload" aria-hidden="true"></i> Upload first street
+                </a>
+              </p>
+            </div>
+          {% endif %}
+        </section>
+
+        <footer>
+          <p class="footer-main">&copy; 2025 ABTO</p>
+          <p class="footer-sub">A Better Travel Observer • Walk • Drive • Sit • Fly</p>
+        </footer>
+      </main>
     </div>
+  </div>
 
-    <button
-      class="mobile-menu-toggle"
-      id="mobileToggle"
-      aria-label="Toggle navigation menu"
-      aria-expanded="false"
-    >
-      <span class="hamburger"></span>
-      <span class="hamburger"></span>
-      <span class="hamburger"></span>
-    </button>
-  </nav>
-
-  <!-- ========================================================================
-       MAIN CONTENT
-       ====================================================================== -->
-  <main>
-    <!-- HERO SECTION -->
-    <section class="hero" aria-labelledby="hero-title">
-      <!-- Content -->
-      <div class="hero-content">
-        <div class="hero-badge">
-          <i class="fas fa-globe-americas" aria-hidden="true"></i>
-          <span
-            id="streetCount"
-            data-count="{{ streets|length if streets else 0 }}"
-          >
-            {{ streets|length if streets else 0 }}+ Real Streets
-          </span>
-        </div>
-
-        <h1 id="hero-title">Explore Real Streets<br>From Anywhere</h1>
-
-        <p>
-          Walk, drive, sit or fly through real locations around the world. 
-          No games. Just reality. Powered by real video footage.
-        </p>
-
-        <div class="hero-actions">
-          <a href="#streets" class="hero-cta">
-            <i class="fas fa-play-circle" aria-hidden="true"></i>
-            Start Exploring Now
-          </a>
-          <a href="{{ url_for('upload') }}" class="hero-secondary">
-            <i class="fas fa-circle" aria-hidden="true"></i>
-            <span>Or upload your own street</span>
-          </a>
-        </div>
-
-        <div class="hero-stats" aria-label="ABTO quick stats">
-          <div class="hero-stat">
-            <strong>{{ streets|length if streets else 0 }}+</strong>
-            <span>Streets uploaded</span>
-          </div>
-          <div class="hero-stat">
-            <strong>4</strong>
-            <span>Exploration modes</span>
-          </div>
-          <div class="hero-stat">
-            <strong>Global</strong>
-            <span>City & neighborhood coverage</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Visual: 3 Screenshots -->
-      <div class="hero-visual" aria-label="ABTO preview screenshots">
-        <p class="hero-visual-title">LIVE STREET EXPERIENCE</p>
-        <p class="hero-visual-sub">
-          Experience places before you go – preview your next tour or family journey in real streets.
-        </p>
-
-        <div class="hero-screenshots">
-          <!-- Left: big screenshot -->
-          <div class="hero-screenshot-main">
-            <img
-              src="{{ url_for('static', filename='img/main.png') }}"
-              alt="ABTO main street view interface"
-              loading="eager"
-              decoding="async"
-              width="960"
-              height="540"
-            >
-          </div>
-
-          <!-- Right: two stacked screenshots -->
-          <div class="hero-screenshot-column">
-            <div class="hero-screenshot-small-top">
-              <img
-                src="{{ url_for('static', filename='img/top.png') }}"
-                alt="ABTO top view and navigation controls"
-                loading="lazy"
-                decoding="async"
-                width="480"
-                height="260"
-              >
-            </div>
-            <div class="hero-screenshot-small-right">
-              <img
-                src="{{ url_for('static', filename='img/right.png') }}"
-                alt="ABTO right side walk & drive mode preview"
-                loading="lazy"
-                decoding="async"
-                width="480"
-                height="260"
-              >
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="scroll-indicator" aria-hidden="true">
-        <span>SCROLL TO STREETS</span>
-        <div class="scroll-indicator-dot"></div>
-      </div>
-    </section>
-
-    <!-- MODES SECTION -->
-    <section class="modes" aria-label="Exploration modes">
-      <a href="{{ url_for('world_walk') }}" class="mode-card">
-        <div class="mode-icon" aria-hidden="true">🚶‍♂️</div>
-        <h3>Walk Mode</h3>
-        <p>Human-pace exploration with ambient realism. Follow the camera as if you were there.</p>
-      </a>
-      <a href="{{ url_for('world_drive') }}" class="mode-card">
-        <div class="mode-icon" aria-hidden="true">🚗</div>
-        <h3>Drive Mode</h3>
-        <p>Smooth highway and city driving experiences for long-form, lean-back travel.</p>
-      </a>
-      <a href="{{ url_for('world_sit') }}" class="mode-card">
-        <div class="mode-icon" aria-hidden="true">🪑</div>
-        <h3>Sit Mode</h3>
-        <p>Stay in one cozy spot—balcony, café or bench—and soak in the real-life ambiance.</p>
-      </a>
-      <a href="{{ url_for('world_fly') }}" class="mode-card">
-        <div class="mode-icon" aria-hidden="true">✈️</div>
-        <h3>Fly Mode</h3>
-        <p>Aerial drone perspectives of cities, skylines and coastlines from above.</p>
-      </a>
-    </section>
-
-    <!-- HOW IT WORKS -->
-    <section class="section section-how" id="how-it-works" aria-labelledby="how-title">
-      <div class="section-header">
-        <h2 id="how-title">How ABTO Works</h2>
-        <p>ABTO converts real-world footage into a simple “press play and travel” experience.</p>
-        <p class="section-subline">NO HEADSET • NO CONTROLS TO LEARN • JUST PRESS PLAY</p>
-      </div>
-
-      <div class="how-grid">
-        <article class="how-step">
-          <div class="how-step-badge">01</div>
-          <h3>Upload real street footage</h3>
-          <p>Creators upload walking, driving, sitting or flying videos from any city using a simple web upload flow.</p>
-        </article>
-        <article class="how-step">
-          <div class="how-step-badge">02</div>
-          <h3>ABTO prepares the journey</h3>
-          <p>We process orientation, pacing and quality so viewers get a smooth, distraction-free travel session.</p>
-        </article>
-        <article class="how-step">
-          <div class="how-step-badge">03</div>
-          <h3>Viewers explore on demand</h3>
-          <p>Visitors pick a street, choose a mode (walk, drive, sit, fly) and drop into a real place in seconds.</p>
-        </article>
-      </div>
-
-      <div class="usecases-strip" aria-label="Popular ways people use ABTO">
-        <div class="usecase-pill">
-          <i class="fas fa-coffee" aria-hidden="true"></i>
-          Ambient travel while working
-        </div>
-        <div class="usecase-pill">
-          <i class="fas fa-brain" aria-hidden="true"></i>
-          Relaxing focus backgrounds
-        </div>
-        <div class="usecase-pill">
-          <i class="fas fa-plane-departure" aria-hidden="true"></i>
-          Pre-trip neighborhood scouting
-        </div>
-        <div class="usecase-pill">
-          <i class="fas fa-city" aria-hidden="true"></i>
-          Exploring cities you may never visit
-        </div>
-      </div>
-    </section>
-
-    <!-- 💸 TRIP PRICE CHECKER (HITS /api/price) -->
-    <section class="section-price" id="trip-price" aria-labelledby="price-title">
-      <div class="price-header">
-        <h3 id="price-title">Check a Sample Trip Price</h3>
-        <p>
-          Type a simple route like <strong>Dubai → Taj Mahal</strong> to see a rough flight price range,
-          powered by live distance lookup. This is still an estimate only.
-        </p>
-        <p class="price-subline">EXPERIMENTAL • DISTANCE-BASED PRICING ONLY</p>
-      </div>
-
-      <div class="price-checker">
-        <form id="priceCheckForm" autocomplete="off">
-          <div class="price-input-row">
-            <div class="price-input-group">
-              <label for="priceFrom">From</label>
-              <input
-                type="text"
-                id="priceFrom"
-                class="price-input"
-                placeholder="Dubai, UAE"
-                required
-              >
-            </div>
-            <div class="price-input-group">
-              <label for="priceTo">To</label>
-              <input
-                type="text"
-                id="priceTo"
-                class="price-input"
-                placeholder="Taj Mahal, Agra"
-                required
-              >
-            </div>
-            <button type="submit" class="hero-cta price-cta" id="priceSubmitBtn">
-              <i class="fas fa-ticket-alt" aria-hidden="true"></i>
-              Check price
-            </button>
-          </div>
-        </form>
-
-        <div class="price-result" id="priceResult" aria-live="polite">
-          <p class="price-result-placeholder">
-            Try <strong>Dubai, UAE</strong> to <strong>Taj Mahal, Agra</strong> to see a sample distance and price range.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- 💡 BEST TOUR PLACES ROW WITH SEARCH & FILTERS -->
-    {% set effective_tour_streets = tour_streets if tour_streets is defined
-         else (streets|selectattr('is_tour')|list if streets else []) %}
-
-    <section class="section-tour" id="tour-preview" aria-labelledby="tour-title">
-      <div class="tour-header">
-        <h3 id="tour-title">Best Tour Places — Visit Here Before You Go</h3>
-        <p>
-          Search real streets from popular tourist spots and preview the vibe before you book tickets.
-        </p>
-        <p class="tour-subline">TYPE A CITY • COUNTRY • OR STREET NAME • FILTER BY COUNTRY & TYPE</p>
-      </div>
-
-      {% if effective_tour_streets and effective_tour_streets|length > 0 %}
-        <div class="tour-filters" aria-label="Filter tour places">
-          <!-- Text search -->
-          <div class="tour-search-wrap">
-            <i class="fas fa-search" aria-hidden="true"></i>
-            <input
-              type="text"
-              id="tourSearch"
-              class="tour-search-input"
-              placeholder="Search Dubai Marina, Paris, New York..."
-              autocomplete="off"
-            >
-          </div>
-
-          <!-- Country filter (populated from data via JS) -->
-          <select
-            id="tourCountryFilter"
-            class="tour-filter-select"
-            aria-label="Filter by country"
-          >
-            <option value="">All countries</option>
-          </select>
-
-          <!-- Category / type filter (populated from data via JS) -->
-          <select
-            id="tourCategoryFilter"
-            class="tour-filter-select"
-            aria-label="Filter by tour type"
-          >
-            <option value="">All types</option>
-          </select>
-        </div>
-
-        <div class="tour-grid" id="tourGrid">
-          {% for st in effective_tour_streets[:8] %}
-            {% if st.videos and st.videos|length > 0 and st.videos[0].url %}
-              {% set thumb_url_tour = st.videos[0].url|replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_400,c_fill,g_center') %}
-              {% set is_placeholder_tour = False %}
-            {% else %}
-              {% set thumb_url_tour = url_for('static', filename='images/placeholder-street.jpg') %}
-              {% set is_placeholder_tour = True %}
-            {% endif %}
-            <a
-              href="{{ url_for('world', street_id=st._id) }}"
-              class="card tour-card"
-              data-search="{{ (st.name ~ ' ' ~ (st.city or '') ~ ' ' ~ (st.country or '') ~ ' ' ~ (st.tour_category or '') ~ ' ' ~ (st.tour_best_time or ''))|lower }}"
-              data-country="{{ (st.country or '')|lower }}"
-              data-category="{{ (st.tour_category or '')|lower }}"
-            >
-              <div class="thumb" style="background-image: url('{{ thumb_url_tour }}')">
-                {% if is_placeholder_tour %}
-                  <div class="thumb-placeholder">
-                    <i class="fas fa-map-marked-alt" aria-hidden="true"></i>
-                  </div>
-                {% endif %}
-              </div>
-              <div class="card-body">
-                <h4 title="{{ st.name }}">
-                  {{ st.name[:50] }}{% if st.name|length > 50 %}...{% endif %}
-                </h4>
-                <div class="card-location">
-                  <i class="fas fa-location-dot" aria-hidden="true"></i>
-                  <span>{{ st.city or 'Unknown' }}, {{ st.country or 'Unknown' }}</span>
-                </div>
-              </div>
-            </a>
-          {% endfor %}
-        </div>
-
-        <p class="tour-note">
-          Type any city or country, then narrow by country / type to quickly find streets in your next tour destination.
-        </p>
-      {% else %}
-        <div class="empty-state" style="padding-top: 40px;">
-          <i class="fas fa-map-location-dot" aria-hidden="true"></i>
-          <h3>Best tour places coming soon</h3>
-          <p>Upload your first tour street (with “Tour / Trip Preview” enabled) to see it here.</p>
-        </div>
-      {% endif %}
-    </section>
-
-    <!-- FEATURED STREETS -->
-    <section class="section" id="streets" aria-labelledby="featured-streets-title">
-      <div class="section-header">
-        <h2 id="featured-streets-title">Featured Streets</h2>
-        <p>Handpicked immersive locations from around the world, ready to walk, drive, sit or fly through.</p>
-        <p class="section-subline">
-          {{ streets|length if streets else 0 }} AVAILABLE • CONTINUOUSLY GROWING
-        </p>
-      </div>
-
-      {% if streets and streets|length > 0 %}
-        <!-- Simple search for featured streets -->
-        <div class="streets-filters" aria-label="Search streets">
-          <div class="streets-search-wrap">
-            <i class="fas fa-search" aria-hidden="true"></i>
-            <input
-              type="text"
-              id="streetsSearch"
-              class="streets-search-input"
-              placeholder="Search any street, city or country..."
-              autocomplete="off"
-            >
-          </div>
-        </div>
-
-        <div class="grid" id="streetsGrid">
-          {% for st in streets %}
-            {% if st.videos and st.videos|length > 0 and st.videos[0].url %}
-              {% set thumb_url = st.videos[0].url|replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_400,c_fill,g_center') %}
-              {% set is_placeholder = False %}
-            {% else %}
-              {% set thumb_url = url_for('static', filename='images/placeholder-street.jpg') %}
-              {% set is_placeholder = True %}
-            {% endif %}
-            <a
-              href="{{ url_for('world', street_id=st._id) }}"
-              class="card street-card"
-              data-search="{{ (st.name ~ ' ' ~ (st.city or '') ~ ' ' ~ (st.country or ''))|lower }}"
-            >
-              <div class="thumb" style="background-image: url('{{ thumb_url }}')">
-                {% if is_placeholder %}
-                  <div class="thumb-placeholder">
-                    <i class="fas fa-map-marked-alt" aria-hidden="true"></i>
-                  </div>
-                {% endif %}
-              </div>
-              <div class="card-body">
-                <h4 title="{{ st.name }}">
-                  {{ st.name[:50] }}{% if st.name|length > 50 %}...{% endif %}
-                </h4>
-                <div class="card-location">
-                  <i class="fas fa-location-dot" aria-hidden="true"></i>
-                  <span>{{ st.city or 'Unknown' }}, {{ st.country or 'Unknown' }}</span>
-                </div>
-              </div>
-            </a>
-          {% endfor %}
-        </div>
-
-        {% if streets|length > 12 %}
-          <div style="text-align: center; margin-top: 50px">
-            <a href="{{ url_for('dashboard') }}" class="hero-cta" style="font-size: 17px; padding: 16px 36px">
-              <i class="fas fa-th-large" aria-hidden="true"></i> View All Streets
-            </a>
-          </div>
-        {% endif %}
-      {% else %}
-        <div class="empty-state">
-          <i class="fas fa-map" aria-hidden="true"></i>
-          <h3>No streets available yet</h3>
-          <p>Be the first to upload and explore real streets around the world.</p>
-          <a href="{{ url_for('upload') }}" class="hero-cta" style="margin-top: 30px; font-size: 17px">
-            <i class="fas fa-upload" aria-hidden="true"></i> Upload First Street
-          </a>
-        </div>
-      {% endif %}
-    </section>
-
-    <!-- CREATOR CTA STRIP -->
-    <section class="section section-cta" aria-label="Become an early ABTO creator">
-      <div class="section-cta-inner">
-        <div>
-          <div class="section-cta-title">
-            Become an early ABTO creator and put your city on the map.
-          </div>
-          <div class="section-cta-sub">
-            Upload a single walk, drive, sit or fly video and see it live on ABTO.
-          </div>
-        </div>
-        <a href="{{ url_for('upload') }}" class="hero-cta" style="padding: 12px 26px; font-size: 15px;">
-          <i class="fas fa-upload" aria-hidden="true"></i>
-          Start uploading
-        </a>
-      </div>
-    </section>
-  </main>
-
-  <!-- ========================================================================
-       FOOTER
-       ====================================================================== -->
-  <footer>
-    <p style="font-size: 18px; margin-bottom: 6px">
-      &copy; 2025
-      <span style="
-        font-weight: 900;
-        background: var(--gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        letter-spacing: .08em;
-        font-size: 1.4em;
-        text-transform: uppercase;
-      ">
-        ABTO
-      </span>
-    </p>
-    <p style="font-size: 14px; opacity: .85; margin-top: 4px">
-      A Better Travel Observer • Walk • Drive • Sit • Fly
-    </p>
-  </footer>
-
-  <!-- ========================================================================
-       FLOATING ACTIONS
-       ====================================================================== -->
-  <a href="{{ url_for('upload') }}" class="floating-upload-pill">
-    <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
-    <span>Upload a new street</span>
-  </a>
-
-  <button type="button" class="back-to-top" id="backToTop" aria-label="Back to top">
-    <i class="fas fa-arrow-up" aria-hidden="true"></i>
-  </button>
-
-  <!-- ========================================================================
-       ENHANCED JAVASCRIPT
-       ====================================================================== -->
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Preloader (max ~1.2s) with guard
+    document.addEventListener('DOMContentLoaded', function () {
+      // Preloader
       const preloader = document.getElementById('preloader');
-      let preloaderHidden = false;
       const hidePreloader = () => {
-        if (!preloader || preloaderHidden) return;
-        preloaderHidden = true;
+        if (!preloader) return;
         preloader.style.opacity = '0';
-        preloader.style.transform = 'scale(0.96)';
-        setTimeout(() => { preloader.style.display = 'none'; }, 280);
+        preloader.style.transform = 'scale(0.98)';
+        setTimeout(() => preloader.remove(), 240);
+      };
+      setTimeout(hidePreloader, 550);
+
+      // Mobile sidebar drawer
+      const navbar = document.getElementById('navbar');
+      const overlay = document.getElementById('overlay');
+      const openBtn = document.getElementById('openSidebar');
+      const closeBtn = document.getElementById('closeSidebar');
+
+      // ✅ Fix: keep scroll position when locking body
+      let scrollY = 0;
+
+      const lockBody = () => {
+        scrollY = window.scrollY || 0;
+        document.body.classList.add('nav-open');
+        document.body.style.top = `-${scrollY}px`;
       };
 
-      const heroEl = document.querySelector('.hero');
+      const unlockBody = () => {
+        const y = scrollY;
+        document.body.classList.remove('nav-open');
+        document.body.style.top = '';
+        window.scrollTo(0, y);
+      };
 
-      // Hide when hero becomes visible
-      if (heroEl && 'IntersectionObserver' in window) {
-        const heroObserver = new IntersectionObserver((entries) => {
-          if (entries[0].isIntersecting) {
-            hidePreloader();
-            heroObserver.disconnect();
-          }
-        }, { threshold: 0.2 });
-        heroObserver.observe(heroEl);
-      } else {
-        // Fallback if IO not supported
-        hidePreloader();
-      }
+      const openSidebar = () => {
+        navbar?.classList.add('open');
+        overlay?.classList.add('show');
+        lockBody();
+      };
 
-      // Fallback timeout
-      setTimeout(hidePreloader, 1200);
+      const closeSidebar = () => {
+        navbar?.classList.remove('open');
+        overlay?.classList.remove('show');
+        unlockBody();
+      };
 
-      // Navbar scroll effect
-      const navbar = document.getElementById('navbar');
-      window.addEventListener('scroll', () => {
-        if (!navbar) return;
-        navbar.classList.toggle('scrolled', window.scrollY > 50);
+      openBtn?.addEventListener('click', openSidebar);
+      closeBtn?.addEventListener('click', closeSidebar);
+      overlay?.addEventListener('click', closeSidebar);
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSidebar(); });
+
+      // ✅ close drawer on click (mobile)
+      document.querySelectorAll('#navLinks a.nav-link').forEach(a => {
+        a.addEventListener('click', () => {
+          if (window.matchMedia('(max-width: 980px)').matches) closeSidebar();
+        });
       });
 
-      // Mobile menu
-      const mobileToggle = document.getElementById('mobileToggle');
-      const navLinks = document.getElementById('navLinks');
-      if (mobileToggle && navLinks) {
-        mobileToggle.addEventListener('click', () => {
-          const isActive = navLinks.classList.toggle('active');
-          mobileToggle.classList.toggle('open');
-          document.body.style.overflow = isActive ? 'hidden' : '';
-          mobileToggle.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+      // Tabs scroll
+      document.querySelectorAll('.tab[data-scroll]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const sel = btn.getAttribute('data-scroll');
+          const el = sel ? document.querySelector(sel) : null;
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
+      });
 
-        // Close menu on link click (for in-page or same-page links)
-        document.querySelectorAll('.nav-link').forEach(link => {
-          link.addEventListener('click', () => {
-            if (navLinks.classList.contains('active')) {
-              navLinks.classList.remove('active');
-              mobileToggle.classList.remove('open');
-              document.body.style.overflow = '';
-              mobileToggle.setAttribute('aria-expanded', 'false');
-            }
-          });
-        });
-
-        // Close menu on ESC
-        document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape' && navLinks.classList.contains('active')) {
-            navLinks.classList.remove('active');
-            mobileToggle.classList.remove('open');
-            document.body.style.overflow = '';
-            mobileToggle.setAttribute('aria-expanded', 'false');
-          }
-        });
-      }
-
-      // Smooth scroll for hero CTA -> streets
-      const heroCta = document.querySelector('.hero-cta[href="#streets"]');
-      const streetsSection = document.getElementById('streets');
-      if (heroCta && streetsSection) {
-        heroCta.addEventListener('click', (e) => {
-          e.preventDefault();
-          streetsSection.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
-        });
-      }
-
-      // Back to top button behaviour
-      const backToTop = document.getElementById('backToTop');
-      if (backToTop) {
-        backToTop.addEventListener('click', () => {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-
-        window.addEventListener('scroll', () => {
-          if (window.scrollY > 400) {
-            backToTop.classList.add('visible');
-          } else {
-            backToTop.classList.remove('visible');
-          }
-        });
-      }
-
-      // Street count formatting from data attribute
+      // Street count formatting
       const streetCount = document.getElementById('streetCount');
       if (streetCount) {
         const rawVal = streetCount.dataset.count || '0';
         const val = parseInt(rawVal, 10);
-        if (!isNaN(val)) {
-          streetCount.textContent = `${val.toLocaleString('en-US')}+ Real Streets`;
-        }
+        if (!isNaN(val)) streetCount.textContent = `${val.toLocaleString('en-US')}+ Streets`;
       }
 
-      // Hero visible state (safety)
-      if (heroEl) {
-        heroEl.style.opacity = '1';
-        heroEl.style.transform = 'none';
-        heroEl.style.position = 'relative';
-      }
-
-      // 💡 Tour search + filters
+      // Tour search + filters
       const tourSearch         = document.getElementById('tourSearch');
       const tourGrid           = document.getElementById('tourGrid');
       const tourCountryFilter  = document.getElementById('tourCountryFilter');
@@ -710,21 +553,15 @@
         const countrySet = new Set();
         const categorySet = new Set();
 
-        // Collect unique countries & categories from data attributes
         tourCards.forEach(card => {
-          const c   = (card.dataset.country || '').trim();
+          const c = (card.dataset.country || '').trim();
           const cat = (card.dataset.category || '').trim();
           if (c) countrySet.add(c);
           if (cat) categorySet.add(cat);
         });
 
-        // Helper to title-case simple strings
-        const toLabel = (str) => {
-          if (!str) return '';
-          return str.split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
-        };
+        const toLabel = (str) => str ? str.split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ') : '';
 
-        // Populate country select
         if (tourCountryFilter && countrySet.size) {
           Array.from(countrySet).sort().forEach(c => {
             const opt = document.createElement('option');
@@ -733,8 +570,6 @@
             tourCountryFilter.appendChild(opt);
           });
         }
-
-        // Populate category select
         if (tourCategoryFilter && categorySet.size) {
           Array.from(categorySet).sort().forEach(cat => {
             const opt = document.createElement('option');
@@ -744,104 +579,97 @@
           });
         }
 
-        let tourSearchTimeout;
-
+        let t;
         function applyTourFilters() {
-          const q         = (tourSearch?.value || '').trim().toLowerCase();
-          const country   = (tourCountryFilter?.value || '').trim();
-          const category  = (tourCategoryFilter?.value || '').trim();
+          const q = (tourSearch?.value || '').trim().toLowerCase();
+          const country = (tourCountryFilter?.value || '').trim();
+          const category = (tourCategoryFilter?.value || '').trim();
 
           tourCards.forEach(card => {
-            const text        = (card.dataset.search || '');
-            const cardCountry = (card.dataset.country || '');
-            const cardCat     = (card.dataset.category || '');
-
-            const matchesText     = !q || text.includes(q);
-            const matchesCountry  = !country || cardCountry === country;
-            const matchesCategory = !category || cardCat === category;
-
-            const show = matchesText && matchesCountry && matchesCategory;
-            if (show) {
-              card.classList.remove('tour-card-hidden');
-            } else {
-              card.classList.add('tour-card-hidden');
-            }
-          });
-        }
-
-        if (tourSearch) {
-          tourSearch.addEventListener('input', () => {
-            clearTimeout(tourSearchTimeout);
-            tourSearchTimeout = setTimeout(applyTourFilters, 150);
-          });
-        }
-
-        if (tourCountryFilter) {
-          tourCountryFilter.addEventListener('change', applyTourFilters);
-        }
-
-        if (tourCategoryFilter) {
-          tourCategoryFilter.addEventListener('change', applyTourFilters);
-        }
-      }
-
-      // 💡 Featured streets search
-      const streetsSearch = document.getElementById('streetsSearch');
-      const streetsGridEl = document.getElementById('streetsGrid');
-      if (streetsSearch && streetsGridEl) {
-        const streetCards = Array.from(streetsGridEl.querySelectorAll('.street-card'));
-
-        streetsSearch.addEventListener('input', () => {
-          const q = streetsSearch.value.trim().toLowerCase();
-          streetCards.forEach(card => {
             const text = (card.dataset.search || '');
-            const show = !q || text.includes(q);
+            const c = (card.dataset.country || '');
+            const cat = (card.dataset.category || '');
+
+            const show = (!q || text.includes(q)) &&
+                         (!country || c === country) &&
+                         (!category || cat === category);
+
             card.style.display = show ? '' : 'none';
           });
+        }
+
+        tourSearch?.addEventListener('input', () => {
+          clearTimeout(t);
+          t = setTimeout(applyTourFilters, 140);
+        });
+        tourCountryFilter?.addEventListener('change', applyTourFilters);
+        tourCategoryFilter?.addEventListener('change', applyTourFilters);
+      }
+
+      // Streets search + global sync
+      const streetsSearch = document.getElementById('streetsSearch');
+      const globalSearch  = document.getElementById('globalSearch');
+      const streetsGridEl = document.getElementById('streetsGrid');
+
+      function applyStreetSearch(value) {
+        if (!streetsGridEl) return;
+        const cards = Array.from(streetsGridEl.querySelectorAll('.street-card'));
+        const q = (value || '').trim().toLowerCase();
+        cards.forEach(card => {
+          const text = (card.dataset.search || '');
+          card.style.display = (!q || text.includes(q)) ? '' : 'none';
         });
       }
 
-      // 💸 Trip price checker -> calls Flask /api/price
+      streetsSearch?.addEventListener('input', () => {
+        applyStreetSearch(streetsSearch.value);
+        if (globalSearch && globalSearch.value !== streetsSearch.value) globalSearch.value = streetsSearch.value;
+      });
+
+      globalSearch?.addEventListener('input', () => {
+        applyStreetSearch(globalSearch.value);
+        if (streetsSearch && streetsSearch.value !== globalSearch.value) streetsSearch.value = globalSearch.value;
+      });
+
+      // Trip price checker
       const priceForm      = document.getElementById('priceCheckForm');
       const priceFrom      = document.getElementById('priceFrom');
       const priceTo        = document.getElementById('priceTo');
       const priceResult    = document.getElementById('priceResult');
       const priceSubmitBtn = document.getElementById('priceSubmitBtn');
 
-      async function runPriceCheck(event) {
-        if (event) event.preventDefault();
+      async function runPriceCheck(e) {
+        if (e) e.preventDefault();
         if (!priceFrom || !priceTo || !priceResult || !priceSubmitBtn) return;
 
-        const origin      = priceFrom.value.trim();
+        const origin = priceFrom.value.trim();
         const destination = priceTo.value.trim();
 
         if (!origin || !destination) {
           priceResult.innerHTML = `
             <div class="price-result-card">
               <h4>Please enter both places</h4>
-              <p>Example: try <strong>Dubai, UAE</strong> to <strong>Taj Mahal, Agra</strong> to see a sample distance + price estimate.</p>
+              <p>Example: <strong>Dubai, UAE</strong> to <strong>Taj Mahal, Agra</strong>.</p>
             </div>`;
           return;
         }
 
-        const originalLabel = priceSubmitBtn.innerHTML;
+        const old = priceSubmitBtn.innerHTML;
         priceSubmitBtn.disabled = true;
-        priceSubmitBtn.innerHTML = `<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>&nbsp;Checking...`;
-        priceResult.innerHTML = `<p>Calculating distance and rough price estimate...</p>`;
+        priceSubmitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>&nbsp;Checking...`;
+        priceResult.innerHTML = `<p>Calculating distance and rough estimate...</p>`;
 
         try {
           const resp = await fetch("{{ url_for('api_price') }}", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ origin, destination })
           });
 
           const data = await resp.json();
 
           if (!resp.ok) {
-            const msg = data && data.error ? data.error : 'Something went wrong on the server.';
+            const msg = data && data.error ? data.error : "Something went wrong on the server.";
             priceResult.innerHTML = `
               <div class="price-result-card">
                 <h4>Could not fetch estimate</h4>
@@ -853,17 +681,16 @@
           const originLabel = data.origin_formatted || origin;
           const destLabel   = data.destination_formatted || destination;
 
-          const distanceText = data.distance_text || '';
-          const priceText    = data.price_text    || '';
+          const distanceText = data.distance_text || "";
+          const priceText    = data.price_text || "";
 
           priceResult.innerHTML = `
             <div class="price-result-card">
               <h4>${originLabel} → ${destLabel}</h4>
-              ${distanceText ? `<p>${distanceText}</p>` : ''}
-              ${priceText ? `<p class="price-tag">${priceText}</p>` : ''}
+              ${distanceText ? `<p>${distanceText}</p>` : ""}
+              ${priceText ? `<p class="price-tag">${priceText}</p>` : ""}
               <p class="price-disclaimer">
-                This is an automatic estimate based on distance only. Real ticket prices change with airline,
-                season, date, offers and how early you book.
+                Automatic estimate based on distance only. Real prices vary by airline, season and booking date.
               </p>
             </div>`;
         } catch (err) {
@@ -871,17 +698,15 @@
           priceResult.innerHTML = `
             <div class="price-result-card">
               <h4>Network error</h4>
-              <p>We couldn't reach the pricing service. Please check your connection and try again.</p>
+              <p>Couldn’t reach the pricing service. Please try again.</p>
             </div>`;
         } finally {
           priceSubmitBtn.disabled = false;
-          priceSubmitBtn.innerHTML = originalLabel;
+          priceSubmitBtn.innerHTML = old;
         }
       }
 
-      if (priceForm) {
-        priceForm.addEventListener('submit', runPriceCheck);
-      }
+      priceForm?.addEventListener('submit', runPriceCheck);
     });
   </script>
 </body>
