@@ -4,947 +4,450 @@
   <meta charset="UTF-8" />
   <title>ABTO – Creator Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="ABTO Creator Dashboard – manage your streets, see analytics, and track activity.">
   <meta name="theme-color" content="#020617">
 
-  <!-- ✅ FAVICONS (same as home page) -->
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-  <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/fav.png') }}">
-  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/fav.png') }}">
-  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/fav.png') }}">
 
-  <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- Chart.js for analytics -->
   <script src="{{ url_for('static', filename='js/chart.umd.js') }}"></script>
-  <!-- MapLibre -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/maplibre-gl.css') }}">
   <script src="{{ url_for('static', filename='js/maplibre-gl.js') }}"></script>
 
   <style>
-    :root {
-      --bg-page: #020617;
-      --bg-panel: #020617cc;
-      --bg-card: #0b1120;
-      --accent: #38bdf8;
-      --accent-soft: rgba(56, 189, 248, 0.15);
-      --success: #22c55e;
-      --warning: #f97316;
-      --purple: #a855f7;
-      --danger: #ef4444;
-      --text-main: #e5e7eb;
-      --text-muted: #9ca3af;
-      --radius-lg: 18px;
-      --radius-md: 12px;
-      --shadow-soft: 0 22px 45px rgba(0, 0, 0, 0.65);
-      --shadow-glow: 0 0 30px rgba(56, 189, 248, 0.3);
-      --focus-ring-color: rgba(56, 189, 248, 0.85);
+    :root{
+      --bg:#020617;
+      --glass:rgba(15,23,42,.86);
+      --glass2:rgba(15,23,42,.94);
+      --border:rgba(148,163,184,.28);
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --accent:#38bdf8;
+      --accent2:#60a5fa;
+      --success:#22c55e;
+      --warning:#f97316;
+      --purple:#a855f7;
+      --danger:#ef4444;
+      --r18:18px;
+      --r12:12px;
+      --shadow:0 22px 55px rgba(0,0,0,.68);
     }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Inter,system-ui,-apple-system,sans-serif; color:var(--text);
       background:
-        radial-gradient(circle at top left, #0f172a, transparent 55%),
-        radial-gradient(circle at bottom right, #022c3a, #000 70%);
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      color: var(--text-main);
-      padding: 12px 0;
-      line-height: 1.5;
+        radial-gradient(circle at top left,#0f172a,transparent 55%),
+        radial-gradient(circle at bottom right,#022c3a,#000 70%);
+      min-height:100vh;
+      padding:14px 0;
     }
-
-    .shell {
-      width: 100%;
-      max-width: 1440px;
-      margin: 0 auto;
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.92));
-      padding: 24px;
-      box-shadow: var(--shadow-soft);
-      border: 1px solid rgba(148, 163, 184, 0.35);
+    .shell{
+      max-width:1480px; margin:0 auto; padding:22px;
+      background:linear-gradient(135deg, rgba(15,23,42,.96), rgba(15,23,42,.90));
+      border:1px solid rgba(148,163,184,.35);
+      border-radius:var(--r18);
+      box-shadow:var(--shadow);
       backdrop-filter: blur(14px);
-      border-radius: var(--radius-lg);
     }
-
-    /* TOP NAV / HEADER */
-    .top-nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 28px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.3);
-      gap: 14px;
-    }
-
-    .branding-area {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .logo img {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(56, 189, 248, 0.65);
-      object-fit: contain;
-    }
-
-    .logo-text-main {
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      background: linear-gradient(135deg, #38bdf8, #60a5fa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .logo-text-sub {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .nav-actions {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      padding: 9px 18px;
-      border-radius: 999px;
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 14px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.25s ease;
-      border: none;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-      color: #0b1120;
-      box-shadow: 0 8px 25px rgba(56, 189, 248, 0.4);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 35px rgba(56, 189, 248, 0.5);
-    }
-
-    .btn-secondary {
-      background: rgba(15, 23, 42, 0.9);
-      color: var(--text-main);
-      border: 1px solid rgba(148, 163, 184, 0.5);
-    }
-
-    .btn-secondary:hover {
-      background: rgba(56, 189, 248, 0.15);
-      border-color: var(--accent);
-    }
-
-    .btn-xs {
-      padding: 6px 10px;
-      font-size: 12px;
-      border-radius: 999px;
-    }
-
-    .btn-danger {
-      background: rgba(239, 68, 68, 0.12);
-      color: #fecaca;
-      border: 1px solid rgba(248, 113, 113, 0.6);
-    }
-
-    .btn-danger:hover {
-      background: rgba(239, 68, 68, 0.2);
-    }
-
-    /* USER PILL */
-    .user-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 14px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.5);
-    }
-
-    .user-avatar-circle {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 15px;
-      background: radial-gradient(circle at top, rgba(56,189,248,.25), rgba(15,23,42,1));
-      border: 1px solid rgba(56,189,248,0.6);
-      box-shadow: 0 0 15px rgba(56,189,248,0.45);
-    }
-
-    .user-meta {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .user-name {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .user-email {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .user-meta-small {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    /* STATS */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 18px;
-      margin-bottom: 24px;
-    }
-
-    .stat-card {
-      background: rgba(15, 23, 42, 0.92);
-      border-radius: var(--radius-lg);
-      padding: 18px 20px;
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      opacity: 0.7;
-    }
-
-    .stat-card.total::before { background: linear-gradient(90deg, var(--accent), transparent); }
-    .stat-card.likes::before { background: linear-gradient(90deg, #f97316, transparent); }
-    .stat-card.walk::before { background: linear-gradient(90deg, var(--success), transparent); }
-    .stat-card.drive::before { background: linear-gradient(90deg, var(--accent), transparent); }
-
-    .stat-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 22px 45px rgba(0, 0, 0, 0.85);
-    }
-
-    .stat-number {
-      font-size: 30px;
-      font-weight: 700;
-      line-height: 1.1;
-    }
-
-    .stat-total { color: var(--accent); }
-    .stat-likes { color: #f97316; }
-    .stat-walk { color: var(--success); }
-    .stat-drive { color: var(--accent); }
-
-    .stat-label {
-      font-size: 13px;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    .stat-change {
-      font-size: 12px;
-      margin-top: 4px;
-      color: var(--text-muted);
-    }
-
-    .main-content {
-      display: grid;
-      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-      gap: 22px;
-      align-items: flex-start;
-    }
-
-    .analytics-section {
-      background: rgba(15, 23, 42, 0.94);
-      border-radius: var(--radius-lg);
-      padding: 20px 20px 18px;
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      min-width: 0;
-    }
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-      gap: 10px;
-    }
-
-    .section-title {
-      font-size: 17px;
-      font-weight: 600;
-      margin: 0;
-    }
-
-    .section-subtitle {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    .section-header select {
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.95);
-      color: var(--text-main);
-      border: 1px solid rgba(148,163,184,0.6);
-      font-size: 13px;
-    }
-
-    .chart-container {
-      height: 260px;
-      position: relative;
-    }
-
-    .side-column {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      min-width: 0;
-    }
-
-    .recent-activity {
-      background: rgba(15, 23, 42, 0.94);
-      border-radius: var(--radius-lg);
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      overflow: hidden;
-    }
-
-    .activity-item {
-      padding: 14px 18px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-      transition: background 0.2s ease;
-      cursor: pointer;
-    }
-
-    .activity-item:last-child {
-      border-bottom: none;
-    }
-
-    .activity-item:hover {
-      background: rgba(56, 189, 248, 0.10);
-    }
-
-    .activity-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 4px;
-      gap: 8px;
-    }
-
-    .activity-title {
-      font-weight: 600;
-      font-size: 14px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .activity-mode {
-      padding: 3px 9px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 500;
-      flex-shrink: 0;
-    }
-
-    .activity-mode.walk { background: rgba(34, 197, 94, 0.2); color: #bbf7d0; }
-    .activity-mode.drive { background: rgba(56, 189, 248, 0.2); color: #e0f2fe; }
-    .activity-mode.fly { background: rgba(168, 85, 247, 0.2); color: #f3e8ff; }
-    .activity-mode.sit { background: rgba(249, 115, 22, 0.2); color: #ffedd5; }
-
-    .activity-meta {
-      font-size: 11px;
-      color: var(--text-muted);
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .mode-breakdown {
-      margin-top: 18px;
-    }
-
-    .mode-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .mode-stat {
-      text-align: center;
-      padding: 12px 10px;
-      border-radius: 12px;
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid rgba(148, 163, 184, 0.3);
-    }
-
-    .mode-stat-icon {
-      font-size: 20px;
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .mode-stat-number {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 2px;
-    }
-
-    .mode-stat.walk { border-color: var(--success); }
-    .mode-stat.drive { border-color: var(--accent); }
-    .mode-stat.fly { border-color: var(--purple); }
-
-    /* My Streets CRUD section */
-    .streets-section {
-      margin-top: 26px;
-      background: rgba(15, 23, 42, 0.95);
-      border-radius: var(--radius-lg);
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      padding: 18px 20px;
-    }
-
-    .streets-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.25);
-      margin-bottom: 10px;
-    }
-
-    .streets-header h2 {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .street-table {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 6px;
-    }
-
-    .street-row {
-      display: grid;
-      grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.7fr) minmax(0, 1.1fr) auto;
-      gap: 10px;
-      padding: 10px 8px;
-      border-radius: 12px;
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      align-items: center;
-    }
-
-    .street-main {
-      min-width: 0;
-    }
-
-    .street-name {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 2px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .street-location {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .badge-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .badge {
-      padding: 3px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      color: var(--text-muted);
-      background: rgba(15, 23, 42, 0.9);
-      font-size: 11px;
-    }
-
-    .badge-type {
-      border-color: rgba(56, 189, 248, 0.5);
-      color: #e0f2fe;
-    }
-
-    .badge-mode-walk {
-      border-color: rgba(34, 197, 94, 0.6);
-      color: #bbf7d0;
-    }
-
-    .badge-mode-drive {
-      border-color: rgba(56, 189, 248, 0.6);
-      color: #e0f2fe;
-    }
-
-    .badge-mode-fly {
-      border-color: rgba(168, 85, 247, 0.6);
-      color: #f3e8ff;
-    }
-
-    .badge-mode-sit {
-      border-color: rgba(249, 115, 22, 0.7);
-      color: #ffedd5;
-    }
-
-    .badge-status {
-      border-color: rgba(52, 211, 153, 0.7);
-      color: #bbf7d0;
-    }
-
-    .street-meta {
-      font-size: 11px;
-      color: var(--text-muted);
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .street-actions {
-      display: flex;
-      gap: 6px;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-    }
-
-    .delete-form {
-      margin: 0;
-    }
-
-    .empty-message {
-      font-size: 13px;
-      color: var(--text-muted);
-      padding: 10px 2px 4px;
-    }
-
-    @media (max-width: 900px) {
-      body { padding: 8px 0; }
-      .shell { padding: 16px; margin: 6px; }
-      .top-nav { flex-direction: column; align-items: flex-start; }
-      .branding-area { width: 100%; justify-content: space-between; }
-      .nav-actions { width: 100%; justify-content: flex-start; flex-wrap: wrap; }
-      .main-content { grid-template-columns: 1fr; }
-      .chart-container { height: 230px; }
-      #worldMapDashboard { height: 240px !important; }
-      .street-row {
-        grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.2fr);
-        grid-auto-rows: auto;
-        grid-template-areas:
-          "main meta"
-          "badges actions";
-      }
-      .street-main { grid-area: main; }
-      .street-meta { grid-area: meta; }
-      .badge-row { grid-area: badges; }
-      .street-actions { grid-area: actions; justify-content: flex-start; }
-    }
-
-    @media (max-width: 600px) {
-      .shell { padding: 12px; margin: 0; border-radius: 0; }
-      .top-nav { align-items: center; text-align: center; flex-direction: column; gap: 10px; }
-      .branding-area { justify-content: center; }
-      .nav-actions { justify-content: center; }
-      .stat-number { font-size: 26px; }
-      .stats-grid { gap: 14px; }
-      .chart-container { height: 210px; }
-      #worldMapDashboard { height: 220px !important; }
-      .street-row { grid-template-columns: 1fr; }
-      .street-actions { justify-content: flex-start; }
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
+    .top{
+      display:flex; justify-content:space-between; align-items:center; gap:14px;
+      padding-bottom:16px; border-bottom:1px solid rgba(148,163,184,.22);
+      margin-bottom:18px;
+    }
+    .brand{display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit}
+    .brand img{width:44px; height:44px; border-radius:14px; object-fit:contain; box-shadow:0 10px 30px rgba(56,189,248,.55)}
+    .brand h1{margin:0; font-size:18px; letter-spacing:.18em; text-transform:uppercase;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+      font-weight:800;
+    }
+    .brand .sub{color:var(--muted); font-size:12px; margin-top:2px}
+    .actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    .pill{
+      display:flex; align-items:center; gap:10px; padding:8px 12px;
+      border:1px solid rgba(148,163,184,.45); border-radius:999px; background:rgba(15,23,42,.85);
+      max-width:560px;
+    }
+    .avatar{width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-weight:800; background:radial-gradient(circle at top, rgba(56,189,248,.25), rgba(15,23,42,1));
+      border:1px solid rgba(56,189,248,.55);
+      flex-shrink:0;
+    }
+    .meta{min-width:0}
+    .meta .name{font-weight:800; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .meta .email{font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .adminBadge{
+      margin-left:8px;
+      padding:3px 8px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.06em;
+      background:rgba(168,85,247,.16);
+      border:1px solid rgba(168,85,247,.45);
+      color:#f3e8ff;
+      display:none;
+      flex-shrink:0;
+    }
+    .btn{
+      border:0; cursor:pointer; text-decoration:none;
+      padding:9px 16px; border-radius:999px; display:inline-flex; gap:8px; align-items:center;
+      font-size:13px; font-weight:700; transition:.2s ease;
+      white-space:nowrap;
+    }
+    .btn.primary{background:linear-gradient(135deg,var(--accent),#0ea5e9); color:#06121f; box-shadow:0 10px 28px rgba(56,189,248,.26)}
+    .btn.primary:hover{transform:translateY(-2px)}
+    .btn.ghost{background:rgba(15,23,42,.85); color:var(--text); border:1px solid rgba(148,163,184,.45)}
+    .btn.ghost:hover{border-color:rgba(56,189,248,.7); background:rgba(56,189,248,.10)}
+    .grid{
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap:18px;
+      align-items:start;
+    }
+    .stats{
+      display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:14px; margin-bottom:16px;
+    }
+    .card{
+      background:rgba(15,23,42,.90);
+      border:1px solid rgba(148,163,184,.26);
+      border-radius:var(--r18);
+      padding:16px;
+      position:relative; overflow:hidden;
+    }
+    .card:hover{border-color:rgba(56,189,248,.35)}
+    .card .num{font-size:26px; font-weight:900; line-height:1.05}
+    .card .lbl{font-size:12px; color:var(--muted); font-weight:700; margin-top:6px}
+    .bar{position:absolute; left:0; right:0; top:0; height:4px; opacity:.75}
+    .b-accent{background:linear-gradient(90deg,var(--accent),transparent)}
+    .b-warn{background:linear-gradient(90deg,var(--warning),transparent)}
+    .b-succ{background:linear-gradient(90deg,var(--success),transparent)}
+    .b-purple{background:linear-gradient(90deg,var(--purple),transparent)}
+    .b-danger{background:linear-gradient(90deg,var(--danger),transparent)}
+    .section-title{display:flex; align-items:end; justify-content:space-between; gap:10px; margin-bottom:12px}
+    .section-title h2{margin:0; font-size:15px}
+    .section-title p{margin:0; color:var(--muted); font-size:12px; font-weight:600}
+    .select{
+      background:rgba(15,23,42,.92);
+      border:1px solid rgba(148,163,184,.45);
+      color:var(--text);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      font-weight:700;
+    }
+    .chartWrap{height:290px}
+
+    .two{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+      margin-top:14px;
+    }
+    .list{
+      display:flex; flex-direction:column; gap:10px;
+    }
+
+    /* ROW as grid so we can add buttons */
+    .row{
+      display:grid;
+      grid-template-columns: 1fr auto auto;
+      gap:10px;
+      align-items:center;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.20);
+      background:rgba(15,23,42,.80);
+    }
+    .row.clickable{cursor:pointer}
+    .row.clickable:hover{background:rgba(56,189,248,.10); border-color:rgba(56,189,248,.22)}
+    .row .left{min-width:0}
+    .row .t{font-weight:800; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .row .s{font-size:11px; color:var(--muted); margin-top:2px; font-weight:600}
+
+    .tag{
+      font-size:11px; font-weight:900;
+      padding:4px 10px; border-radius:999px;
+      border:1px solid rgba(148,163,184,.35);
+      color:var(--text);
+      background:rgba(15,23,42,.85);
+      flex-shrink:0;
+    }
+    .tag.walk{border-color:rgba(34,197,94,.5); color:#bbf7d0; background:rgba(34,197,94,.12)}
+    .tag.drive{border-color:rgba(56,189,248,.55); color:#e0f2fe; background:rgba(56,189,248,.12)}
+    .tag.fly{border-color:rgba(168,85,247,.55); color:#f3e8ff; background:rgba(168,85,247,.12)}
+    .tag.sit{border-color:rgba(249,115,22,.65); color:#ffedd5; background:rgba(249,115,22,.12)}
+
+    .mini{
+      border:1px solid rgba(148,163,184,.35);
+      background:rgba(15,23,42,.88);
+      color:var(--text);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+      transition:.18s ease;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .mini:hover{border-color:rgba(56,189,248,.6); background:rgba(56,189,248,.10)}
+    .mini.danger{
+      border-color:rgba(239,68,68,.55);
+      background:rgba(239,68,68,.10);
+      color:#fecaca;
+    }
+    .mini.danger:hover{background:rgba(239,68,68,.16)}
+    .mini:disabled{opacity:.55; cursor:not-allowed}
+
+    #map{height:300px; border-radius:var(--r18); overflow:hidden}
+    .loading{
+      display:flex; gap:10px; align-items:center; color:var(--muted); font-size:13px; font-weight:700;
+    }
+    .dot{width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 20px rgba(56,189,248,.7)}
+    .small{font-size:11px; color:var(--muted); font-weight:600}
+
+    .toolbar{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .search{
+      flex:1;
+      min-width:220px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border:1px solid rgba(148,163,184,.30);
+      background:rgba(15,23,42,.82);
+      padding:8px 12px;
+      border-radius:999px;
+    }
+    .search i{color:rgba(148,163,184,.8)}
+    .search input{
+      width:100%;
+      border:0;
+      outline:0;
+      background:transparent;
+      color:var(--text);
+      font-weight:700;
+      font-size:12px;
+    }
+
+    @media (max-width:1100px){
+      .grid{grid-template-columns:1fr}
+      .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .two{grid-template-columns:1fr}
     }
-    .pulse { animation: pulse 2s infinite; }
   </style>
 </head>
+
 <body>
   <div class="shell">
-    <!-- TOP NAV -->
-    <div class="top-nav">
-      <div class="branding-area">
-        <a href="{{ url_for('index') }}" class="logo">
-          <img src="{{ url_for('static', filename='img/logo.png') }}" alt="ABTO Logo">
-          <div>
-            <div class="logo-text-main">ABTO</div>
-            <div class="logo-text-sub">Creator Dashboard</div>
-          </div>
-        </a>
-      </div>
 
-      <div class="nav-actions">
-        {% if user_info %}
-        <div class="user-pill">
-          <div class="user-avatar-circle">
-            {{ (user_info.name or user_info.email or 'U')[0]|upper }}
-          </div>
-          <div class="user-meta">
-            <div class="user-name">{{ user_info.name }}</div>
-            <div class="user-email">{{ user_info.email }}</div>
-            <div class="user-meta-small">
-              Joined {{ user_info.createdAtFmt or '—' }} • Last login {{ user_info.lastLoginFmt or '—' }}
+    <div class="top">
+      <a class="brand" href="{{ url_for('index') }}">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="ABTO">
+        <div>
+          <h1>ABTO</h1>
+          <div class="sub">Creator Dashboard • Real analytics</div>
+        </div>
+      </a>
+
+      <div class="actions">
+        <div class="pill" id="userPill">
+          <div class="avatar" id="avatarLetter">U</div>
+          <div class="meta">
+            <div class="name">
+              <span id="userName">Loading…</span>
+              <span class="adminBadge" id="adminBadge">ADMIN</span>
             </div>
+            <div class="email" id="userEmail"></div>
           </div>
         </div>
-        {% endif %}
-        <a href="{{ url_for('upload') }}" class="btn btn-primary">
-          <i class="fas fa-upload"></i> Upload Street
-        </a>
-        <a href="{{ url_for('index') }}" class="btn btn-secondary">
-          <i class="fas fa-home"></i> Home
-        </a>
+
+        <select id="daysSelect" class="select" aria-label="Time range">
+          <option value="7">Last 7 days</option>
+          <option value="30" selected>Last 30 days</option>
+          <option value="90">Last 90 days</option>
+          <option value="0">All time</option>
+        </select>
+
+        <a class="btn primary" href="{{ url_for('upload') }}"><i class="fa-solid fa-upload"></i> Upload</a>
+        <a class="btn ghost" href="{{ url_for('index') }}"><i class="fa-solid fa-house"></i> Home</a>
+        <a class="btn ghost" href="{{ url_for('logout') }}"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
       </div>
     </div>
 
-    <!-- TOP STATS -->
-    <div class="stats-grid">
-      <div class="stat-card total">
-        <div class="stat-number stat-total">{{ total_streets|default(0) }}</div>
-        <div class="stat-label">Total Streets</div>
-        <div class="stat-change">
-          Streets you’ve uploaded{% if session.get('is_admin') %} (showing all as admin){% endif %}
-        </div>
+    <!-- STATS -->
+    <div class="stats">
+      <div class="card">
+        <div class="bar b-accent"></div>
+        <div class="num" id="statTotal">0</div>
+        <div class="lbl">Total Streets</div>
       </div>
-      <div class="stat-card likes">
-        <div class="stat-number stat-likes">{{ total_likes|default(0) }}</div>
-        <div class="stat-label">Total Likes</div>
-        <div class="stat-change">Across all your published streets</div>
+      <div class="card">
+        <div class="bar b-warn"></div>
+        <div class="num" id="statLikes">0</div>
+        <div class="lbl">Total Likes</div>
       </div>
-      <div class="stat-card walk">
-        <div class="stat-number stat-walk">{{ walk_count|default(0) }}</div>
-        <div class="stat-label">Walk Mode</div>
-        <div class="stat-change">Published walking experiences</div>
+      <div class="card">
+        <div class="bar b-succ"></div>
+        <div class="num" id="statWalk">0</div>
+        <div class="lbl">Walk</div>
       </div>
-      <div class="stat-card drive">
-        <div class="stat-number stat-drive">{{ drive_count|default(0) }}</div>
-        <div class="stat-label">Drive Mode</div>
-        <div class="stat-change">Published driving experiences</div>
+      <div class="card">
+        <div class="bar b-accent"></div>
+        <div class="num" id="statDrive">0</div>
+        <div class="lbl">Drive</div>
+      </div>
+      <div class="card">
+        <div class="bar b-purple"></div>
+        <div class="num" id="statFly">0</div>
+        <div class="lbl">Fly</div>
+      </div>
+      <div class="card">
+        <div class="bar b-warn"></div>
+        <div class="num" id="statSit">0</div>
+        <div class="lbl">Sit</div>
       </div>
     </div>
 
-    <!-- MAIN GRID: ANALYTICS + RECENT + MAP -->
-    <div class="main-content">
-      <div class="analytics-section">
-        <div class="section-header">
-          <div>
-            <h2 class="section-title">Analytics Overview</h2>
-            <div class="section-subtitle">Simple view of your recent street activity</div>
-          </div>
-          <select id="timeRange">
-            <option>7 Days</option>
-            <option>30 Days</option>
-            <option>All Time</option>
-          </select>
-        </div>
-
-        <div class="chart-container">
-          <canvas id="analyticsChart"></canvas>
-        </div>
-
-        <div class="mode-breakdown">
-          <h3 style="margin: 10px 0 6px 0; font-size: 15px;">Mode Breakdown</h3>
-          <div class="mode-stats">
-            <div class="mode-stat walk">
-              <span class="mode-stat-icon">🚶</span>
-              <div class="mode-stat-number">{{ walk_count|default(0) }}</div>
-              <div style="font-size: 12px; color: var(--text-muted);">Walk</div>
-            </div>
-            <div class="mode-stat drive">
-              <span class="mode-stat-icon">🚗</span>
-              <div class="mode-stat-number">{{ drive_count|default(0) }}</div>
-              <div style="font-size: 12px; color: var(--text-muted);">Drive</div>
-            </div>
-            <div class="mode-stat fly">
-              <span class="mode-stat-icon">🪂</span>
-              <div class="mode-stat-number">{{ fly_count|default(0) }}</div>
-              <div style="font-size: 12px; color: var(--text-muted);">Fly</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="side-column">
-        <div class="recent-activity">
-          <div class="section-header" style="margin-bottom: 0; padding-bottom: 8px;">
+    <div class="grid">
+      <!-- LEFT -->
+      <div>
+        <div class="card">
+          <div class="section-title">
             <div>
-              <h2 class="section-title">Recent Activity</h2>
-              <div class="section-subtitle">Latest streets you’ve created</div>
+              <h2>Views</h2>
+              <p>Based on activity logs (real)</p>
             </div>
+            <div class="small" id="viewsMeta"></div>
           </div>
-
-          <div id="recentActivityList">
-            {% if recent_streets %}
-              {% for street in recent_streets[:8] %}
-              <div class="activity-item"
-                   data-street-id="{{ street._id }}"
-                   data-mode="{{ street.mode }}">
-                <div class="activity-header">
-                  <div class="activity-title">{{ street.name }}</div>
-                  <span class="activity-mode {{ street.mode }}">
-                    {{ street.mode|capitalize if street.mode else 'Walk' }}
-                  </span>
-                </div>
-                <div class="activity-meta">
-                  <span>{{ street.city or 'Unknown' }}, {{ street.country or 'Unknown' }}</span>
-                  <span>♥ {{ street.likes or 0 }} likes</span>
-                  <span>{{ street.createdAtFmt }}</span>
-                </div>
-              </div>
-              {% endfor %}
-            {% else %}
-              <div class="activity-item">
-                <div style="text-align: center; padding: 32px; color: var(--text-muted);">
-                  No recent activity yet
-                </div>
-              </div>
-            {% endif %}
+          <div class="chartWrap">
+            <canvas id="viewsChart"></canvas>
           </div>
         </div>
 
-        <div id="worldMapDashboard"
-             style="height: 260px; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid rgba(148,163,184,0.4);">
+        <div class="two">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Top Streets (Views)</h2>
+                <p>Most opened streets (real)</p>
+              </div>
+            </div>
+            <div class="list" id="topViewsList">
+              <div class="loading"><span class="dot"></span> Loading…</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Top Streets (Likes)</h2>
+                <p>Most liked streets (real)</p>
+              </div>
+            </div>
+            <div class="list" id="topLikesList">
+              <div class="loading"><span class="dot"></span> Loading…</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px;">
+          <div class="section-title">
+            <div>
+              <h2>My Streets (quick)</h2>
+              <p>Search, filter & delete</p>
+            </div>
+            <div class="small" id="streetsMeta"></div>
+          </div>
+
+          <div class="toolbar">
+            <div class="search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input id="streetSearch" type="text" placeholder="Search by name, city, country..." autocomplete="off">
+            </div>
+            <select id="modeFilter" class="select" aria-label="Filter mode">
+              <option value="all" selected>All modes</option>
+              <option value="walk">Walk</option>
+              <option value="drive">Drive</option>
+              <option value="fly">Fly</option>
+              <option value="sit">Sit</option>
+            </select>
+          </div>
+
+          <div class="list" id="streetsList">
+            <div class="loading"><span class="dot"></span> Loading…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="side">
+        <div class="card">
+          <div class="section-title">
+            <div>
+              <h2>Recent Activity</h2>
+              <p>Last events (real)</p>
+            </div>
+          </div>
+          <div class="list" id="activityList">
+            <div class="loading"><span class="dot"></span> Loading…</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px; padding:0;">
+          <div style="padding:14px 16px 10px 16px; border-bottom:1px solid rgba(148,163,184,.18);">
+            <div class="section-title" style="margin:0;">
+              <div>
+                <h2>Map</h2>
+                <p>All your streets</p>
+              </div>
+            </div>
+          </div>
+          <div id="map"></div>
+        </div>
+
+        <div class="card" style="margin-top:14px;">
+          <div class="section-title">
+            <div>
+              <h2>Tips</h2>
+              <p>What improves ABTO growth</p>
+            </div>
+          </div>
+          <div class="small">
+            • Add “Tour” streets for high retention<br>
+            • Use clear city + country for search<br>
+            • Upload 20–40s clips (best for reels)<br>
+            • Add categories (Beach, City, Night, Scenic)
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- MY STREETS (CRUD) -->
-    <div class="streets-section">
-      <div class="streets-header">
-        <h2>My Streets</h2>
-        <span class="section-subtitle">
-          {{ total_streets|default(0) }} total
-        </span>
-      </div>
-
-      {% if streets %}
-        <div class="street-table">
-          {% for s in streets %}
-          <div class="street-row">
-            <div class="street-main">
-              <div class="street-name" title="{{ s.name }}">{{ s.name }}</div>
-              <div class="street-location">
-                {{ s.city or 'Unknown' }}, {{ s.country or 'Unknown' }}
-              </div>
-            </div>
-
-            <div class="badge-row">
-              <span class="badge badge-type">{{ s.type|upper }}</span>
-              {% if s.mode %}
-                {% set mode_class = 'badge-mode-' + s.mode %}
-                <span class="badge {{ mode_class }}">
-                  {{ s.mode|capitalize }}
-                </span>
-              {% endif %}
-              {% if s.status %}
-                <span class="badge badge-status">{{ s.status|capitalize }}</span>
-              {% endif %}
-            </div>
-
-            <div class="street-meta">
-              <span>♥ {{ s.likes or 0 }} likes</span>
-              <span>{{ s.createdAtFmt or '' }}</span>
-            </div>
-
-            <div class="street-actions">
-              {% set mode = s.mode or 'walk' %}
-              {% if mode == 'drive' %}
-                {% set world_url = url_for('world_drive', street_id=s._id) %}
-              {% elif mode == 'fly' %}
-                {% set world_url = url_for('world_fly', street_id=s._id) %}
-              {% elif mode == 'sit' %}
-                {% set world_url = url_for('world_sit', street_id=s._id) %}
-              {% else %}
-                {% set world_url = url_for('world', street_id=s._id) %}
-              {% endif %}
-
-              <a href="{{ world_url }}" class="btn btn-xs btn-secondary">View</a>
-              <a href="{{ url_for('edit_street', street_id=s._id) }}" class="btn btn-xs btn-primary">
-                Edit
-              </a>
-
-              <form method="POST"
-                    action="{{ url_for('delete_street', street_id=s._id) }}"
-                    class="delete-form">
-                <button type="submit" class="btn btn-xs btn-danger">
-                  Delete
-                </button>
-              </form>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="empty-message">
-          You haven’t uploaded any streets yet. Click “Upload Street” above to add your first one.
-        </div>
-      {% endif %}
-    </div>
   </div>
 
   <script>
-    // Sample data placeholder — replace with real analytics later
-    const sampleData = {
-      streets: {{ total_streets|default(0) }},
-      likes: {{ total_likes|default(0) }},
-      analytics: {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        data:  [45, 67, 89, 120, 156, 189, 234]
-      }
+    window.ABTO = {
+      apiSummaryUrl: "{{ url_for('api_dashboard_summary') }}",
+      mapStyle: "{{ map_style_url }}",
+      worldBase: "{{ url_for('world') }}",
+      worldDrive: "{{ url_for('world_drive') }}",
+      worldFly: "{{ url_for('world_fly') }}",
+      worldSit: "{{ url_for('world_sit') }}",
+      worldWalk: "{{ url_for('world_walk') }}"
     };
-
-    // Analytics Chart
-    const ctx = document.getElementById('analyticsChart').getContext('2d');
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: sampleData.analytics.labels,
-        datasets: [{
-          label: 'Street Views',
-          data: sampleData.analytics.data,
-          borderColor: '#38bdf8',
-          backgroundColor: 'rgba(56, 189, 248, 0.1)',
-          borderWidth: 3,
-          fill: true,
-          tension: 0.4,
-          pointBackgroundColor: '#38bdf8',
-          pointBorderColor: '#ffffff',
-          pointBorderWidth: 2,
-          pointRadius: 5
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: { color: 'rgba(148,163,184,0.1)' },
-            ticks: { color: '#9ca3af', font: { size: 11 } }
-          },
-          x: {
-            grid: { display: false },
-            ticks: { color: '#9ca3af', font: { size: 11 } }
-          }
-        }
-      }
-    });
-
-    // Dashboard Map (uses your MapTiler / MapLibre style)
-    const dashboardMap = new maplibregl.Map({
-      container: 'worldMapDashboard',
-      style: '{{ map_style_url }}',
-      center: [55.2708, 25.2048],
-      zoom: 2,
-      hash: false
-    });
-
-    // Streets for markers (passed from Flask)
-    const STREETS = {{ streets|tojson|safe }};
-
-    dashboardMap.on('load', () => {
-      (STREETS || []).slice(0, 200).forEach(st => {
-        if (st.lat != null && st.lng != null) {
-          new maplibregl.Marker({ color: '#38bdf8' })
-            .setLngLat([st.lng, st.lat])
-            .setPopup(new maplibregl.Popup().setText(`${st.name}, ${st.city || ''}`))
-            .addTo(dashboardMap);
-        }
-      });
-    });
-
-    // Recent activity click handler – route by mode
-    document.querySelectorAll('.activity-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const streetId = item.dataset.streetId;
-        const mode = (item.dataset.mode || 'walk').toLowerCase();
-
-        if (!streetId) return;
-
-        let basePath = '/world';
-        if (mode === 'drive') basePath = '/world/drive';
-        else if (mode === 'fly') basePath = '/world/fly';
-        else if (mode === 'sit') basePath = '/world/sit';
-
-        window.location.href = `${basePath}?street_id=${streetId}`;
-      });
-    });
-
-    // Time range selector (placeholder)
-    document.getElementById('timeRange').addEventListener('change', (e) => {
-      console.log('Time range changed:', e.target.value);
-    });
-
-    // Pulse animation on stats (simple entrance effect)
-    document.querySelectorAll('.stat-number').forEach((stat, i) => {
-      setTimeout(() => stat.classList.add('pulse'), i * 200);
-      setTimeout(() => stat.classList.remove('pulse'), 4000);
-    });
-
-    // Confirm delete for street delete forms
-    document.querySelectorAll('.delete-form').forEach(form => {
-      form.addEventListener('submit', (e) => {
-        const ok = confirm('Delete this street? This cannot be undone.');
-        if (!ok) {
-          e.preventDefault();
-        }
-      });
-    });
   </script>
+
+  <script src="{{ url_for('static', filename='js/dash.js') }}"></script>
 </body>
 </html>
