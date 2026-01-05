@@ -41,6 +41,8 @@
       font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
       color:var(--text-main);
       overflow:hidden;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
     .viewer-panel{
@@ -62,16 +64,13 @@
 
     /* cinematic overlays */
     .vignette{
-      position:absolute;
-      inset:0;
+      position:absolute; inset:0;
       pointer-events:none;
       z-index: 5;
-      background:
-        radial-gradient(ellipse at center, rgba(0,0,0,0) 35%, rgba(0,0,0,.35) 72%, rgba(0,0,0,.65) 100%);
+      background: radial-gradient(ellipse at center, rgba(0,0,0,0) 35%, rgba(0,0,0,.35) 72%, rgba(0,0,0,.65) 100%);
     }
     .top-fade{
-      position:absolute;
-      inset:0;
+      position:absolute; inset:0;
       pointer-events:none;
       z-index: 6;
       background: linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,0) 35%);
@@ -104,8 +103,7 @@
       backdrop-filter: blur(10px);
     }
     .mode-dot{
-      width:22px;
-      height:22px;
+      width:22px; height:22px;
       border-radius:999px;
       background: radial-gradient(circle at 30% 20%, #fee2e2, #fecaca 40%, #991b1b 100%);
       border:2px solid rgba(15,23,42,.9);
@@ -177,6 +175,7 @@
       box-shadow: 0 12px 30px rgba(0,0,0,.75);
       z-index:50;
       cursor:pointer;
+      touch-action: manipulation;
     }
     .mini-map canvas{ border-radius:999px; }
 
@@ -214,6 +213,7 @@
       cursor:pointer;
       backdrop-filter: blur(6px);
       box-shadow: 0 10px 30px rgba(0,0,0,.80);
+      touch-action: manipulation;
     }
 
     /* ---------- Street info (bottom-left) ---------- */
@@ -231,17 +231,8 @@
       user-select:none;
       box-shadow: 0 18px 44px rgba(0,0,0,.55);
     }
-    .street-info h2{
-      margin:0;
-      font-size: 15px;
-      line-height: 1.2;
-    }
-    .street-info p{
-      margin:4px 0 0;
-      font-size: 12px;
-      color:#cbd5e1;
-      line-height: 1.3;
-    }
+    .street-info h2{ margin:0; font-size: 15px; line-height: 1.2; }
+    .street-info p{ margin:4px 0 0; font-size: 12px; color:#cbd5e1; line-height: 1.3; }
     .street-info .category-pill{
       margin-top:6px;
       font-size:11px;
@@ -255,10 +246,8 @@
 
     /* ---------- Video + fade + subtle parallax ---------- */
     #streetVideo{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
+      position:absolute; inset:0;
+      width:100%; height:100%;
       object-fit:cover;
       pointer-events:none;
       z-index:1;
@@ -277,8 +266,7 @@
       inset:0;
       z-index: 20;
       pointer-events:none;
-      background:
-        linear-gradient(110deg, rgba(2,6,23,.85) 0%, rgba(15,23,42,.80) 40%, rgba(2,6,23,.85) 70%);
+      background: linear-gradient(110deg, rgba(2,6,23,.85) 0%, rgba(15,23,42,.80) 40%, rgba(2,6,23,.85) 70%);
       background-size: 200% 100%;
       opacity: 0;
       transition: opacity .25s ease;
@@ -301,7 +289,7 @@
       user-select:none;
     }
 
-    /* ---------- SOUND BUTTON (kept, but we also add a dock on desktop) ---------- */
+    /* ---------- SOUND BUTTONS ---------- */
     .sound-toggle{
       position:absolute;
       right: calc(18px + var(--safe-right));
@@ -320,6 +308,7 @@
       box-shadow: var(--shadow-soft);
       transition: background .16s ease, border-color .16s ease, transform .12s ease, box-shadow .16s ease;
       backdrop-filter: blur(8px);
+      touch-action: manipulation;
     }
     .sound-toggle span{ font-size:18px; line-height:1; }
     .sound-toggle:hover{
@@ -334,7 +323,7 @@
       color: #0b1120;
     }
 
-    /* ---------- TOP-RIGHT DOCK (desktop + tablet) ---------- */
+    /* ---------- TOP-RIGHT DOCK (desktop/tablet) ---------- */
     .top-right-dock{
       position:absolute;
       top: calc(16px + var(--safe-top));
@@ -358,6 +347,7 @@
       box-shadow: var(--shadow-soft);
       transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
       user-select:none;
+      touch-action: manipulation;
     }
     .dock-btn:hover{
       transform: translateY(-1px);
@@ -375,10 +365,10 @@
       .fullscreen-btn{ display:none; }
     }
     @media (max-width: 1023px){
-      .top-right-dock{ display:none; } /* keep mobile button + bottom sound */
+      .top-right-dock{ display:none; } /* keep mobile buttons */
     }
 
-    /* ---------- FULLSCREEN BUTTON (mobile focus) ---------- */
+    /* ---------- FULLSCREEN BUTTON (mobile) ---------- */
     .fullscreen-btn{
       position:absolute;
       top: calc(16px + var(--safe-top));
@@ -397,6 +387,32 @@
       z-index:70;
       box-shadow: var(--shadow-soft);
       backdrop-filter: blur(8px);
+      touch-action: manipulation;
+    }
+
+    /* ---------- MOBILE: LIST BUTTON (fix for “street list not showing”) ---------- */
+    .list-btn{
+      position:absolute;
+      top: calc(16px + var(--safe-top));
+      right: calc(64px + var(--safe-right)); /* sits left of fullscreen */
+      width:40px;
+      height:40px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.70);
+      background: rgba(15,23,42,.90);
+      color:#e5e7eb;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+      cursor:pointer;
+      z-index:70;
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(8px);
+      touch-action: manipulation;
+    }
+    @media (min-width: 1024px){
+      .list-btn{ display:none; }
     }
 
     /* ---------- ORIENTATION GATE (mobile portrait) ---------- */
@@ -418,16 +434,8 @@
       display:inline-block;
       animation: rotateHint 1.8s ease-in-out infinite;
     }
-    .orientation-title{
-      font-size:18px;
-      font-weight:700;
-      margin-bottom:8px;
-    }
-    .orientation-text{
-      font-size:14px;
-      color: var(--text-muted);
-      line-height: 1.45;
-    }
+    .orientation-title{ font-size:18px; font-weight:700; margin-bottom:8px; }
+    .orientation-text{ font-size:14px; color: var(--text-muted); line-height: 1.45; }
     @keyframes rotateHint{
       0%,100%{ transform: rotate(0deg); }
       50%{ transform: rotate(90deg); }
@@ -444,6 +452,9 @@
       backdrop-filter: blur(10px);
       display:none;
       z-index:240;
+      /* IMPORTANT: allow taps/scrolls inside on mobile */
+      pointer-events:auto;
+      touch-action: none; /* we manage scroll only inside drawer */
     }
     .streets-drawer{
       width: min(380px, 92vw);
@@ -455,6 +466,7 @@
       display:flex;
       flex-direction:column;
       gap: 10px;
+      touch-action: pan-y;
     }
     .drawer-header{
       display:flex;
@@ -463,18 +475,15 @@
       gap:10px;
       padding: 6px 4px;
     }
-    .drawer-title{
-      font-weight: 750;
-      letter-spacing: .01em;
-    }
+    .drawer-title{ font-weight: 750; letter-spacing: .01em; }
     .drawer-close{
-      width: 38px;
-      height: 38px;
+      width: 38px; height: 38px;
       border-radius: 999px;
       border:1px solid rgba(148,163,184,.35);
       background: rgba(15,23,42,.75);
       color:#fff;
       cursor:pointer;
+      touch-action: manipulation;
     }
     .drawer-search{
       width: 100%;
@@ -489,10 +498,13 @@
 
     .streets-list{
       overflow:auto;
+      -webkit-overflow-scrolling: touch;
       padding-right: 2px;
       display:flex;
       flex-direction:column;
       gap: 10px;
+      overscroll-behavior: contain;
+      touch-action: pan-y;
     }
     .street-item{
       padding: 10px 12px;
@@ -501,21 +513,15 @@
       border: 1px solid rgba(148,163,184,.18);
       cursor:pointer;
       transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      touch-action: manipulation;
     }
     .street-item:hover{
       transform: translateY(-1px);
       border-color: rgba(148,163,184,.35);
       background: rgba(15,23,42,.70);
     }
-    .street-item strong{
-      display:block;
-      font-size: 13px;
-      margin-bottom: 2px;
-    }
-    .street-item small{
-      color: rgba(203,213,225,.90);
-      font-size: 11px;
-    }
+    .street-item strong{ display:block; font-size: 13px; margin-bottom: 2px; }
+    .street-item small{ color: rgba(203,213,225,.90); font-size: 11px; }
     .street-item .pill{
       display:inline-block;
       margin-top: 6px;
@@ -531,7 +537,7 @@
       box-shadow: 0 10px 24px rgba(249,115,22,.12);
     }
 
-    /* ---------- Toast (best on desktop) ---------- */
+    /* ---------- Toast ---------- */
     .device-toast{
       position: fixed;
       left: 50%;
@@ -547,31 +553,18 @@
       box-shadow: 0 18px 50px rgba(0,0,0,.70);
       backdrop-filter: blur(10px);
     }
-    .toast-row{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap: 12px;
-    }
-    .toast-row strong{
-      display:block;
-      font-size: 13px;
-      margin-bottom: 2px;
-    }
-    .toast-row span{
-      font-size: 12px;
-      color: rgba(203,213,225,.92);
-      line-height: 1.35;
-    }
+    .toast-row{ display:flex; align-items:flex-start; justify-content:space-between; gap: 12px; }
+    .toast-row strong{ display:block; font-size: 13px; margin-bottom: 2px; }
+    .toast-row span{ font-size: 12px; color: rgba(203,213,225,.92); line-height: 1.35; }
     .toast-close{
-      width: 34px;
-      height: 34px;
+      width: 34px; height: 34px;
       border-radius: 999px;
       border:1px solid rgba(148,163,184,.25);
       background: rgba(2,6,23,.55);
       color:#fff;
       cursor:pointer;
       flex: 0 0 auto;
+      touch-action: manipulation;
     }
 
     /* ---------- Responsive tweaks ---------- */
@@ -587,10 +580,22 @@
       }
       .mode-header{ top: calc(10px + var(--safe-top)); }
       .mode-location{ max-width: 220px; }
-      .sound-toggle{ right: calc(14px + var(--safe-right)); bottom: calc(18px + var(--safe-bottom)); width:40px; height:40px; }
+      .sound-toggle{
+        right: calc(14px + var(--safe-right));
+        bottom: calc(18px + var(--safe-bottom));
+        width:40px; height:40px;
+      }
+      .fullscreen-btn{
+        top: calc(12px + var(--safe-top));
+        right: calc(12px + var(--safe-right));
+      }
+      .list-btn{
+        top: calc(12px + var(--safe-top));
+        right: calc(58px + var(--safe-right));
+      }
     }
 
-    /* Reduce motion for accessibility */
+    /* Reduce motion */
     @media (prefers-reduced-motion: reduce){
       #streetVideo, .loading-scrim{ transition: none !important; animation: none !important; }
       .orientation-icon{ animation: none !important; }
@@ -671,15 +676,18 @@
       <!-- Desktop dock -->
       <div class="top-right-dock" id="topRightDock" aria-label="Controls">
         <button class="dock-btn" id="dockSoundBtn" aria-label="Toggle sound (M)">
-          <span id="dockSoundIcon">🔇</span>
+          <span id="dockSoundIcon">🔊</span>
         </button>
         <button class="dock-btn" id="dockStreetsBtn" aria-label="All sit spots (L)">☰</button>
         <button class="dock-btn" id="dockFullscreenBtn" aria-label="Fullscreen (F)">⤢</button>
       </div>
 
-      <!-- Sound toggle (mobile button) -->
-      <button type="button" class="sound-toggle" id="soundToggle" aria-label="Unmute ambience (press M)">
-        <span>🔇</span>
+      <!-- Mobile: Streets list button (NEW) -->
+      <button id="listBtn" class="list-btn" aria-label="All sit spots (tap)">☰</button>
+
+      <!-- Sound toggle (mobile) -->
+      <button type="button" class="sound-toggle" id="soundToggle" aria-label="Mute ambience (press M)">
+        <span>🔊</span>
       </button>
 
       <!-- Fullscreen button (mobile) -->
@@ -693,6 +701,7 @@
         id="streetVideo"
         preload="auto"
         playsinline
+        webkit-playsinline
         disablepictureinpicture
         controlslist="nodownload nofullscreen noplaybackrate"
         aria-label="Sit view video">
@@ -744,6 +753,8 @@
     const dockFullscreenBtn = document.getElementById("dockFullscreenBtn");
     const fullscreenBtn = document.getElementById("fullscreenBtn");
 
+    const listBtn = document.getElementById("listBtn"); // NEW mobile list button
+
     const orientationGate = document.getElementById("orientationGate");
 
     const drawerOverlay = document.getElementById("streetsDrawerOverlay");
@@ -775,7 +786,6 @@
 
     function ensureFullMap(){
       if (fullMapReady) return;
-
       try{
         fullMap = new maplibregl.Map({
           container: "fullMapContainer",
@@ -823,7 +833,6 @@
     function showFullMap(){
       fullMapOverlay.style.display = "flex";
       ensureFullMap();
-      // MapLibre sometimes needs resize when container becomes visible
       setTimeout(() => { try{ fullMap?.resize(); } catch(_){} }, 50);
     }
     function hideFullMap(){
@@ -842,11 +851,13 @@
     let currentStreetIndex = -1;
     let currentVideos = [];
     let currentVideoIndex = 0;
-    let userHasInteracted = false;
 
-    // default: muted ON to avoid autoplay issues (then user can unmute)
+    // ✅ IMPORTANT: "sound ON by default" is not possible as true autoplay on mobile
+    // unless user interacts. So we:
+    // 1) start muted=false and try play
+    // 2) if browser blocks, we auto-mute and show a gentle hint
     if (video){
-      video.muted = true;
+      video.muted = false;
       video.volume = 1.0;
     }
 
@@ -872,12 +883,31 @@
       }
     }
 
+    function showTapToUnmuteHint(){
+      // reuse existing toast if available, otherwise just update street text
+      try{
+        if (deviceToast){
+          deviceToast.style.display = "block";
+          const strong = deviceToast.querySelector("strong");
+          const span = deviceToast.querySelector("span");
+          if (strong) strong.textContent = "Tap for Sound";
+          if (span) span.textContent = "Your browser blocked autoplay with audio. Tap 🔊 once to enable ambience.";
+        }
+      } catch(_) {}
+    }
+
     async function safePlay(){
       if (!video) return;
       try{
         await video.play();
-      } catch(_){
-        // autoplay can fail on some devices
+      } catch(e){
+        // If autoplay with sound is blocked, fallback to muted autoplay
+        if (video && !video.muted){
+          video.muted = true;
+          updateSoundUI();
+          try{ await video.play(); } catch(_) {}
+          showTapToUnmuteHint();
+        }
       }
     }
 
@@ -890,17 +920,29 @@
 
     function toggleSound(){
       if (!video) return;
-      userHasInteracted = true;
       setMuted(!video.muted);
     }
 
     soundToggleBtn?.addEventListener("click", toggleSound);
     dockSoundBtn?.addEventListener("click", toggleSound);
 
-    // Mark interaction (helps iOS autoplay + audio)
-    ["pointerdown","touchstart","keydown"].forEach(evt=>{
-      window.addEventListener(evt, ()=>{ userHasInteracted = true; }, { once:false, passive:true });
-    });
+    // Ensure first user interaction tries to enable sound (keeps your “sound on default” feel)
+    const enableSoundOnFirstTap = async () => {
+      if (!video) return;
+      // if already unmuted, nothing
+      if (!video.muted) return;
+      video.muted = false;
+      updateSoundUI();
+      try{ await video.play(); } catch(_) {
+        // if still blocked, keep muted
+        video.muted = true;
+        updateSoundUI();
+      }
+      window.removeEventListener("pointerdown", enableSoundOnFirstTap, true);
+      window.removeEventListener("touchstart", enableSoundOnFirstTap, true);
+    };
+    window.addEventListener("pointerdown", enableSoundOnFirstTap, true);
+    window.addEventListener("touchstart", enableSoundOnFirstTap, true);
 
     // Gentle loop through sit videos
     video?.addEventListener("ended", () => {
@@ -924,7 +966,6 @@
     video?.addEventListener("playing", ()=>showLoading(false));
     video?.addEventListener("error", ()=>{
       showLoading(false);
-      // fallback message if video fails
       if (streetLocationEl) streetLocationEl.textContent = "Video unavailable. Try another sit spot.";
     });
 
@@ -941,7 +982,6 @@
       const city = street.city || "";
       const country = street.country || "";
       const category = street.category || "Ambient view";
-
       const locationText = buildLocationText(city, country);
 
       if (streetNameEl) streetNameEl.textContent = name;
@@ -966,9 +1006,7 @@
       video.load();
       video.currentTime = 0;
 
-      // If user already interacted, try unmuted state they chose
       safePlay().finally(()=>showLoading(false));
-
       updateMiniMapForStreet(street);
       renderDrawerList(); // keep active highlight in sync
     }
@@ -992,7 +1030,6 @@
     if (viewerCanvas && video){
       const maxShift = 10;
       viewerCanvas.addEventListener("pointermove", (e) => {
-        // avoid when reduced-motion
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
         const rect = viewerCanvas.getBoundingClientRect();
@@ -1023,7 +1060,7 @@
       return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
     }
     async function enterFullscreen(){
-      const el = document.documentElement; // or viewerCanvas
+      const el = document.documentElement;
       if (el.requestFullscreen) return el.requestFullscreen();
       if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
     }
@@ -1061,31 +1098,48 @@
     document.addEventListener("webkitfullscreenchange", updateFullscreenIcons);
     updateFullscreenIcons();
 
-    // ---------- DRAWER ----------
+    // ---------- DRAWER (FIXED FOR MOBILE) ----------
+    function lockBodyScroll(lock){
+      // prevent background page scrolling while drawer is open
+      document.documentElement.style.overflow = lock ? "hidden" : "";
+      document.body.style.overflow = lock ? "hidden" : "";
+    }
+
     function openDrawer(){
       if (!drawerOverlay) return;
       drawerOverlay.style.display = "block";
       drawerOverlay.setAttribute("aria-hidden","false");
-      setTimeout(()=>streetSearch?.focus(), 50);
+      lockBodyScroll(true);
       renderDrawerList();
+      setTimeout(()=>streetSearch?.focus(), 60);
     }
     function closeDrawer(){
       if (!drawerOverlay) return;
       drawerOverlay.style.display = "none";
       drawerOverlay.setAttribute("aria-hidden","true");
+      lockBodyScroll(false);
     }
+
+    // Desktop dock list
     dockStreetsBtn?.addEventListener("click", openDrawer);
+    // ✅ Mobile list button
+    listBtn?.addEventListener("click", openDrawer);
+
     closeDrawerBtn?.addEventListener("click", closeDrawer);
 
     // click outside drawer to close
     drawerOverlay?.addEventListener("click", (e)=>{
       if (e.target === drawerOverlay) closeDrawer();
-    });
+    }, { passive:true });
+
+    // stop tap inside drawer from closing
+    document.querySelector(".streets-drawer")?.addEventListener("click", (e)=>e.stopPropagation(), { passive:true });
 
     function normalize(s){ return (s || "").toString().toLowerCase().trim(); }
 
     function renderDrawerList(){
       if (!streetsListEl) return;
+
       const q = normalize(streetSearch?.value);
       const rows = (Array.isArray(STREETS) ? STREETS : []).map((s, i) => ({ s, i }))
         .filter(({s})=>{
@@ -1093,6 +1147,15 @@
           const hay = normalize([s.name, s.city, s.country, s.category].filter(Boolean).join(" "));
           return hay.includes(q);
         });
+
+      if (rows.length === 0){
+        streetsListEl.innerHTML = `
+          <div style="padding:10px 6px; color: rgba(203,213,225,.85); font-size: 12px;">
+            No sit spots match your search.
+          </div>
+        `;
+        return;
+      }
 
       streetsListEl.innerHTML = rows.map(({s,i})=>{
         const loc = buildLocationText(s.city, s.country) || "Somewhere";
@@ -1112,7 +1175,7 @@
         el.addEventListener("click", ()=>{
           loadStreetByIndex(idx);
           closeDrawer();
-        });
+        }, { passive:true });
         el.addEventListener("keydown", (e)=>{
           if (e.key === "Enter" || e.key === " "){
             e.preventDefault();
@@ -1144,17 +1207,15 @@
       } else if (e.key === "f" || e.key === "F"){
         toggleFullscreen();
       } else if (e.key === "l" || e.key === "L"){
-        // list
         if (drawerOverlay?.style.display === "block") closeDrawer();
         else openDrawer();
       } else if (e.key === "Escape"){
-        // close overlays
         if (drawerOverlay?.style.display === "block") closeDrawer();
         if (fullMapOverlay?.style.display === "flex") hideFullMap();
       }
     });
 
-    // ---------- ESCAPE HTML (for drawer) ----------
+    // ---------- ESCAPE HTML ----------
     function escapeHtml(str){
       return (str || "").toString()
         .replaceAll("&", "&amp;")
@@ -1177,7 +1238,6 @@
     if (initialIdx !== -1){
       loadStreetByIndex(initialIdx);
     } else {
-      // no streets available
       if (streetNameEl) streetNameEl.textContent = "No Sit Spots Found";
       if (streetLocationEl) streetLocationEl.textContent = "Please add sit spots in your database.";
       if (topLocationEl) topLocationEl.textContent = "No sit spots";
