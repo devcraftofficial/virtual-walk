@@ -41,7 +41,9 @@
 
   <!-- Preload -->
   <link rel="preload" as="image" href="{{ url_for('static', filename='img/main.png') }}" />
-   <link rel="stylesheet" href="{{ url_for('static', filename='css/home-abto.css') }}">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home-abto.css') }}">
 
   <!-- JSON-LD -->
   <script type="application/ld+json">
@@ -52,8 +54,6 @@
     "url":"{{ url_for('index', _external=True) }}"
   }
   </script>
-
-  
 </head>
 
 <body>
@@ -97,7 +97,7 @@
           </button>
         </div>
 
-        <!-- ✅ optional: user in sidebar -->
+        <!-- User label (sidebar) -->
         {% if current_user %}
           {% set USER_LABEL = current_user.name if current_user.name is defined and current_user.name
               else (current_user.full_name if current_user.full_name is defined and current_user.full_name
@@ -161,8 +161,6 @@
             {% endif %}
           </div>
         </div>
-
-       
       </div>
     </nav>
 
@@ -196,15 +194,37 @@
               <span class="dot"></span>
               <span>{{ streets|length if streets else 0 }} locations</span>
             </div>
-            <a href="{{ url_for('upload') }}" class="btn">
-              <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
-              <span>Upload</span>
-            </a>
+
+            <!-- ✅ If logged out, send them to login and back to upload -->
+            {% if current_user %}
+              <a href="{{ url_for('upload') }}" class="btn">
+                <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+                <span>Upload</span>
+              </a>
+            {% else %}
+              <a href="{{ url_for('login') }}?next={{ url_for('upload') }}" class="btn">
+                <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+                <span>Upload</span>
+              </a>
+            {% endif %}
           </div>
         </header>
       </div>
 
       <main id="main">
+        <!-- ✅ Flash messages (so you see login/logout/reset notices) -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-wrap" aria-live="polite">
+              {% for category, message in messages %}
+                <div class="flash {{ category|e }}">
+                  <span class="flash-text">{{ message }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
         <!-- HERO -->
         <section class="banner" aria-label="ABTO hero">
           <div>
@@ -227,10 +247,18 @@
                 <i class="fas fa-play" aria-hidden="true"></i>
                 Start exploring
               </a>
-              <a href="{{ url_for('upload') }}" class="cta-secondary">
-                <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
-                Upload a street
-              </a>
+
+              {% if current_user %}
+                <a href="{{ url_for('upload') }}" class="cta-secondary">
+                  <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+                  Upload a street
+                </a>
+              {% else %}
+                <a href="{{ url_for('login') }}?next={{ url_for('upload') }}" class="cta-secondary">
+                  <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+                  Upload a street
+                </a>
+              {% endif %}
             </div>
           </div>
 
@@ -271,7 +299,9 @@
             <button class="tab" type="button" data-scroll="#streets">Driving</button>
             <button class="tab" type="button" data-scroll="#streets">Beach</button>
             <button class="tab" type="button" data-scroll="#streets">Mountains</button>
-            <button class="tab more" type="button" aria-label="More categories"><i class="fas fa-ellipsis-h"></i></button>
+            <button class="tab more" type="button" aria-label="More categories">
+              <i class="fas fa-ellipsis-h"></i>
+            </button>
           </div>
         </section>
 
@@ -343,7 +373,8 @@
                   {% set thumb_url_tour = st.videos[0].url|replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_400,c_fill,g_center') %}
                   {% set is_placeholder_tour = False %}
                 {% else %}
-                  {% set thumb_url_tour = url_for('static', filename='images/placeholder-street.jpg') %}
+                  <!-- ✅ use same folder as your project (img/...) -->
+                  {% set thumb_url_tour = url_for('static', filename='img/placeholder-street.jpg') %}
                   {% set is_placeholder_tour = True %}
                 {% endif %}
 
@@ -427,7 +458,7 @@
                   {% set thumb_url = st.videos[0].url|replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_400,c_fill,g_center') %}
                   {% set is_placeholder = False %}
                 {% else %}
-                  {% set thumb_url = url_for('static', filename='images/placeholder-street.jpg') %}
+                  {% set thumb_url = url_for('static', filename='img/placeholder-street.jpg') %}
                   {% set is_placeholder = True %}
                 {% endif %}
 
@@ -456,9 +487,15 @@
               <h3>No streets available yet</h3>
               <p>Be the first to upload and explore real streets around the world.</p>
               <p style="margin-top:12px;">
-                <a class="btn" href="{{ url_for('upload') }}">
-                  <i class="fas fa-upload" aria-hidden="true"></i> Upload first street
-                </a>
+                {% if current_user %}
+                  <a class="btn" href="{{ url_for('upload') }}">
+                    <i class="fas fa-upload" aria-hidden="true"></i> Upload first street
+                  </a>
+                {% else %}
+                  <a class="btn" href="{{ url_for('login') }}?next={{ url_for('upload') }}">
+                    <i class="fas fa-upload" aria-hidden="true"></i> Upload first street
+                  </a>
+                {% endif %}
               </p>
             </div>
           {% endif %}
@@ -513,7 +550,6 @@
         overlay.classList.add('show');
         lockBody();
 
-        // focus close button for accessibility
         if (closeBtn) closeBtn.focus();
       };
 
@@ -524,7 +560,6 @@
         overlay.classList.remove('show');
         unlockBody();
 
-        // restore focus
         if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
       };
 
@@ -580,7 +615,9 @@
           if (cat) categorySet.add(cat);
         });
 
-        const toLabel = (str) => str ? str.split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ') : '';
+        const toLabel = (str) => str
+          ? str.split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')
+          : '';
 
         if (tourCountryFilter && countrySet.size) {
           Array.from(countrySet).sort().forEach(c => {
