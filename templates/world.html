@@ -14,753 +14,747 @@
   <script src="{{ url_for('static', filename='js/maplibre-gl.js') }}"></script>
 
   <style>
-    :root {
-      --bg-page: #020617;
-      --text-main: #e5e7eb;
-      --text-muted: #9ca3af;
+    :root{
+      --bg-page:#020617;
+      --bg-deep:#000;
+      --text-main:#e5e7eb;
+      --text-muted:#9ca3af;
 
-      --accent: #38bdf8;
-      --accent-2: #22c55e;
+      --accent:#38bdf8;
+      --accent-2:#22c55e;
+      --danger:#fb7185;
 
-      --glass: rgba(15, 23, 42, 0.78);
-      --glass-strong: rgba(15, 23, 42, 0.92);
-      --border: rgba(148,163,184,0.45);
-      --shadow: 0 18px 45px rgba(0,0,0,0.82);
+      --glass:rgba(15,23,42,.78);
+      --glass-strong:rgba(15,23,42,.92);
+      --border:rgba(148,163,184,.45);
+      --shadow:0 18px 45px rgba(0,0,0,.82);
 
-      --radius-lg: 18px;
-      --radius-pill: 999px;
+      --radius-lg:18px;
+      --radius-md:14px;
+      --radius-pill:999px;
 
       --vh: 1vh;
     }
 
-    *, *::before, *::after { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; height: 100%; }
+    *,*::before,*::after{ box-sizing:border-box; }
+    html,body{ margin:0; padding:0; height:100%; }
 
-    body {
-      margin: 0;
-      background: radial-gradient(circle at top, #020617, #000 80%);
-      font-family: system-ui, sans-serif;
-      color: var(--text-main);
-      overflow: hidden;
+    body{
+      background: radial-gradient(circle at top, var(--bg-page), var(--bg-deep) 80%);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text-main);
+      overflow:hidden;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .viewer-panel {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      height: 100dvh;
+    /* ===== Viewer root ===== */
+    .viewer-panel{
+      position:fixed;
+      inset:0;
+      width:100vw;
+      height:100vh;
+      height:100dvh;
       height: calc(var(--vh) * 100);
     }
 
-    .viewer-canvas {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      overflow: hidden;
+    .viewer-canvas{
+      position:relative;
+      width:100%;
+      height:100%;
+      background:#000;
+      overflow:hidden;
+      touch-action: none;
     }
 
     /* ===== VIDEO ===== */
-    #streetVideo {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: 1;
-      pointer-events: none;
+    #streetVideo{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      z-index:1;
+      pointer-events:none;
       transition: transform 0.12s ease-out, opacity 0.2s ease-out;
+      opacity:0;
     }
 
-    #walkVignette {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: radial-gradient(circle at center, transparent 55%, rgba(0,0,0,0.35) 85%);
-      z-index: 3;
-      opacity: 0;
-      transition: opacity 0.3s ease-out;
+    #walkVignette{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background: radial-gradient(circle at center, transparent 55%, rgba(0,0,0,.35) 85%);
+      z-index:3;
+      opacity:0;
+      transition:opacity .25s ease-out;
     }
 
-    #nightOverlay {
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at top, rgba(15,23,42,0.4), rgba(0,0,0,0.9));
-      mix-blend-mode: multiply;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease-out;
-      z-index: 2;
+    #nightOverlay{
+      position:absolute;
+      inset:0;
+      background: radial-gradient(circle at top, rgba(15,23,42,.4), rgba(0,0,0,.9));
+      mix-blend-mode:multiply;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .25s ease-out;
+      z-index:2;
     }
 
     /* ===== MINI MAP ===== */
-    .mini-map {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      width: 104px;
-      height: 104px;
-      border-radius: 999px;
-      overflow: hidden;
-      background: #020617;
-      border: 2px solid rgba(148,163,184,0.6);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.75);
-      cursor: pointer;
-      z-index: 50;
+    .mini-map{
+      position:absolute;
+      top:16px; left:16px;
+      width:104px; height:104px;
+      border-radius:999px;
+      overflow:hidden;
+      background:#020617;
+      border:2px solid rgba(148,163,184,.6);
+      box-shadow:0 12px 30px rgba(0,0,0,.75);
+      cursor:pointer;
+      z-index:80;
     }
-    .mini-map img { width: 100%; height: 100%; object-fit: cover; }
+    .mini-map img{ width:100%; height:100%; object-fit:cover; }
 
-    /* ===== TOP-LEFT DOCK (Settings + Streets List) ===== */
-    .left-dock {
-      position: absolute;
-      top: 132px;
-      left: 16px;
-      display: grid;
-      gap: 10px;
-      z-index: 80;
+    /* ===== TOP-LEFT DOCK ===== */
+    .left-dock{
+      position:absolute;
+      top:132px; left:16px;
+      display:grid;
+      gap:10px;
+      z-index:120;
     }
-
-    .icon-btn {
-      width: 42px;
-      height: 42px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--glass-strong);
-      color: #e5e7eb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: var(--shadow);
+    .icon-btn{
+      width:42px; height:42px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--glass-strong);
+      color:#e5e7eb;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      box-shadow:var(--shadow);
       backdrop-filter: blur(10px);
-      user-select: none;
       transition: transform .15s ease;
     }
-    .icon-btn:hover { transform: translateY(-1px); }
-    .icon-btn:active { transform: translateY(0px) scale(0.98); }
+    .icon-btn:hover{ transform: translateY(-1px); }
+    .icon-btn:active{ transform: translateY(0) scale(.98); }
 
     /* ===== STREET INFO ===== */
-    .street-info {
-      position: absolute;
-      top: 64px;
-      right: 16px;
-      background: rgba(15,23,42,0.7);
-      border: 1px solid rgba(148,163,184,0.4);
-      padding: 8px 14px;
-      border-radius: 12px;
-      z-index: 50;
-      max-width: 240px;
-      font-size: 12px;
-      box-shadow: 0 14px 30px rgba(0,0,0,0.6);
+    .street-info{
+      position:absolute;
+      top:64px; right:16px;
+      background: rgba(15,23,42,.70);
+      border:1px solid rgba(148,163,184,.40);
+      padding:8px 14px;
+      border-radius:12px;
+      z-index:90;
+      max-width:240px;
+      font-size:12px;
+      box-shadow:0 14px 30px rgba(0,0,0,.6);
       backdrop-filter: blur(10px);
     }
-    .street-info h2 {
-      margin: 0;
-      font-size: 14px;
-      line-height: 1.2;
-      cursor: pointer;
+    .street-info h2{
+      margin:0;
+      font-size:14px;
+      line-height:1.2;
+      cursor:pointer;
     }
-    .street-info p { margin: 4px 0 0 0; color: var(--text-muted); }
-    @media (max-width: 520px){
-      .street-info{ right: 10px; max-width: 200px; }
+    .street-info p{ margin:4px 0 0; color:var(--text-muted); }
+
+    @media (max-width:520px){
+      .street-info{ right:10px; max-width:200px; }
     }
 
     /* ===== BRAND PILL ===== */
-    .brand-pill {
-      position: absolute;
-      left: 16px;
-      bottom: 22px;
-      padding: 7px 14px;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.92);
-      border: 1px solid rgba(148,163,184,0.55);
-      box-shadow: 0 14px 30px rgba(0,0,0,0.85);
-      font-size: 11px;
-      color: #e5e7eb;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      z-index: 60;
+    .brand-pill{
+      position:absolute;
+      left:16px; bottom:22px;
+      padding:7px 14px;
+      border-radius:999px;
+      background: rgba(15,23,42,.92);
+      border:1px solid rgba(148,163,184,.55);
+      box-shadow:0 14px 30px rgba(0,0,0,.85);
+      font-size:11px;
+      color:#e5e7eb;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      z-index:120;
       backdrop-filter: blur(10px);
     }
-    .brand-pill span.abto-tag {
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: rgba(56,189,248,0.18);
-      border: 1px solid rgba(56,189,248,0.7);
-      font-weight: 650;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-      font-size: 10px;
-      color: #7dd3fc;
+    .brand-pill .abto-tag{
+      padding:2px 8px;
+      border-radius:999px;
+      background: rgba(56,189,248,.18);
+      border:1px solid rgba(56,189,248,.7);
+      font-weight:650;
+      letter-spacing:.03em;
+      text-transform:uppercase;
+      font-size:10px;
+      color:#7dd3fc;
     }
 
-    /* ===== FULL MAP OVERLAY ===== */
-    #fullMapOverlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      backdrop-filter: blur(6px);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 200;
-      padding: 20px;
-      pointer-events: auto;
-    }
-    #fullMapContainer {
-      width: 90%;
-      height: 80%;
-      background: #0b1120;
-      border-radius: var(--radius-lg);
-      border: 1px solid rgba(148,163,184,0.5);
-      overflow: hidden;
-      box-shadow: 0 25px 70px rgba(0,0,0,0.9);
-    }
-    #closeMapBtn {
-      position: absolute;
-      top: 30px;
-      right: 40px;
-      width: 48px;
-      height: 48px;
-      background: rgba(0,0,0,0.65);
-      color: #fff;
-      border-radius: 50%;
-      border: none;
-      cursor: pointer;
-      font-size: 22px;
-      z-index: 500;
-      backdrop-filter: blur(4px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    /* ===== TOP-RIGHT DOCK ===== */
+    .top-right-dock{
+      position:absolute;
+      top:16px; right:16px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      z-index:140;
     }
 
-    /* ===== TOP-RIGHT CONTROL DOCK ===== */
-    .top-right-dock {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      z-index: 120;
-    }
-
-    .gender-buttons {
-      display: inline-flex;
-      gap: 6px;
-      background: var(--glass);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-pill);
-      padding: 6px;
-      box-shadow: var(--shadow);
+    .gender-buttons{
+      display:inline-flex;
+      gap:6px;
+      background:var(--glass);
+      border:1px solid var(--border);
+      border-radius:var(--radius-pill);
+      padding:6px;
+      box-shadow:var(--shadow);
       backdrop-filter: blur(10px);
     }
-    .gender-buttons button {
-      padding: 7px 12px;
-      font-size: 11px;
-      border-radius: var(--radius-pill);
-      border: 1px solid rgba(255,255,255,0.16);
-      background: rgba(0,0,0,0.25);
-      color: white;
-      cursor: pointer;
-      transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    .gender-buttons button{
+      padding:7px 12px;
+      font-size:11px;
+      border-radius:var(--radius-pill);
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.25);
+      color:#fff;
+      cursor:pointer;
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
     }
-    .gender-buttons button:hover { transform: translateY(-1px); }
-    .gender-buttons .active {
-      background: rgba(29,78,216,0.85);
-      border-color: rgba(59,130,246,0.95);
+    .gender-buttons button:hover{ transform: translateY(-1px); }
+    .gender-buttons .active{
+      background: rgba(29,78,216,.85);
+      border-color: rgba(59,130,246,.95);
     }
 
-    .dock-btn {
-      height: 40px;
+    .dock-btn{
+      height:40px;
       border-radius: var(--radius-pill);
-      border: 1px solid var(--border);
+      border:1px solid var(--border);
       background: var(--glass-strong);
-      color: #e5e7eb;
+      color:#e5e7eb;
       box-shadow: var(--shadow);
       backdrop-filter: blur(10px);
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 0 12px;
-      user-select: none;
-      transition: transform 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
-      white-space: nowrap;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:0 12px;
+      transition: transform .15s ease, opacity .15s ease, border-color .15s ease;
+      white-space:nowrap;
     }
-    .dock-btn:hover { transform: translateY(-1px); }
-    .dock-btn:active { transform: translateY(0px) scale(0.98); }
+    .dock-btn:hover{ transform: translateY(-1px); }
+    .dock-btn:active{ transform: translateY(0) scale(.98); }
 
-    .dock-icon { width: 18px; height: 18px; display: inline-block; }
-    .dock-label { font-size: 11px; color: rgba(226,232,240,0.92); }
+    .dock-icon{ width:18px; height:18px; display:inline-block; }
+    .dock-label{ font-size:11px; color: rgba(226,232,240,.92); }
 
-    /* ✅ Modern AutoWalk pill (enhanced) */
-    .autowalk-btn {
-      border: 1px solid rgba(56,189,248,0.55);
-      background: linear-gradient(135deg, rgba(56,189,248,0.18), rgba(15,23,42,0.92));
-      position: relative;
-      overflow: hidden;
+    /* AutoWalk enhanced */
+    .autowalk-btn{
+      border:1px solid rgba(56,189,248,.55);
+      background: linear-gradient(135deg, rgba(56,189,248,.18), rgba(15,23,42,.92));
+      position:relative;
+      overflow:hidden;
     }
     .autowalk-btn::after{
       content:"";
       position:absolute;
       inset:-40%;
-      background: radial-gradient(circle at 30% 30%, rgba(56,189,248,0.22), transparent 55%);
-      opacity: .7;
+      background: radial-gradient(circle at 30% 30%, rgba(56,189,248,.22), transparent 55%);
+      opacity:.7;
       pointer-events:none;
       transform: rotate(12deg);
     }
-    .autowalk-btn .dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: rgba(148,163,184,0.8);
-      box-shadow: 0 0 0 0 rgba(56,189,248,0.0);
-      transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
-      z-index: 1;
+    .autowalk-btn .dot{
+      width:8px; height:8px;
+      border-radius:50%;
+      background: rgba(148,163,184,.8);
+      transition: background .15s ease, box-shadow .15s ease, transform .15s ease;
+      z-index:1;
     }
-    .autowalk-btn.on {
-      border-color: rgba(34,197,94,0.7);
-      background: linear-gradient(135deg, rgba(34,197,94,0.20), rgba(15,23,42,0.92));
+    .autowalk-btn.on{
+      border-color: rgba(34,197,94,.7);
+      background: linear-gradient(135deg, rgba(34,197,94,.20), rgba(15,23,42,.92));
     }
-    .autowalk-btn.on .dot {
-      background: rgba(34,197,94,0.98);
-      box-shadow: 0 0 18px rgba(34,197,94,0.55);
+    .autowalk-btn.on .dot{
+      background: rgba(34,197,94,.98);
+      box-shadow: 0 0 18px rgba(34,197,94,.55);
       transform: scale(1.05);
       animation: dotPulse 1.2s infinite ease-in-out;
     }
     @keyframes dotPulse{
-      0%,100%{ transform: scale(1.0); opacity: 1; }
-      50%{ transform: scale(1.35); opacity: .75; }
+      0%,100%{ transform: scale(1.0); opacity:1; }
+      50%{ transform: scale(1.35); opacity:.75; }
     }
 
     /* ===== JOYSTICK ===== */
-    #joystickBase {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      width: 96px;
-      height: 96px;
-      border-radius: 50%;
-      background: radial-gradient(circle at center,
-                  rgba(15, 23, 42, 0.353) 0%,
-                  rgba(15, 23, 42, 0.249) 45%,
-                  transparent 70%);
-      border: 1px solid rgba(148, 163, 184, 0.555);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    #joystickBase{
+      position:absolute;
+      bottom:20px; right:20px;
+      width:96px; height:96px;
+      border-radius:50%;
+      background: radial-gradient(circle at center, rgba(15,23,42,.35) 0%, rgba(15,23,42,.25) 45%, transparent 70%);
+      border:1px solid rgba(148,163,184,.55);
+      box-shadow:0 8px 24px rgba(0,0,0,.5);
+      display:flex;
+      justify-content:center;
+      align-items:center;
       backdrop-filter: blur(6px);
-      touch-action: none;
-      z-index: 70;
-      opacity: 0.55;
-      transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+      touch-action:none;
+      z-index:130;
+      opacity:.55;
+      transition: opacity .18s ease-out, transform .18s ease-out;
     }
-    #joystickBase.joy-active { opacity: 0.9; transform: scale(1.02); }
-    #joystickKnob {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%,
-                  rgba(56,189,248,0.85),
-                  rgba(15,23,42,0.9));
-      box-shadow:
-        0 0 0 3px rgba(56,189,248,0.25),
-        0 8px 18px rgba(0,0,0,0.65);
-      touch-action: none;
+    #joystickBase.joy-active{ opacity:.9; transform: scale(1.02); }
+    #joystickKnob{
+      width:40px; height:40px;
+      border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, rgba(56,189,248,.85), rgba(15,23,42,.9));
+      box-shadow: 0 0 0 3px rgba(56,189,248,.25), 0 8px 18px rgba(0,0,0,.65);
+      touch-action:none;
     }
-    @media (max-width: 768px) { #joystickBase { bottom: 90px; } }
+
+    @media (max-width:768px){
+      #joystickBase{
+        bottom: max(12px, env(safe-area-inset-bottom));
+        right:16px;
+      }
+    }
+    @media (max-width:768px){ #joystickBase{ bottom:90px; } }
 
     /* ===== AVATAR ===== */
-    #avatarShadow {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
+    #avatarShadow{
+      position:absolute;
+      bottom:20px;
+      left:50%;
       transform: translateX(-50%);
-      width: 200px;
-      height: 45px;
-      background: radial-gradient(circle, rgba(0,0,0,0.45), transparent);
+      width:200px; height:45px;
+      background: radial-gradient(circle, rgba(0,0,0,.45), transparent);
       filter: blur(12px);
-      z-index: 7;
-      transition: transform 0.12s ease-out;
+      z-index:7;
+      transition: transform .12s ease-out;
+      pointer-events:none;
     }
-    #avatarWrapper {
-      position: absolute;
-      bottom: -15px;
-      left: 50%;
+    #avatarWrapper{
+      position:absolute;
+      bottom:-15px;
+      left:50%;
       transform: translateX(-50%);
-      width: 220px;
-      height: 440px;
-      z-index: 10;
-      pointer-events: none;
+      width:220px;
+      height:440px;
+      z-index:10;
+      pointer-events:none;
     }
-    #avatarMV { width: 100%; height: 100%; display: block; }
+    #avatarMV{ width:100%; height:100%; display:block; }
 
     /* ===== SPEECH ===== */
-    #avatarSpeech, #streetSpeech {
-      font-size: 12px;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease-out, transform 0.2s ease-out;
-      box-shadow: 0 18px 45px rgba(0,0,0,0.8);
-      border: 1px solid rgba(148,163,184,0.7);
+    #avatarSpeech, #streetSpeech{
+      font-size:12px;
+      white-space:nowrap;
+      text-overflow:ellipsis;
+      overflow:hidden;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .2s ease-out, transform .2s ease-out;
+      box-shadow:0 18px 45px rgba(0,0,0,.8);
+      border:1px solid rgba(148,163,184,.7);
     }
-    #avatarSpeech {
-      position: absolute;
-      bottom: 410px;
-      left: 50%;
+    #avatarSpeech{
+      position:absolute;
+      bottom:410px;
+      left:50%;
       transform: translateX(-50%) translateY(6px);
-      max-width: 280px;
-      padding: 7px 12px;
-      background: rgba(15,23,42,0.96);
-      border-radius: 999px;
-      color: #e5e7eb;
-      z-index: 11;
+      max-width:280px;
+      padding:7px 12px;
+      background: rgba(15,23,42,.96);
+      border-radius:999px;
+      color:#e5e7eb;
+      z-index:150;
     }
-    #streetSpeech {
-      position: absolute;
-      bottom: 420px;
-      right: 40px;
-      max-width: 260px;
-      padding: 7px 12px;
-      background: rgba(30,41,59,0.95);
-      border-radius: 12px;
-      color: #f1f5f9;
-      z-index: 12;
+    #streetSpeech{
+      position:absolute;
+      bottom:420px;
+      right:40px;
+      max-width:260px;
+      padding:7px 12px;
+      background: rgba(30,41,59,.95);
+      border-radius:12px;
+      color:#f1f5f9;
+      z-index:150;
+      transform: translateY(6px);
     }
-    #avatarSpeech.visible { opacity: 1; transform: translateX(-50%) translateY(-4px); }
-    #streetSpeech.visible { opacity: 1; transform: translateY(-4px); }
+    #avatarSpeech.visible{ opacity:1; transform: translateX(-50%) translateY(-4px); }
+    #streetSpeech.visible{ opacity:1; transform: translateY(-4px); }
 
     /* ===== LOADING ===== */
-    #videoLoading {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0,0,0,0.9);
-      z-index: 5;
-      pointer-events: none;
+    #videoLoading{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(0,0,0,.9);
+      z-index:6;
+      pointer-events:none;
     }
-    #videoLoadingSpinner {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 3px solid rgba(148,163,184,0.4);
-      border-top-color: #38bdf8;
-      animation: spin 0.7s linear infinite;
+    #videoLoadingSpinner{
+      width:36px; height:36px;
+      border-radius:50%;
+      border:3px solid rgba(148,163,184,.4);
+      border-top-color: var(--accent);
+      animation: spin .7s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin{ to{ transform: rotate(360deg); } }
 
     /* ===== START HINT ===== */
-    #startHint {
+    #startHint{
       position:absolute;
       inset:auto 0 82px 0;
       display:flex;
       justify-content:center;
-      z-index:15;
-      transition:opacity 0.25s ease-out;
+      z-index:160;
+      transition: opacity .25s ease-out;
     }
 
     /* ===== ORIENTATION GATE ===== */
-    .orientation-gate {
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(circle at top, #020617, #000 80%);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 40px 24px;
-      z-index: 300;
+    .orientation-gate{
+      position:fixed;
+      inset:0;
+      background: radial-gradient(circle at top, var(--bg-page), var(--bg-deep) 80%);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:40px 24px;
+      z-index:500;
     }
-    .orientation-inner { max-width: 340px; }
-    .orientation-icon {
-      font-size: 46px;
-      margin-bottom: 18px;
-      display: inline-block;
+    .orientation-inner{ max-width:340px; }
+    .orientation-icon{
+      font-size:46px;
+      margin-bottom:18px;
+      display:inline-block;
       animation: rotateHint 1.8s ease-in-out infinite;
     }
-    .orientation-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-    .orientation-text { font-size: 14px; color: #9ca3af; }
-    @keyframes rotateHint {
-      0%, 100% { transform: rotate(0deg); }
-      50%      { transform: rotate(90deg); }
+    .orientation-title{ font-size:18px; font-weight:600; margin-bottom:8px; }
+    .orientation-text{ font-size:14px; color:#9ca3af; }
+    @keyframes rotateHint{
+      0%,100%{ transform: rotate(0deg); }
+      50%{ transform: rotate(90deg); }
     }
-    @media (max-width: 768px) and (orientation: portrait) {
-      .orientation-gate { display: flex; }
+    @media (max-width:768px) and (orientation: portrait){
+      .orientation-gate{ display:flex; }
     }
 
     /* ===== ERROR BANNER ===== */
-    .error-banner {
-      position: fixed;
-      top: 16px;
-      left: 50%;
+    .error-banner{
+      position:fixed;
+      top:16px; left:50%;
       transform: translateX(-50%);
-      background: rgba(15,23,42,0.96);
-      border-radius: 999px;
-      border: 1px solid rgba(248,113,113,0.7);
-      color: #fecaca;
-      padding: 8px 14px;
-      font-size: 12px;
-      display: none;
-      align-items: center;
-      gap: 10px;
-      z-index: 500;
-      box-shadow: 0 18px 45px rgba(0,0,0,0.85);
+      background: rgba(15,23,42,.96);
+      border-radius:999px;
+      border:1px solid rgba(248,113,113,.7);
+      color:#fecaca;
+      padding:8px 14px;
+      font-size:12px;
+      display:none;
+      align-items:center;
+      gap:10px;
+      z-index:700;
+      box-shadow:0 18px 45px rgba(0,0,0,.85);
       backdrop-filter: blur(12px);
-      transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+      transition: opacity .2s ease-out, transform .2s ease-out;
     }
-    .error-banner-visible { display: inline-flex; }
-    .error-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #f97316;
-      box-shadow: 0 0 12px #f97316;
-      flex-shrink: 0;
+    .error-banner-visible{ display:inline-flex; }
+    .error-dot{
+      width:8px; height:8px;
+      border-radius:50%;
+      background:#f97316;
+      box-shadow:0 0 12px #f97316;
+      flex-shrink:0;
     }
-    .error-banner button {
-      border: none;
-      background: transparent;
-      color: #9ca3af;
-      cursor: pointer;
-      font-size: 14px;
-      padding-left: 6px;
+    .error-banner button{
+      border:none;
+      background:transparent;
+      color:#9ca3af;
+      cursor:pointer;
+      font-size:14px;
+      padding-left:6px;
     }
 
     /* ===== SETTINGS PANEL ===== */
-    #settingsPanel {
-      position: absolute;
-      left: 72px;
-      top: 132px;
-      width: 270px;
-      max-width: 80vw;
-      background: rgba(15,23,42,0.96);
-      border-radius: 16px;
-      border: 1px solid rgba(148,163,184,0.6);
-      box-shadow: 0 18px 45px rgba(0,0,0,0.9);
-      padding: 10px 12px 12px;
-      z-index: 140;
+    #settingsPanel{
+      position:absolute;
+      left:72px;
+      top:132px;
+      width:270px;
+      max-width:80vw;
+      background: rgba(15,23,42,.96);
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.6);
+      box-shadow:0 18px 45px rgba(0,0,0,.9);
+      padding:10px 12px 12px;
+      z-index:250;
       transform: translateY(10px);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.18s ease-out, transform 0.18s ease-out;
-      font-size: 12px;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .18s ease-out, transform .18s ease-out;
+      font-size:12px;
       backdrop-filter: blur(12px);
     }
-    #settingsPanel.open {
-      opacity: 1;
+    #settingsPanel.open{
+      opacity:1;
       transform: translateY(0);
-      pointer-events: auto;
+      pointer-events:auto;
     }
-    .settings-section {
-      margin-top: 8px;
-      padding-top: 6px;
-      border-top: 1px solid rgba(30,64,175,0.5);
+    .settings-section{
+      margin-top:8px;
+      padding-top:6px;
+      border-top:1px solid rgba(30,64,175,.5);
     }
-    .settings-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 6px;
-      gap: 8px;
-      font-size: 11px;
-      color: rgba(226,232,240,0.92);
+    .settings-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-top:6px;
+      gap:8px;
+      font-size:11px;
+      color: rgba(226,232,240,.92);
     }
 
     /* ===== STREETS DRAWER ===== */
-    #streetsDrawerOverlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.55);
+    #streetsDrawerOverlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.55);
       backdrop-filter: blur(6px);
-      display: none;
-      z-index: 220;
-      pointer-events: auto;
+      display:none;
+      z-index:400;
+      pointer-events:auto;
     }
-    #streetsDrawer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: min(380px, 92vw);
-      background: rgba(2,6,23,0.92);
-      border-right: 1px solid rgba(148,163,184,0.25);
-      box-shadow: 40px 0 90px rgba(0,0,0,0.75);
-      padding: 14px 14px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+    #streetsDrawer{
+      position:absolute;
+      top:0; left:0;
+      height:100%;
+      width:min(380px, 92vw);
+      background: rgba(2,6,23,.92);
+      border-right:1px solid rgba(148,163,184,.25);
+      box-shadow:40px 0 90px rgba(0,0,0,.75);
+      padding:14px 14px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
     }
-    .drawer-head {
+    .drawer-head{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid rgba(148,163,184,0.18);
+      padding-bottom:6px;
+      border-bottom:1px solid rgba(148,163,184,.18);
     }
-    .drawer-title { font-size: 13px; font-weight: 650; letter-spacing: 0.02em; }
-    .drawer-close {
-      width: 36px; height: 36px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.35);
-      background: rgba(15,23,42,0.65);
-      color: #e5e7eb;
-      cursor: pointer;
+    .drawer-title{ font-size:13px; font-weight:650; letter-spacing:.02em; }
+    .drawer-close{
+      width:36px; height:36px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.35);
+      background: rgba(15,23,42,.65);
+      color:#e5e7eb;
+      cursor:pointer;
     }
-    .drawer-search {
-      width: 100%;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.28);
-      background: rgba(15,23,42,0.6);
-      color: #e5e7eb;
-      padding: 10px 12px;
-      outline: none;
-      font-size: 12px;
+    .drawer-search{
+      width:100%;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.28);
+      background: rgba(15,23,42,.6);
+      color:#e5e7eb;
+      padding:10px 12px;
+      outline:none;
+      font-size:12px;
     }
-    .drawer-list { overflow: auto; padding-right: 6px; flex: 1; }
-    .street-item {
+    .drawer-list{
+      overflow:auto;
+      padding-right:6px;
+      flex:1;
+    }
+    .street-item{
       display:flex;
       flex-direction:column;
       gap:4px;
-      padding: 10px 10px;
-      border-radius: 14px;
-      border: 1px solid rgba(148,163,184,0.16);
-      background: rgba(15,23,42,0.45);
-      cursor: pointer;
-      margin-bottom: 10px;
-      transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+      padding:10px 10px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.16);
+      background: rgba(15,23,42,.45);
+      cursor:pointer;
+      margin-bottom:10px;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
     }
-    .street-item:hover {
+    .street-item:hover{
       transform: translateY(-1px);
-      border-color: rgba(56,189,248,0.38);
-      background: rgba(15,23,42,0.62);
+      border-color: rgba(56,189,248,.38);
+      background: rgba(15,23,42,.62);
     }
-    .street-item .name { font-size: 12px; font-weight: 650; }
-    .street-item .meta { font-size: 11px; color: rgba(148,163,184,0.92); }
-    .street-item.active {
-      border-color: rgba(56,189,248,0.65);
-      background: rgba(56,189,248,0.10);
+    .street-item .name{ font-size:12px; font-weight:650; }
+    .street-item .meta{ font-size:11px; color: rgba(148,163,184,.92); }
+    .street-item.active{
+      border-color: rgba(56,189,248,.65);
+      background: rgba(56,189,248,.10);
+    }
+
+    /* ===== FULL MAP OVERLAY ===== */
+    #fullMapOverlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.75);
+      backdrop-filter: blur(6px);
+      display:none;
+      justify-content:center;
+      align-items:center;
+      z-index:380;
+      padding:20px;
+      pointer-events:auto;
+    }
+    #fullMapContainer{
+      width:90%;
+      height:80%;
+      background:#0b1120;
+      border-radius: var(--radius-lg);
+      border:1px solid rgba(148,163,184,.5);
+      overflow:hidden;
+      box-shadow:0 25px 70px rgba(0,0,0,.9);
+    }
+    #closeMapBtn{
+      position:absolute;
+      top:30px; right:40px;
+      width:48px; height:48px;
+      background: rgba(0,0,0,.65);
+      color:#fff;
+      border-radius:50%;
+      border:none;
+      cursor:pointer;
+      font-size:22px;
+      z-index:500;
+      backdrop-filter: blur(4px);
+      box-shadow:0 10px 30px rgba(0,0,0,.8);
     }
 
     /* ===== POPUP CARD ===== */
-    #streetPopup {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.65);
+    #streetPopup{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.65);
       backdrop-filter: blur(6px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:520;
     }
-    #streetPopupCard {
-      width: 90%;
-      max-width: 420px;
-      background: rgba(15,23,42,0.92);
-      border: 1px solid rgba(148,163,184,0.4);
-      padding: 26px;
-      border-radius: 18px;
-      animation: popupFade 0.3s ease;
+    #streetPopupCard{
+      width:90%;
+      max-width:420px;
+      background: rgba(15,23,42,.92);
+      border:1px solid rgba(148,163,184,.4);
+      padding:26px;
+      border-radius:18px;
+      animation: popupFade .25s ease;
     }
-    #streetPopupCard h2 {
-      margin: 0 0 10px 0;
-      font-size: 22px;
+    #streetPopupCard h2{
+      margin:0 0 10px 0;
+      font-size:22px;
       color: var(--accent);
     }
-    #streetPopupCard p {
-      margin: 6px 0;
-      font-size: 14px;
+    #streetPopupCard p{
+      margin:6px 0;
+      font-size:14px;
       color: var(--text-main);
     }
-    #popupClose {
-      margin-top: 16px;
-      padding: 10px 22px;
+    #popupClose{
+      margin-top:16px;
+      padding:10px 22px;
       background: var(--accent);
-      border: none;
-      border-radius: 10px;
-      color: #000;
-      font-weight: 700;
-      cursor: pointer;
-      width: 100%;
+      border:none;
+      border-radius:10px;
+      color:#000;
+      font-weight:800;
+      cursor:pointer;
+      width:100%;
     }
-    @keyframes popupFade {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes popupFade{
+      from{ opacity:0; transform: translateY(16px); }
+      to{ opacity:1; transform: translateY(0); }
     }
 
     /* ===== FADE ===== */
-    #fadeLayer {
-      position: absolute;
-      inset: 0;
-      background: black;
-      opacity: 0;
-      transition: opacity 0.5s;
-      pointer-events: none;
-      z-index: 200;
+    #fadeLayer{
+      position:absolute;
+      inset:0;
+      background:#000;
+      opacity:0;
+      transition: opacity .5s;
+      pointer-events:none;
+      z-index:360;
     }
 
     /* ===== MAP MARKER ===== */
-    .map-marker-selected {
-      width: 26px !important;
-      height: 26px !important;
-      background: #38bdf8 !important;
-      border-radius: 50%;
-      border: 3px solid white !important;
-      box-shadow: 0 0 18px #38bdf8, 0 0 32px #38bdf8;
+    .map-marker-selected{
+      width:26px !important;
+      height:26px !important;
+      background: var(--accent) !important;
+      border-radius:50%;
+      border:3px solid #fff !important;
+      box-shadow: 0 0 18px var(--accent), 0 0 32px var(--accent);
       animation: markerPulse 1.4s infinite ease-in-out;
     }
-    @keyframes markerPulse {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.3); opacity: 0.7; }
-      100% { transform: scale(1); opacity: 1; }
+    @keyframes markerPulse{
+      0%{ transform: scale(1); opacity:1; }
+      50%{ transform: scale(1.3); opacity:.7; }
+      100%{ transform: scale(1); opacity:1; }
     }
 
     /* ===== MOBILE “BETTER ON DESKTOP” TOAST ===== */
-    #deviceToast {
-      position: fixed;
-      left: 50%;
-      bottom: 24px;
+    #deviceToast{
+      position:fixed;
+      left:50%;
+      bottom:24px;
       transform: translateX(-50%);
-      background: rgba(15,23,42,0.92);
-      border: 1px solid rgba(148,163,184,0.45);
-      border-radius: 14px;
-      box-shadow: 0 25px 70px rgba(0,0,0,0.85);
-      padding: 10px 12px;
-      z-index: 600;
-      display: none;
-      align-items: center;
-      gap: 10px;
+      background: rgba(15,23,42,.92);
+      border:1px solid rgba(148,163,184,.45);
+      border-radius:14px;
+      box-shadow:0 25px 70px rgba(0,0,0,.85);
+      padding:10px 12px;
+      z-index:800;
+      display:none;
+      align-items:center;
+      gap:10px;
       backdrop-filter: blur(12px);
       max-width: min(560px, 92vw);
     }
-    #deviceToast .t-title { font-size: 12px; font-weight: 700; }
-    #deviceToast .t-sub { font-size: 11px; color: rgba(148,163,184,0.95); }
-    #deviceToast button {
-      margin-left: 8px;
-      width: 34px;
-      height: 34px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.3);
-      background: rgba(0,0,0,0.25);
-      color: #e5e7eb;
-      cursor: pointer;
+    #deviceToast .t-title{ font-size:12px; font-weight:800; }
+    #deviceToast .t-sub{ font-size:11px; color: rgba(148,163,184,.95); }
+    #deviceToast button{
+      margin-left:8px;
+      width:34px;
+      height:34px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.3);
+      background: rgba(0,0,0,.25);
+      color:#e5e7eb;
+      cursor:pointer;
     }
 
     /* ===== MOBILE: smaller avatar ===== */
-    @media (max-width: 900px) {
-      #avatarWrapper { bottom: -4px; height: min(55vh, 300px); }
-      #avatarShadow { bottom: 10px; width: 160px; height: 36px; }
+    @media (max-width:900px){
+      #avatarWrapper{ bottom:-4px; height:min(55vh, 300px); }
+      #avatarShadow{ bottom:10px; width:160px; height:36px; }
     }
-    @media (max-width: 520px) {
-      .dock-label { display: none; }
-      .dock-btn { padding: 0 10px; }
+    @media (max-width:520px){
+      .dock-label{ display:none; }
+      .dock-btn{ padding: 0 10px; }
     }
   </style>
 </head>
@@ -804,11 +798,11 @@
   <!-- Full map overlay -->
   <div id="fullMapOverlay">
     <div id="fullMapContainer"></div>
-    <button id="closeMapBtn">✕</button>
+    <button id="closeMapBtn" aria-label="Close map">✕</button>
   </div>
 
   <!-- Streets drawer -->
-  <div id="streetsDrawerOverlay">
+  <div id="streetsDrawerOverlay" aria-hidden="true">
     <div id="streetsDrawer" role="dialog" aria-label="All streets list">
       <div class="drawer-head">
         <div class="drawer-title">All Streets</div>
@@ -821,11 +815,11 @@
 
   <div class="viewer-panel" id="viewerPanel">
     <div class="viewer-canvas" id="viewerCanvas">
-      <div id="miniMap" class="mini-map">
+      <div id="miniMap" class="mini-map" title="Open map">
         <img src="/static/img/minimap_placeholder.png" alt="">
       </div>
 
-      <!-- ✅ aligned top-right dock -->
+      <!-- Top-right dock -->
       <div class="top-right-dock">
         <div class="gender-buttons" aria-label="Avatar gender">
           <button class="active" data-gender="male">Male</button>
@@ -887,7 +881,7 @@
       <div id="avatarSpeech"></div>
       <div id="streetSpeech"></div>
 
-      <div id="joystickBase">
+      <div id="joystickBase" aria-label="Movement joystick">
         <div id="joystickKnob"></div>
       </div>
 
@@ -994,90 +988,133 @@
   <script type="module">
     const DEBUG = false;
 
-    // ---- Real viewport height for mobile ----
-    function setViewportHeightVar() {
+    /* =========================================================
+       Utilities
+    ========================================================= */
+    const $ = (id) => document.getElementById(id);
+
+    function setViewportHeightVar(){
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty('--vh', `${vh}px`);
     }
-    setViewportHeightVar();
-    window.addEventListener('resize', setViewportHeightVar);
-    window.addEventListener('orientationchange', setViewportHeightVar);
-    document.addEventListener('fullscreenchange', setViewportHeightVar);
-    document.addEventListener('webkitfullscreenchange', setViewportHeightVar);
 
-    // Safer JSON parsing
+    function escapeHtml(str){
+      return String(str).replace(/[&<>"']/g, (m) => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[m]));
+    }
+
+    function isFullscreenActive(){
+      return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+    }
+
+    function ensureOverlayParent(overlayEl){
+      if (!overlayEl) return;
+      const parent = isFullscreenActive() ? viewerPanel : document.body;
+      if (overlayEl.parentElement !== parent) parent.appendChild(overlayEl);
+    }
+
+    function restoreOverlayToBody(overlayEl){
+      if (!overlayEl) return;
+      if (overlayEl.parentElement !== document.body) document.body.appendChild(overlayEl);
+    }
+
+    function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+    function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+    /* =========================================================
+       Parse data safely
+    ========================================================= */
     let STREETS = [];
     let SELECTED = null;
-    try {
-      STREETS = JSON.parse(document.getElementById("streets-data").textContent || "[]");
-      SELECTED = JSON.parse(document.getElementById("selected-street-data").textContent || "null");
-    } catch (e) {
+
+    try{
+      STREETS = JSON.parse($("streets-data").textContent || "[]");
+      SELECTED = JSON.parse($("selected-street-data").textContent || "null");
+      if (!Array.isArray(STREETS)) STREETS = [];
+    }catch(e){
       STREETS = [];
       SELECTED = null;
     }
 
-    const viewerPanel = document.getElementById("viewerPanel");
-    const viewerCanvas = document.getElementById("viewerCanvas");
+    /* =========================================================
+       Elements
+    ========================================================= */
+    const viewerPanel = $("viewerPanel");
+    const viewerCanvas = $("viewerCanvas");
 
-    const video = document.getElementById("streetVideo");
-    const vsrc = document.getElementById("videoSource");
-    const avatar = document.getElementById("avatarMV");
-    const avatarWrapper = document.getElementById("avatarWrapper");
-    const shadowEl = document.getElementById("avatarShadow");
-    const fadeLayer = document.getElementById("fadeLayer");
-    const nightOverlay = document.getElementById("nightOverlay");
-    const footstepAudio = document.getElementById("footstepAudio");
-    const videoLoading = document.getElementById("videoLoading");
-    const walkVignette = document.getElementById("walkVignette");
+    const video = $("streetVideo");
+    const vsrc = $("videoSource");
+    const videoLoading = $("videoLoading");
+    const walkVignette = $("walkVignette");
+    const nightOverlay = $("nightOverlay");
 
-    const speechEl = document.getElementById("avatarSpeech");
-    const streetSpeechEl = document.getElementById("streetSpeech");
-    const voiceAudio = document.getElementById("voiceAudio");
+    const avatar = $("avatarMV");
+    const avatarWrapper = $("avatarWrapper");
+    const shadowEl = $("avatarShadow");
+    const fadeLayer = $("fadeLayer");
 
-    const settingsBtn = document.getElementById("settingsBtn");
-    const settingsPanel = document.getElementById("settingsPanel");
-    const setVideoMuted = document.getElementById("setVideoMuted");
-    const setVideoSlow = document.getElementById("setVideoSlow");
-    const setHideAvatar = document.getElementById("setHideAvatar");
-    const setWalkNoAvatar = document.getElementById("setWalkNoAvatar");
-    const setNightMode = document.getElementById("setNightMode");
+    const speechEl = $("avatarSpeech");
+    const streetSpeechEl = $("streetSpeech");
+    const voiceAudio = $("voiceAudio");
+    const footstepAudio = $("footstepAudio");
 
-    const joystickBase = document.getElementById("joystickBase");
-    const joystickKnob = document.getElementById("joystickKnob");
+    const settingsBtn = $("settingsBtn");
+    const settingsPanel = $("settingsPanel");
 
-    const startHint = document.getElementById("startHint");
-    const startHintSkip = document.getElementById("startHintSkip");
+    const setVideoMuted = $("setVideoMuted");
+    const setVideoSlow = $("setVideoSlow");
+    const setHideAvatar = $("setHideAvatar");
+    const setWalkNoAvatar = $("setWalkNoAvatar");
+    const setNightMode = $("setNightMode");
 
-    const fullMapOverlay = document.getElementById("fullMapOverlay");
-    const orientationGate = document.getElementById("orientationGate");
+    const joystickBase = $("joystickBase");
+    const joystickKnob = $("joystickKnob");
 
-    const errorBanner = document.getElementById("errorBanner");
-    const errorBannerClose = document.getElementById("errorBannerClose");
+    const startHint = $("startHint");
+    const startHintSkip = $("startHintSkip");
 
-    // Streets drawer
-    const streetsBtn = document.getElementById("streetsBtn");
-    const streetsDrawerOverlay = document.getElementById("streetsDrawerOverlay");
-    const streetsDrawerClose = document.getElementById("streetsDrawerClose");
-    const streetsSearch = document.getElementById("streetsSearch");
-    const streetsList = document.getElementById("streetsList");
+    const fullMapOverlay = $("fullMapOverlay");
+    const fullMapContainer = $("fullMapContainer");
+    const closeMapBtn = $("closeMapBtn");
+    const orientationGate = $("orientationGate");
 
-    // Top-right dock buttons
-    const fullscreenBtn = document.getElementById("fullscreenBtn");
-    const fsIcon = document.getElementById("fsIcon");
-    const fsLabel = document.getElementById("fsLabel");
+    const errorBanner = $("errorBanner");
+    const errorBannerClose = $("errorBannerClose");
 
-    const autoWalkDockBtn = document.getElementById("autoWalkDockBtn");
-    const autoWalkLabel = document.getElementById("autoWalkLabel");
+    const streetsBtn = $("streetsBtn");
+    const streetsDrawerOverlay = $("streetsDrawerOverlay");
+    const streetsDrawerClose = $("streetsDrawerClose");
+    const streetsSearch = $("streetsSearch");
+    const streetsList = $("streetsList");
 
-    // Toast
-    const deviceToast = document.getElementById("deviceToast");
-    const toastClose = document.getElementById("toastClose");
+    const fullscreenBtn = $("fullscreenBtn");
+    const fsIcon = $("fsIcon");
+    const fsLabel = $("fsLabel");
 
+    const autoWalkDockBtn = $("autoWalkDockBtn");
+    const autoWalkLabel = $("autoWalkLabel");
+
+    const deviceToast = $("deviceToast");
+    const toastClose = $("toastClose");
+
+    const streetNameEl = $("streetName");
+
+    // popup
+    const popupCard = $("streetPopup");
+    const popupTitle = $("popupTitle");
+    const popupCity = $("popupCity");
+    const popupCategory = $("popupCategory");
+    const popupDescription = $("popupDescription");
+    const popupClose = $("popupClose");
+
+    /* =========================================================
+       State
+    ========================================================= */
     let audioUnlocked = false;
     let lastFrameTime = 0;
-    let isVideoLoading = false;
 
-    // ✅ ONE place only
     let markerEls = [];
     let fullMapReady = false;
     let fullMap = null;
@@ -1086,17 +1123,22 @@
     let currentIndex = -1;
     let currentVideos = [];
     let currentVideoIndex = 0;
+
     let currentGender = "male";
-    let currentDir = 0;
+    let currentDir = 0;         // -1 back, 0 stop, 1 forward
     let reversePlaying = false;
+
     let headBob = 0;
     let bobDirection = 1;
     let strafe = 0;
     let strafeOffset = 0;
     const STRAFE_MAX = 120;
+
     let motionMomentum = 0;
     let joyActive = false;
+
     let isFirstStreetLoad = true;
+    let isVideoLoading = false;
 
     let speechTimeout = null;
     let streetSpeechTimeout = null;
@@ -1105,120 +1147,110 @@
 
     let autoWalkEnabled = false;
 
-    // ---------- FULLSCREEN + OVERLAYS FIX ----------
-    function isFullscreenActive() {
-      return !!(
-        document.fullscreenElement ||
-        document.webkitFullscreenElement ||
-        document.msFullscreenElement
-      );
-    }
+    // For cancelling reverse loop safely
+    let reverseRAF = 0;
 
-    function ensureOverlayParent(overlayEl) {
-      if (!overlayEl) return;
-      const parent = isFullscreenActive() ? viewerPanel : document.body;
-      if (overlayEl.parentElement !== parent) parent.appendChild(overlayEl);
-    }
-
-    function restoreOverlayToBody(overlayEl) {
-      if (!overlayEl) return;
-      if (overlayEl.parentElement !== document.body) document.body.appendChild(overlayEl);
-    }
-    // --------------------------------------------
-
+    /* =========================================================
+       Avatars
+    ========================================================= */
     const avatarSources = {
       male: { idle: "/static/avatars/male/idle.glb", walk: "/static/avatars/male/walk.glb" },
       female: { idle: "/static/avatars/female/idle.glb", walk: "/static/avatars/female/walk.glb" }
     };
 
-    function hideStartHint() {
-      if (hasStartedWalking) return;
-      hasStartedWalking = true;
-      if (startHint) {
-        startHint.style.opacity = "0";
-        startHint.style.pointerEvents = "none";
-        setTimeout(() => { startHint.style.display = "none"; }, 220);
-      }
-    }
-    if (startHintSkip) startHintSkip.addEventListener("click", hideStartHint);
+    /* =========================================================
+       Viewport height
+    ========================================================= */
+    setViewportHeightVar();
+    window.addEventListener("resize", setViewportHeightVar);
+    window.addEventListener("orientationchange", setViewportHeightVar);
+    document.addEventListener("fullscreenchange", setViewportHeightVar);
+    document.addEventListener("webkitfullscreenchange", setViewportHeightVar);
 
-    function hardResetVideo() {
-      video.pause();
-      video.removeAttribute("src");
-      video.load();
-      video.currentTime = 0;
-    }
-
-    function unlockAudio() {
+    /* =========================================================
+       Audio unlock
+    ========================================================= */
+    function unlockAudio(){
       if (audioUnlocked) return;
-      [footstepAudio, voiceAudio].forEach(audio => {
-        audio.muted = false;
-        audio.play().then(() => {
-          audio.pause();
-          audio.currentTime = 0;
-        }).catch(() => {});
+      [footstepAudio, voiceAudio].forEach(a => {
+        try{
+          a.muted = false;
+          a.play().then(() => {
+            a.pause();
+            a.currentTime = 0;
+          }).catch(()=>{});
+        }catch(_){}
       });
       audioUnlocked = true;
     }
 
+    window.addEventListener("pointerdown", unlockAudio, { once:true });
+    window.addEventListener("keydown", unlockAudio, { once:true });
+
+    /* =========================================================
+       Dialogues
+    ========================================================= */
     const dialogues = {
       male: [
-        { q: "Good morning!", a: "Good morning! Have a nice day!", qFile: "/static/audio/greetings/male/male_greet_1.mp3", aFile: "/static/audio/street/reply_1.mp3" },
-        { q: "Hello there!", a: "Hi! Welcome to the street!", qFile: "/static/audio/greetings/male/male_greet_2.mp3", aFile: "/static/audio/street/reply_2.mp3" },
-        { q: "Hey, ready for a walk?", a: "Yes! Enjoy your walk!", qFile: "/static/audio/greetings/male/male_greet_3.mp3", aFile: "/static/audio/street/reply_3.mp3" }
+        { q:"Good morning!", a:"Good morning! Have a nice day!", qFile:"/static/audio/greetings/male/male_greet_1.mp3", aFile:"/static/audio/street/reply_1.mp3" },
+        { q:"Hello there!", a:"Hi! Welcome to the street!", qFile:"/static/audio/greetings/male/male_greet_2.mp3", aFile:"/static/audio/street/reply_2.mp3" },
+        { q:"Hey, ready for a walk?", a:"Yes! Enjoy your walk!", qFile:"/static/audio/greetings/male/male_greet_3.mp3", aFile:"/static/audio/street/reply_3.mp3" }
       ],
       female: [
-        { q: "Hello, how are you today?", a: "I'm good! Have a lovely day!", qFile: "/static/audio/greetings/female/female_greet_1.mp3", aFile: "/static/audio/street/reply_1.mp3" },
-        { q: "Hi, let's take a walk.", a: "Sure! Welcome to the street!", qFile: "/static/audio/greetings/female/female_greet_2.mp3", aFile: "/static/audio/street/reply_2.mp3" },
-        { q: "Good morning!", a: "Good morning! Enjoy your walk!", qFile: "/static/audio/greetings/female/female_greet_3.mp3", aFile: "/static/audio/street/reply_3.mp3" }
+        { q:"Hello, how are you today?", a:"I'm good! Have a lovely day!", qFile:"/static/audio/greetings/female/female_greet_1.mp3", aFile:"/static/audio/street/reply_1.mp3" },
+        { q:"Hi, let's take a walk.", a:"Sure! Welcome to the street!", qFile:"/static/audio/greetings/female/female_greet_2.mp3", aFile:"/static/audio/street/reply_2.mp3" },
+        { q:"Good morning!", a:"Good morning! Enjoy your walk!", qFile:"/static/audio/greetings/female/female_greet_3.mp3", aFile:"/static/audio/street/reply_3.mp3" }
       ]
     };
 
     const teleportLines = {
       male: [
-        { text: "Teleporting to the next street.", file: "/static/audio/teleport/male_tp_1.mp3" },
-        { text: "Jumping to another street!", file: "/static/audio/teleport/male_tp_2.mp3" }
+        { text:"Teleporting to the next street.", file:"/static/audio/teleport/male_tp_1.mp3" },
+        { text:"Jumping to another street!", file:"/static/audio/teleport/male_tp_2.mp3" }
       ],
       female: [
-        { text: "Teleporting to the next street.", file: "/static/audio/teleport/female_tp_1.mp3" },
-        { text: "Jumping to another cute street!", file: "/static/audio/teleport/female_tp_2.mp3" }
+        { text:"Teleporting to the next street.", file:"/static/audio/teleport/female_tp_1.mp3" },
+        { text:"Jumping to another cute street!", file:"/static/audio/teleport/female_tp_2.mp3" }
       ]
     };
 
-    function showAvatarSpeech(text, duration = 2300) {
+    function showAvatarSpeech(text, duration=2300){
       speechEl.textContent = text;
       speechEl.classList.add("visible");
       clearTimeout(speechTimeout);
       speechTimeout = setTimeout(() => speechEl.classList.remove("visible"), duration);
     }
 
-    function showStreetSpeech(text, duration = 2300) {
+    function showStreetSpeech(text, duration=2300){
       streetSpeechEl.textContent = text;
       streetSpeechEl.classList.add("visible");
       clearTimeout(streetSpeechTimeout);
       streetSpeechTimeout = setTimeout(() => streetSpeechEl.classList.remove("visible"), duration);
     }
 
-    function playVoice(file) {
+    function playVoice(file){
       if (!file || !audioUnlocked) return;
-      voiceAudio.pause();
-      voiceAudio.currentTime = 0;
-      voiceAudio.src = file;
-      voiceAudio.play().catch(() => {});
+      try{
+        voiceAudio.pause();
+        voiceAudio.currentTime = 0;
+        voiceAudio.src = file;
+        voiceAudio.play().catch(()=>{});
+      }catch(_){}
     }
 
-    function triggerGreeting() {
+    function triggerGreeting(){
       const now = Date.now();
       if (now - lastGreetingAt < GREETING_COOLDOWN) return;
+
       const list = dialogues[currentGender] || dialogues.male;
       if (!list.length) return;
-      const pair = list[Math.floor(Math.random() * list.length)];
+      const pair = list[Math.floor(Math.random()*list.length)];
       lastGreetingAt = now;
 
       showAvatarSpeech(pair.q, 1600);
       playVoice(pair.qFile);
 
-      if (pair.a && pair.aFile) {
+      if (pair.a && pair.aFile){
         setTimeout(() => {
           showStreetSpeech(pair.a, 2000);
           playVoice(pair.aFile);
@@ -1226,48 +1258,140 @@
       }
     }
 
-    function onWalkStart() {
+    function hideStartHint(){
+      if (hasStartedWalking) return;
+      hasStartedWalking = true;
+      startHint.style.opacity = "0";
+      startHint.style.pointerEvents = "none";
+      setTimeout(() => { startHint.style.display = "none"; }, 220);
+    }
+    if (startHintSkip) startHintSkip.addEventListener("click", hideStartHint);
+
+    function onWalkStart(){
       hideStartHint();
       triggerGreeting();
     }
 
-    function buildVideoList(street) {
+    /* =========================================================
+       Video loading helpers
+    ========================================================= */
+    function hardResetVideo(){
+      cancelReverseLoop();
+      try{
+        video.pause();
+        video.removeAttribute("src");
+        vsrc.src = "";
+        video.load();
+        video.currentTime = 0;
+      }catch(_){}
+    }
+
+    function buildVideoList(street){
       const vids = [];
-      if (Array.isArray(street.videos) && street.videos.length) {
-        street.videos.forEach(v => { if (v && v.url) vids.push(v.url); });
+      if (Array.isArray(street?.videos) && street.videos.length){
+        street.videos.forEach(v => { if (v?.url) vids.push(v.url); });
       }
-      if (!vids.length && street.videoUrl) vids.push(street.videoUrl);
+      if (!vids.length && street?.videoUrl) vids.push(street.videoUrl);
       return vids;
     }
 
-    function loadStreet(street) {
-      if (!street || !street.name) return teleportNearest();
+    function setAvatarState(){
+      const state = (currentDir === 0) ? "idle" : "walk";
+      const srcSet = avatarSources[currentGender] || avatarSources.male;
+      const src = srcSet[state];
+      if (src && avatar.getAttribute("src") !== src) avatar.setAttribute("src", src);
+    }
 
-      document.getElementById("streetName").textContent = street.name || "Untitled Street";
-      document.getElementById("streetLocation").textContent =
+    function updateFootsteps(){
+      if (currentDir !== 0 && audioUnlocked){
+        if (footstepAudio.paused) footstepAudio.play().catch(()=>{});
+      } else {
+        footstepAudio.pause();
+        footstepAudio.currentTime = 0;
+      }
+    }
+
+    function playForward(){
+      cancelReverseLoop();
+      reversePlaying = false;
+      motionMomentum = Math.min(motionMomentum + 0.15, 1);
+
+      if (!audioUnlocked) return;
+      video.playbackRate = setVideoSlow.checked ? 0.5 : 1;
+      video.play().catch(()=>{});
+    }
+
+    function cancelReverseLoop(){
+      reversePlaying = false;
+      if (reverseRAF) cancelAnimationFrame(reverseRAF);
+      reverseRAF = 0;
+    }
+
+    function playReverse(){
+      if (!audioUnlocked) return;
+      cancelReverseLoop();
+      reversePlaying = true;
+      video.pause();
+
+      const step = () => {
+        if (!reversePlaying) return;
+
+        const delta = setVideoSlow.checked ? 0.008 : 0.016;
+        const dur = Number.isFinite(video.duration) ? video.duration : 0;
+
+        // If duration not ready, just wait
+        if (!dur || dur < 0.05){
+          reverseRAF = requestAnimationFrame(step);
+          return;
+        }
+
+        video.currentTime = (video.currentTime - delta);
+        if (video.currentTime <= 0.02) video.currentTime = dur - 0.02;
+
+        reverseRAF = requestAnimationFrame(step);
+      };
+
+      reverseRAF = requestAnimationFrame(step);
+    }
+
+    /* =========================================================
+       Street loading
+    ========================================================= */
+    async function loadStreet(street){
+      if (!street || !street.name){
+        await teleportNearest();
+        return;
+      }
+
+      $("streetName").textContent = street.name || "Untitled Street";
+      $("streetLocation").textContent =
         (street.city || "") + (street.city && street.country ? ", " : "") + (street.country || "");
 
       currentVideos = buildVideoList(street);
-      if (!currentVideos.length) return teleportNearest();
-
       currentVideoIndex = 0;
 
-      if (isFirstStreetLoad) {
+      if (!currentVideos.length){
+        await teleportNearest();
+        return;
+      }
+
+      if (isVideoLoading) return;
+      isVideoLoading = true;
+
+      if (isFirstStreetLoad){
         videoLoading.style.display = "flex";
         video.style.opacity = "0";
       }
-      if (isVideoLoading) return;
-      isVideoLoading = true;
 
       const url = currentVideos[0];
       hardResetVideo();
       vsrc.src = url;
       video.load();
 
-      const onVideoReady = () => {
+      const onReady = () => {
         isVideoLoading = false;
         video.style.opacity = "1";
-        if (isFirstStreetLoad) {
+        if (isFirstStreetLoad){
           videoLoading.style.display = "none";
           isFirstStreetLoad = false;
         }
@@ -1275,120 +1399,95 @@
         else if (currentDir === -1) playReverse();
       };
 
-      video.addEventListener("loadeddata", onVideoReady, { once: true });
-      video.addEventListener("error", () => {
+      const onErr = async () => {
         isVideoLoading = false;
         if (isFirstStreetLoad) videoLoading.style.display = "none";
-        teleportNearest();
-      }, { once: true });
+        await teleportNearest();
+      };
+
+      video.addEventListener("loadeddata", onReady, { once:true });
+      video.addEventListener("error", onErr, { once:true });
     }
 
-    function loadStreetByIndex(i) {
-      if (i < 0 || i >= STREETS.length) return;
+    function loadStreetByIndex(i){
+      if (!Number.isFinite(i) || i < 0 || i >= STREETS.length) return;
       currentIndex = i;
+
       loadStreet(STREETS[i]);
       updateMapMarkerHighlight();
       renderStreetsList(streetsSearch.value || "");
-      if (fullMap && STREETS[i]) {
+
+      if (fullMap && STREETS[i]){
         const s = STREETS[i];
-        fullMap.flyTo({ center: [parseFloat(s.lng), parseFloat(s.lat)], zoom: 12, speed: 0.9 });
+        const lng = parseFloat(s.lng), lat = parseFloat(s.lat);
+        if (Number.isFinite(lng) && Number.isFinite(lat)){
+          fullMap.flyTo({ center:[lng, lat], zoom:12, speed:0.9 });
+        }
       }
     }
 
-    function playForward() {
-      reversePlaying = false;
-      motionMomentum = Math.min(motionMomentum + 0.15, 1);
-      if (audioUnlocked) {
-        video.playbackRate = setVideoSlow.checked ? 0.5 : 1;
-        video.play().catch(() => {});
-      }
-    }
-
-    function playReverse() {
-      if (!audioUnlocked) return;
-      reversePlaying = true;
-      video.pause();
-      function frameBack() {
-        if (!reversePlaying) return;
-        const step = setVideoSlow.checked ? 0.008 : 0.016;
-        video.currentTime -= step;
-        if (video.currentTime <= 0.02) video.currentTime = video.duration || 0;
-        requestAnimationFrame(frameBack);
-      }
-      requestAnimationFrame(frameBack);
-    }
-
-    function setAvatarState() {
-      if (!avatar) return;
-      const state = currentDir === 0 ? "idle" : "walk";
-      const srcSet = avatarSources[currentGender] || avatarSources.male;
-      const src = srcSet[state];
-      if (src && avatar.getAttribute("src") !== src) avatar.setAttribute("src", src);
-    }
-
-    function updateFootsteps() {
-      if (currentDir !== 0 && audioUnlocked) {
-        if (footstepAudio.paused) footstepAudio.play().catch(() => {});
-      } else {
-        footstepAudio.pause();
-        footstepAudio.currentTime = 0;
-      }
-    }
-
-    function haversine(lat1, lon1, lat2, lon2) {
+    /* =========================================================
+       Teleport nearest
+    ========================================================= */
+    function haversine(lat1, lon1, lat2, lon2){
       const R = 6371;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat / 2) ** 2 +
-        Math.cos(lat1 * Math.PI / 180) *
-        Math.cos(lat2 * Math.PI / 180) *
-        Math.sin(dLon / 2) ** 2;
-      return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const a =
+        Math.sin(dLat/2)**2 +
+        Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+      return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    function nearestStreetIndex() {
+    function nearestStreetIndex(){
       const base = STREETS[currentIndex];
-      if (!base || STREETS.length < 2) return -1;
+      if (!base || STREETS.length < 2) return (STREETS.length ? 0 : -1);
 
-      let best = -1;
-      let bestDist = Infinity;
       const baseLat = parseFloat(base.lat);
       const baseLng = parseFloat(base.lng);
 
+      let best = -1;
+      let bestDist = Infinity;
+
       STREETS.forEach((s, i) => {
         if (i === currentIndex) return;
-        const d = haversine(baseLat, baseLng, parseFloat(s.lat), parseFloat(s.lng));
-        if (!Number.isNaN(d) && d < bestDist) {
+        const lat = parseFloat(s.lat);
+        const lng = parseFloat(s.lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+        const d = haversine(baseLat, baseLng, lat, lng);
+        if (!Number.isNaN(d) && d < bestDist){
           bestDist = d;
           best = i;
         }
       });
 
-      if (best === -1 || !Number.isFinite(bestDist) || bestDist > 0.8) {
+      // If too far or no good match, fallback next index
+      if (best === -1 || !Number.isFinite(bestDist) || bestDist > 0.8){
         return (currentIndex + 1) % STREETS.length;
       }
       return best;
     }
 
-    async function teleportNearest() {
+    async function teleportNearest(){
       const next = nearestStreetIndex();
       if (next === -1) return;
 
       const list = teleportLines[currentGender] || teleportLines.male;
-      if (list && list.length) {
-        const line = list[Math.floor(Math.random() * list.length)];
+      if (list?.length){
+        const line = list[Math.floor(Math.random()*list.length)];
         showAvatarSpeech(line.text, 2200);
         playVoice(line.file);
       }
 
       fadeLayer.style.opacity = "1";
-      await new Promise(r => setTimeout(r, 350));
+      await sleep(350);
       loadStreetByIndex(next);
       fadeLayer.style.opacity = "0";
     }
 
-    video.addEventListener("ended", () => {
-      if (currentVideos.length > 1 && currentVideoIndex < currentVideos.length - 1) {
+    // When current video ends -> next in list or teleport
+    video.addEventListener("ended", async () => {
+      if (currentVideos.length > 1 && currentVideoIndex < currentVideos.length - 1){
         currentVideoIndex++;
         const nextUrl = currentVideos[currentVideoIndex] || "";
         hardResetVideo();
@@ -1398,68 +1497,78 @@
         if (currentDir === 1) playForward();
         return;
       }
-      reversePlaying = false;
+
+      cancelReverseLoop();
       currentDir = 0;
       video.pause();
       setAvatarState();
       updateFootsteps();
-      teleportNearest();
+      await teleportNearest();
     });
 
-    function tick(currentTime = 0) {
-      if (currentTime - lastFrameTime < 16) return requestAnimationFrame(tick);
-      lastFrameTime = currentTime;
+    /* =========================================================
+       Tick loop (motion + effects)
+    ========================================================= */
+    function tick(t=0){
+      if (t - lastFrameTime < 16){
+        requestAnimationFrame(tick);
+        return;
+      }
+      lastFrameTime = t;
 
-      if (document.hidden) {
+      if (document.hidden){
         video.pause();
         footstepAudio.pause();
-        return requestAnimationFrame(tick);
+        requestAnimationFrame(tick);
+        return;
       }
 
       motionMomentum *= 0.92;
       if (motionMomentum < 0.02) motionMomentum = 0;
 
-      if (currentDir !== 0) {
+      if (currentDir !== 0){
         headBob += bobDirection * 0.25 * motionMomentum;
         if (headBob > 2 || headBob < -2) bobDirection *= -1;
       } else {
-        headBob *= 0.85 * motionMomentum;
+        headBob *= 0.85 * (motionMomentum || 0.2);
       }
 
-      if (strafe !== 0) {
+      if (strafe !== 0){
         strafeOffset += strafe * 4;
-        strafeOffset = Math.max(-STRAFE_MAX, Math.min(STRAFE_MAX, strafeOffset));
+        strafeOffset = clamp(strafeOffset, -STRAFE_MAX, STRAFE_MAX);
       } else {
         strafeOffset *= 0.9;
       }
 
-      const swayX = Math.sin(Date.now() * 0.002) * 2;
-      const swayY = Math.cos(Date.now() * 0.0015) * 1.5;
-      const walkIntensity = Math.abs(currentDir) > 0 ? motionMomentum : 0.3;
+      const time = Date.now();
+      const swayX = Math.sin(time * 0.002) * 2;
+      const swayY = Math.cos(time * 0.0015) * 1.5;
+      const walkIntensity = Math.abs(currentDir) > 0 ? motionMomentum : 0.25;
 
       video.style.transform =
-        `translate(${strafeOffset * 0.25 + swayX * walkIntensity}px, ${headBob * 1.4 + swayY * walkIntensity}px) scale(1.02)`;
+        `translate(${strafeOffset*0.25 + swayX*walkIntensity}px, ${headBob*1.4 + swayY*walkIntensity}px) scale(1.02)`;
 
-      if (avatarWrapper) {
-        avatarWrapper.style.transform = `translate(calc(-50% + ${strafeOffset}px), 0px)`;
-      }
+      avatarWrapper.style.transform = `translate(calc(-50% + ${strafeOffset}px), 0px)`;
 
       const shadowScale = 1 + Math.abs(headBob) * 0.04;
       shadowEl.style.transform = `translateX(-50%) scale(${shadowScale})`;
 
       walkVignette.style.opacity = walkIntensity > 0.1 ? walkIntensity * 0.7 : 0;
+
       footstepAudio.volume = Math.min(0.9, Math.abs(currentDir) * 0.7 + Math.abs(strafe) * 0.3);
 
       requestAnimationFrame(tick);
     }
 
-    window.addEventListener("pointerdown", unlockAudio, { once: true });
-    window.addEventListener("keydown", unlockAudio, { once: true });
+    requestAnimationFrame(tick);
 
-    function setAutoWalk(on) {
+    /* =========================================================
+       Auto walk
+    ========================================================= */
+    function setAutoWalk(on){
       autoWalkEnabled = on;
 
-      if (autoWalkEnabled) {
+      if (autoWalkEnabled){
         currentDir = 1;
         playForward();
         setAvatarState();
@@ -1471,7 +1580,7 @@
       } else {
         currentDir = 0;
         motionMomentum = 0.8;
-        reversePlaying = false;
+        cancelReverseLoop();
         video.pause();
         setAvatarState();
         updateFootsteps();
@@ -1481,76 +1590,153 @@
       }
     }
 
-    function cancelAutoWalkIfUserMoves() {
+    function cancelAutoWalkIfUserMoves(){
       if (!autoWalkEnabled) return;
       setAutoWalk(false);
     }
 
-    // Keyboard movement
-    window.addEventListener("keydown", e => {
+    autoWalkDockBtn.addEventListener("click", () => {
+      if (!audioUnlocked) unlockAudio();
+      setAutoWalk(!autoWalkEnabled);
+    });
+
+        // =========================================================
+    // Keyboard controls (remaining)
+    // =========================================================
+    window.addEventListener("keydown", (e) => {
       const key = e.key;
+
+      // Global escapes
       if (key === "Escape") {
-        if (fullMapOverlay && fullMapOverlay.style.display === "flex") fullMapOverlay.style.display = "none";
-        if (settingsPanel.classList.contains("open")) settingsPanel.classList.remove("open");
-        if (streetsDrawerOverlay.style.display === "block") closeStreetsDrawer();
+        // Close overlays / panels
+        if (fullMapOverlay?.style.display === "flex") {
+          fullMapOverlay.style.display = "none";
+          restoreOverlayToBody(fullMapOverlay);
+        }
+        if (settingsPanel?.classList.contains("open")) settingsPanel.classList.remove("open");
+        if (streetsDrawerOverlay?.style.display === "block") closeStreetsDrawer();
+        if (popupCard?.style.display === "flex") popupCard.style.display = "none";
         return;
       }
 
+      // Prevent arrow keys from scrolling the page
+      if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(key)) e.preventDefault();
+
+      // While map/drawer open, don't move
+      const anyOverlayOpen =
+        (fullMapOverlay?.style.display === "flex") ||
+        (streetsDrawerOverlay?.style.display === "block") ||
+        (popupCard?.style.display === "flex");
+      if (anyOverlayOpen) return;
+
       const k = key.toLowerCase();
 
-      if (k === "arrowleft" || k === "a") { cancelAutoWalkIfUserMoves(); strafe = -1; }
-      else if (k === "arrowright" || k === "d") { cancelAutoWalkIfUserMoves(); strafe = 1; }
-      else if (k === "arrowup" || k === "w") {
+      // Strafe
+      if (k === "arrowleft" || k === "a") {
         cancelAutoWalkIfUserMoves();
-        const wasStopped = currentDir === 0;
+        strafe = -1;
+        return;
+      }
+      if (k === "arrowright" || k === "d") {
+        cancelAutoWalkIfUserMoves();
+        strafe = 1;
+        return;
+      }
+
+      // Forward
+      if (k === "arrowup" || k === "w") {
+        cancelAutoWalkIfUserMoves();
+        const wasStopped = (currentDir === 0);
         currentDir = 1;
         playForward();
         setAvatarState();
         updateFootsteps();
         if (wasStopped) onWalkStart();
+        return;
       }
-      else if (k === "arrowdown" || k === "s") {
+
+      // Reverse
+      if (k === "arrowdown" || k === "s") {
         cancelAutoWalkIfUserMoves();
         currentDir = -1;
         playReverse();
         setAvatarState();
         updateFootsteps();
+        return;
       }
-    });
 
-    window.addEventListener("keyup", e => {
-      const k = e.key.toLowerCase();
-      if (["arrowup", "w", "arrowdown", "s"].includes(k)) {
+      // Quick actions
+      if (k === "m") { // map
+        openMapOverlay();
+        return;
+      }
+      if (k === "l") { // list
+        openStreetsDrawer();
+        return;
+      }
+      if (k === "p") { // pause
         currentDir = 0;
         motionMomentum = 0.8;
-        reversePlaying = false;
+        cancelReverseLoop();
+        video.pause();
+        setAvatarState();
+        updateFootsteps();
+        return;
+      }
+      if (k === "t") { // teleport
+        teleportNearest();
+        return;
+      }
+      if (k === "f") { // fullscreen
+        fullscreenBtn?.click();
+        return;
+      }
+    }, { passive: false });
+
+    window.addEventListener("keyup", (e) => {
+      const k = e.key.toLowerCase();
+
+      if (["arrowup","w","arrowdown","s"].includes(k)) {
+        currentDir = 0;
+        motionMomentum = 0.8;
+        cancelReverseLoop();
         video.pause();
         setAvatarState();
         updateFootsteps();
       }
-      if (k === "arrowleft" || k === "a" || k === "arrowright" || k === "d") strafe = 0;
+
+      if (k === "arrowleft" || k === "a" || k === "arrowright" || k === "d") {
+        strafe = 0;
+      }
     });
 
-    // Joystick movement
+    // =========================================================
+    // Joystick controls
+    // =========================================================
     function joyMove(ev) {
       cancelAutoWalkIfUserMoves();
 
       const rect = joystickBase.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
+
       const dx = ev.clientX - cx;
       const dy = ev.clientY - cy;
       const r = rect.width / 2;
-      const nx = dx / r;
-      const ny = dy / r;
+
+      const nx = clamp(dx / r, -1, 1);
+      const ny = clamp(dy / r, -1, 1);
 
       joystickKnob.style.transform = `translate(${nx * 30}px, ${ny * 30}px)`;
 
       const prevDir = currentDir;
-      if (Math.abs(ny) > 0.2) currentDir = ny < 0 ? 1 : -1;
+
+      // Forward/back
+      if (Math.abs(ny) > 0.22) currentDir = (ny < 0) ? 1 : -1;
       else currentDir = 0;
 
-      if (Math.abs(nx) > 0.2) strafe = nx > 0 ? 1 : -1;
+      // Left/right strafe
+      if (Math.abs(nx) > 0.22) strafe = (nx > 0) ? 1 : -1;
       else strafe = 0;
 
       if (currentDir === 1) {
@@ -1560,20 +1746,25 @@
         playReverse();
       } else {
         motionMomentum = 0.8;
-        reversePlaying = false;
+        cancelReverseLoop();
         video.pause();
       }
+
       setAvatarState();
       updateFootsteps();
     }
 
-    joystickBase.addEventListener("pointerdown", e => {
+    joystickBase.addEventListener("pointerdown", (e) => {
       joyActive = true;
       joystickBase.classList.add("joy-active");
       joystickBase.setPointerCapture(e.pointerId);
       joyMove(e);
     });
-    joystickBase.addEventListener("pointermove", e => joyActive && joyMove(e));
+
+    joystickBase.addEventListener("pointermove", (e) => {
+      if (!joyActive) return;
+      joyMove(e);
+    });
 
     function resetJoystick() {
       joyActive = false;
@@ -1582,43 +1773,47 @@
       currentDir = 0;
       strafe = 0;
       motionMomentum = 0.8;
-      reversePlaying = false;
+      cancelReverseLoop();
       video.pause();
       setAvatarState();
       updateFootsteps();
     }
+
     joystickBase.addEventListener("pointerup", resetJoystick);
     joystickBase.addEventListener("pointercancel", resetJoystick);
 
-    // Gender buttons
+    // =========================================================
+    // Gender switch
+    // =========================================================
     document.querySelectorAll(".gender-buttons button").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".gender-buttons button").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
-        currentGender = btn.dataset.gender;
+        currentGender = btn.dataset.gender || "male";
         setAvatarState();
       });
     });
 
-    // Auto-walk dock button
-    autoWalkDockBtn.addEventListener("click", () => {
-      if (!audioUnlocked) unlockAudio();
-      setAutoWalk(!autoWalkEnabled);
-    });
-
-    // Settings
+    // =========================================================
+    // Settings panel + toggles
+    // =========================================================
     settingsBtn.addEventListener("click", () => settingsPanel.classList.toggle("open"));
+
     document.addEventListener("click", (e) => {
-      if (settingsPanel.classList.contains("open")) {
-        if (!settingsPanel.contains(e.target) && e.target !== settingsBtn) {
-          settingsPanel.classList.remove("open");
-        }
-      }
+      if (!settingsPanel.classList.contains("open")) return;
+      if (settingsPanel.contains(e.target)) return;
+      if (e.target === settingsBtn) return;
+      settingsPanel.classList.remove("open");
     });
 
-    setVideoMuted.addEventListener("change", () => video.muted = setVideoMuted.checked);
+    setVideoMuted.addEventListener("change", () => {
+      video.muted = setVideoMuted.checked;
+    });
+
     setVideoSlow.addEventListener("change", () => {
-      if (!video.paused && !reversePlaying) video.playbackRate = setVideoSlow.checked ? 0.5 : 1;
+      if (!video.paused && !reversePlaying) {
+        video.playbackRate = setVideoSlow.checked ? 0.5 : 1;
+      }
     });
 
     function applyAvatarVisibility() {
@@ -1626,246 +1821,67 @@
       avatarWrapper.style.display = hide ? "none" : "block";
       shadowEl.style.display = hide ? "none" : "block";
     }
+
     setHideAvatar.addEventListener("change", () => {
       if (setHideAvatar.checked) setWalkNoAvatar.checked = false;
       applyAvatarVisibility();
     });
+
     setWalkNoAvatar.addEventListener("change", () => {
       if (setWalkNoAvatar.checked) setHideAvatar.checked = false;
       applyAvatarVisibility();
     });
+
     setNightMode.addEventListener("change", () => {
       nightOverlay.style.opacity = setNightMode.checked ? "1" : "0";
     });
+
     applyAvatarVisibility();
 
-    // ===== FULL MAP =====
-    function updateMapMarkerHighlight() {
-      markerEls.forEach(({ el, index }) => el.classList.toggle("map-marker-selected", index === currentIndex));
-    }
-
-    function loadMap() {
-      if (fullMapReady) return;
-      if (typeof maplibregl === "undefined") return;
-
-      fullMap = new maplibregl.Map({
-        container: "fullMapContainer",
-        style: "{{ map_style_url or 'https://api.maptiler.com/maps/streets/style.json?key=PqdU3M5vnOQK0dDQnkIq' }}",
-        center: [0, 20],
-        zoom: 2,
-        pitch: 45,
-        bearing: -20
-      });
-      fullMap.addControl(new maplibregl.NavigationControl());
-
-      STREETS.forEach((s, i) => {
-        if (!s.lat || !s.lng) return;
-
-        const el = document.createElement("div");
-        Object.assign(el.style, {
-          width: "18px",
-          height: "18px",
-          borderRadius: "50%",
-          background: "#3b82f6",
-          border: "2px solid white",
-          cursor: "pointer"
-        });
-
-        const popup = new maplibregl.Popup({ offset: 16 }).setHTML(
-          `<div style="font-size:12px;color:#0f172a;">
-            <strong>${escapeHtml(s.name || "Street")}</strong><br/>
-            <span>${escapeHtml((s.city || "") + (s.country ? ", " + s.country : ""))}</span>
-          </div>`
-        );
-
-        const marker = new maplibregl.Marker({ element: el })
-          .setLngLat([parseFloat(s.lng), parseFloat(s.lat)])
-          .setPopup(popup)
-          .addTo(fullMap);
-
-        markerEls.push({ index: i, el, marker });
-
-        el.addEventListener("click", () => {
-          loadStreetByIndex(i);
-          updateMapMarkerHighlight();
-          const coords = marker.getLngLat();
-          fullMap.flyTo({ center: [coords.lng, coords.lat], zoom: 13, speed: 0.9 });
-          popup.addTo(fullMap);
-          fullMapOverlay.style.display = "none";
-          restoreOverlayToBody(fullMapOverlay);
-        });
-      });
-
-      if (currentIndex !== -1 && STREETS[currentIndex]) {
-        const st = STREETS[currentIndex];
-        fullMap.flyTo({ center: [parseFloat(st.lng), parseFloat(st.lat)], zoom: 8, speed: 0.9 });
-      }
-
-      fullMapReady = true;
-    }
-
-    // ✅ Open map: attach overlay inside fullscreen container, then resize map
-    document.getElementById("miniMap").onclick = () => {
-      ensureOverlayParent(fullMapOverlay);
-      fullMapOverlay.style.display = "flex";
-      loadMap();
-      setTimeout(() => { if (fullMap) fullMap.resize(); }, 120);
-    };
-
-    // ✅ Close map: hide and restore to body
-    document.getElementById("closeMapBtn").onclick = () => {
-      fullMapOverlay.style.display = "none";
-      restoreOverlayToBody(fullMapOverlay);
-    };
-
-    // Street popup on name click
-    const popupCard = document.getElementById("streetPopup");
-    const popupTitle = document.getElementById("popupTitle");
-    const popupCity = document.getElementById("popupCity");
-    const popupCategory = document.getElementById("popupCategory");
-    const popupDescription = document.getElementById("popupDescription");
-    const popupClose = document.getElementById("popupClose");
-    const streetNameEl = document.getElementById("streetName");
-
-    streetNameEl.onclick = () => {
-      const name = streetNameEl.textContent;
-      const st = STREETS.find(s => s.name === name);
-      if (!st) return;
-      popupTitle.textContent = st.name;
-      popupCity.textContent = `📍 ${st.city || ""}${st.country ? ", " + st.country : ""}`;
-      popupCategory.textContent = st.category ? `🏷 Category: ${st.category}` : "🏷 No category";
-      popupDescription.textContent = st.description || "No description added.";
-      popupCard.style.display = "flex";
-    };
-    popupClose.onclick = () => popupCard.style.display = "none";
-    popupCard.onclick = e => { if (e.target === popupCard) popupCard.style.display = "none"; };
-
-    // Orientation gate JS fallback
-    function updateOrientationGate() {
-      const isMobile = window.innerWidth <= 768;
-      const isPortrait = window.innerHeight >= window.innerWidth;
-      orientationGate.style.display = (isMobile && isPortrait) ? "flex" : "none";
-    }
-    updateOrientationGate();
-    window.addEventListener("resize", updateOrientationGate);
-    window.addEventListener("orientationchange", updateOrientationGate);
-
-    // ✅ FULLSCREEN
-    const ICON_ENTER = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/>
-        <path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
-      </svg>`;
-    const ICON_EXIT = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M9 3H5a2 2 0 0 0-2 2v4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/>
-        <path d="M3 15v4a2 2 0 0 0 2 2h4"/><path d="M21 15v4a2 2 0 0 1-2 2h-4"/>
-      </svg>`;
-
-    function fsElement() {
-      return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || null;
-    }
-    function canFullscreen() {
-      const el = viewerPanel || viewerCanvas || document.documentElement;
-      return !!(el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen);
-    }
-    async function requestFullscreenOn(el) {
-      try {
-        if (el.requestFullscreen) return await el.requestFullscreen({ navigationUI: "hide" });
-        if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
-        if (el.msRequestFullscreen) return el.msRequestFullscreen();
-      } catch (err) { console.log("Fullscreen error:", err); }
-    }
-    async function exitFullscreen() {
-      try {
-        if (document.exitFullscreen) return await document.exitFullscreen();
-        if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
-        if (document.msExitFullscreen) return document.msExitFullscreen();
-      } catch (err) { console.log("Exit fullscreen error:", err); }
-    }
-    function updateFullscreenButton() {
-      if (!fullscreenBtn) return;
-      if (!canFullscreen()) {
-        fullscreenBtn.style.opacity = "0.45";
-        fullscreenBtn.style.pointerEvents = "none";
-        fsIcon.innerHTML = ICON_ENTER;
-        fsLabel.textContent = "No FS";
-        return;
-      }
-      const active = !!fsElement();
-      fsIcon.innerHTML = active ? ICON_EXIT : ICON_ENTER;
-      fsLabel.textContent = active ? "Exit" : "Fullscreen";
-    }
-    updateFullscreenButton();
-    document.addEventListener("fullscreenchange", updateFullscreenButton);
-    document.addEventListener("webkitfullscreenchange", updateFullscreenButton);
-    document.addEventListener("msfullscreenchange", updateFullscreenButton);
-
-    fullscreenBtn.addEventListener("click", async (e) => {
-      e.preventDefault();
-      if (settingsPanel.classList.contains("open")) settingsPanel.classList.remove("open");
-      if (streetsDrawerOverlay.style.display === "block") closeStreetsDrawer();
-      if (fullMapOverlay && fullMapOverlay.style.display === "flex") {
-        fullMapOverlay.style.display = "none";
-        restoreOverlayToBody(fullMapOverlay);
-      }
-
-      const active = !!fsElement();
-      if (!active) {
-        const target = viewerPanel || viewerCanvas || document.documentElement;
-        await requestFullscreenOn(target);
-      } else {
-        await exitFullscreen();
-      }
-      updateFullscreenButton();
-      setViewportHeightVar();
-    });
-
-    // ✅ IMPORTANT: when fullscreen changes, close overlays + resize map
-    document.addEventListener("fullscreenchange", () => {
-      if (streetsDrawerOverlay.style.display === "block") closeStreetsDrawer();
-      if (fullMapOverlay.style.display === "flex") {
-        fullMapOverlay.style.display = "none";
-        restoreOverlayToBody(fullMapOverlay);
-      }
-      setTimeout(() => { if (fullMap) fullMap.resize(); }, 220);
-    });
-
-    // Streets drawer logic
+    // =========================================================
+    // Streets drawer
+    // =========================================================
     function openStreetsDrawer() {
       ensureOverlayParent(streetsDrawerOverlay);
       streetsDrawerOverlay.style.display = "block";
+      streetsDrawerOverlay.setAttribute("aria-hidden", "false");
       streetsSearch.value = "";
       renderStreetsList("");
       streetsSearch.focus();
     }
+
     function closeStreetsDrawer() {
       streetsDrawerOverlay.style.display = "none";
+      streetsDrawerOverlay.setAttribute("aria-hidden", "true");
       restoreOverlayToBody(streetsDrawerOverlay);
     }
+
     streetsBtn.addEventListener("click", openStreetsDrawer);
     streetsDrawerClose.addEventListener("click", closeStreetsDrawer);
+
     streetsDrawerOverlay.addEventListener("click", (e) => {
       if (e.target === streetsDrawerOverlay) closeStreetsDrawer();
     });
-    streetsSearch.addEventListener("input", () => renderStreetsList(streetsSearch.value || ""));
+
+    streetsSearch.addEventListener("input", () => {
+      renderStreetsList(streetsSearch.value || "");
+    });
 
     function renderStreetsList(query) {
       const q = (query || "").trim().toLowerCase();
+
       const rows = [];
       STREETS.forEach((s, i) => {
-        const name = (s.name || "").toLowerCase();
-        const city = (s.city || "").toLowerCase();
-        const country = (s.country || "").toLowerCase();
+        const name = (s?.name || "").toLowerCase();
+        const city = (s?.city || "").toLowerCase();
+        const country = (s?.country || "").toLowerCase();
         if (q && !(name.includes(q) || city.includes(q) || country.includes(q))) return;
         rows.push({ s, i });
       });
 
       streetsList.innerHTML = rows.map(({ s, i }) => {
         const active = (i === currentIndex) ? "active" : "";
-        const meta = `${s.city || ""}${s.country ? ", " + s.country : ""}`;
+        const meta = `${s.city || ""}${s.country ? ", " + s.country : ""}`.trim();
         return `
           <div class="street-item ${active}" data-index="${i}">
             <div class="name">${escapeHtml(s.name || "Street")}</div>
@@ -1885,22 +1901,257 @@
       });
     }
 
-    function escapeHtml(str) {
-      return String(str).replace(/[&<>"']/g, (m) => ({
-        "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
-      }[m]));
+    // =========================================================
+    // Popup card (street info)
+    // =========================================================
+    streetNameEl.addEventListener("click", () => {
+      const name = streetNameEl.textContent || "";
+      const st = STREETS.find(s => (s?.name || "") === name);
+      if (!st) return;
+
+      popupTitle.textContent = st.name || "Street";
+      popupCity.textContent = `📍 ${st.city || ""}${st.country ? ", " + st.country : ""}`;
+      popupCategory.textContent = st.category ? `🏷 Category: ${st.category}` : "🏷 No category";
+      popupDescription.textContent = st.description || "No description added.";
+
+      popupCard.style.display = "flex";
+    });
+
+    popupClose.addEventListener("click", () => {
+      popupCard.style.display = "none";
+    });
+
+    popupCard.addEventListener("click", (e) => {
+      if (e.target === popupCard) popupCard.style.display = "none";
+    });
+
+    // =========================================================
+    // Orientation gate fallback
+    // =========================================================
+    function updateOrientationGate() {
+      const isMobile = window.innerWidth <= 768;
+      const isPortrait = window.innerHeight >= window.innerWidth;
+      orientationGate.style.display = (isMobile && isPortrait) ? "flex" : "none";
+    }
+    updateOrientationGate();
+    window.addEventListener("resize", updateOrientationGate);
+    window.addEventListener("orientationchange", updateOrientationGate);
+
+    // =========================================================
+    // Fullscreen
+    // =========================================================
+    const ICON_ENTER = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/>
+        <path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+      </svg>`;
+    const ICON_EXIT = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 3H5a2 2 0 0 0-2 2v4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/>
+        <path d="M3 15v4a2 2 0 0 0 2 2h4"/><path d="M21 15v4a2 2 0 0 1-2 2h-4"/>
+      </svg>`;
+
+    function fsElement() {
+      return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || null;
     }
 
-    // Initial streets list build
-    renderStreetsList("");
+    function canFullscreen() {
+      const el = viewerPanel || viewerCanvas || document.documentElement;
+      return !!(el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen);
+    }
 
-    // Mobile/Tablet toast (once)
+    async function requestFullscreenOn(el) {
+      try {
+        if (el.requestFullscreen) return await el.requestFullscreen({ navigationUI: "hide" });
+        if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
+        if (el.msRequestFullscreen) return el.msRequestFullscreen();
+      } catch (err) {
+        if (DEBUG) console.log("Fullscreen error:", err);
+      }
+    }
+
+    async function exitFullscreen() {
+      try {
+        if (document.exitFullscreen) return await document.exitFullscreen();
+        if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+        if (document.msExitFullscreen) return document.msExitFullscreen();
+      } catch (err) {
+        if (DEBUG) console.log("Exit fullscreen error:", err);
+      }
+    }
+
+    function updateFullscreenButton() {
+      if (!fullscreenBtn) return;
+
+      if (!canFullscreen()) {
+        fullscreenBtn.style.opacity = "0.45";
+        fullscreenBtn.style.pointerEvents = "none";
+        fsIcon.innerHTML = ICON_ENTER;
+        fsLabel.textContent = "No FS";
+        return;
+      }
+
+      const active = !!fsElement();
+      fsIcon.innerHTML = active ? ICON_EXIT : ICON_ENTER;
+      fsLabel.textContent = active ? "Exit" : "Fullscreen";
+      fullscreenBtn.style.opacity = "1";
+      fullscreenBtn.style.pointerEvents = "auto";
+    }
+
+    updateFullscreenButton();
+    document.addEventListener("fullscreenchange", updateFullscreenButton);
+    document.addEventListener("webkitfullscreenchange", updateFullscreenButton);
+    document.addEventListener("msfullscreenchange", updateFullscreenButton);
+
+    fullscreenBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+
+      // Close panels before switching
+      if (settingsPanel.classList.contains("open")) settingsPanel.classList.remove("open");
+      if (streetsDrawerOverlay.style.display === "block") closeStreetsDrawer();
+      if (popupCard.style.display === "flex") popupCard.style.display = "none";
+      if (fullMapOverlay.style.display === "flex") {
+        fullMapOverlay.style.display = "none";
+        restoreOverlayToBody(fullMapOverlay);
+      }
+
+      const active = !!fsElement();
+      if (!active) {
+        const target = viewerPanel || viewerCanvas || document.documentElement;
+        await requestFullscreenOn(target);
+      } else {
+        await exitFullscreen();
+      }
+
+      updateFullscreenButton();
+      setViewportHeightVar();
+    });
+
+    // When fullscreen changes: close overlays + resize map safely
+    document.addEventListener("fullscreenchange", () => {
+      if (streetsDrawerOverlay.style.display === "block") closeStreetsDrawer();
+      if (popupCard.style.display === "flex") popupCard.style.display = "none";
+      if (fullMapOverlay.style.display === "flex") {
+        fullMapOverlay.style.display = "none";
+        restoreOverlayToBody(fullMapOverlay);
+      }
+      setTimeout(() => { if (fullMap) fullMap.resize(); }, 220);
+    });
+
+    // =========================================================
+    // Full map (MapLibre)
+    // =========================================================
+    function updateMapMarkerHighlight() {
+      markerEls.forEach(({ el, index }) => {
+        el.classList.toggle("map-marker-selected", index === currentIndex);
+      });
+    }
+
+    function loadMap() {
+      if (fullMapReady) return;
+      if (typeof maplibregl === "undefined") return;
+
+      fullMap = new maplibregl.Map({
+        container: "fullMapContainer",
+        style: "{{ map_style_url or 'https://api.maptiler.com/maps/streets/style.json?key=PqdU3M5vnOQK0dDQnkIq' }}",
+        center: [0, 20],
+        zoom: 2,
+        pitch: 45,
+        bearing: -20
+      });
+
+      fullMap.addControl(new maplibregl.NavigationControl());
+
+      STREETS.forEach((s, i) => {
+        const lat = parseFloat(s?.lat);
+        const lng = parseFloat(s?.lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+        const el = document.createElement("div");
+        Object.assign(el.style, {
+          width: "18px",
+          height: "18px",
+          borderRadius: "50%",
+          background: "#3b82f6",
+          border: "2px solid white",
+          cursor: "pointer"
+        });
+
+        const popup = new maplibregl.Popup({ offset: 16 }).setHTML(
+          `<div style="font-size:12px;color:#0f172a;">
+            <strong>${escapeHtml(s.name || "Street")}</strong><br/>
+            <span>${escapeHtml((s.city || "") + (s.country ? ", " + s.country : ""))}</span>
+          </div>`
+        );
+
+        const marker = new maplibregl.Marker({ element: el })
+          .setLngLat([lng, lat])
+          .setPopup(popup)
+          .addTo(fullMap);
+
+        markerEls.push({ index: i, el, marker });
+
+        el.addEventListener("click", () => {
+          loadStreetByIndex(i);
+          updateMapMarkerHighlight();
+
+          const coords = marker.getLngLat();
+          fullMap.flyTo({ center: [coords.lng, coords.lat], zoom: 13, speed: 0.9 });
+
+          popup.addTo(fullMap);
+
+          fullMapOverlay.style.display = "none";
+          restoreOverlayToBody(fullMapOverlay);
+        });
+      });
+
+      if (currentIndex !== -1 && STREETS[currentIndex]) {
+        const st = STREETS[currentIndex];
+        const lat = parseFloat(st.lat), lng = parseFloat(st.lng);
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+          fullMap.flyTo({ center: [lng, lat], zoom: 8, speed: 0.9 });
+        }
+      }
+
+      fullMapReady = true;
+    }
+
+    function openMapOverlay() {
+      ensureOverlayParent(fullMapOverlay);
+      fullMapOverlay.style.display = "flex";
+      loadMap();
+      setTimeout(() => { if (fullMap) fullMap.resize(); }, 120);
+    }
+
+    // Mini map click
+    $("miniMap").addEventListener("click", openMapOverlay);
+
+    // Close map
+    closeMapBtn.addEventListener("click", () => {
+      fullMapOverlay.style.display = "none";
+      restoreOverlayToBody(fullMapOverlay);
+    });
+
+    // Click outside map to close
+    fullMapOverlay.addEventListener("click", (e) => {
+      if (e.target === fullMapOverlay) {
+        fullMapOverlay.style.display = "none";
+        restoreOverlayToBody(fullMapOverlay);
+      }
+    });
+
+    // =========================================================
+    // Mobile/Tablet toast
+    // =========================================================
     function showDeviceToastOnce() {
       const isSmall = window.innerWidth < 980;
       const already = localStorage.getItem("abto_device_toast_dismissed") === "1";
       if (!isSmall || already) return;
       deviceToast.style.display = "flex";
     }
+
     showDeviceToastOnce();
 
     toastClose.addEventListener("click", () => {
@@ -1908,21 +2159,9 @@
       localStorage.setItem("abto_device_toast_dismissed", "1");
     });
 
-    // Video starts muted
-    video.muted = true;
-
-    // Tick loop
-    requestAnimationFrame(tick);
-
-    // Load first street
-    if (SELECTED) {
-      const idx = STREETS.findIndex(s => s._id === SELECTED._id);
-      loadStreetByIndex(idx !== -1 ? idx : 0);
-    } else if (Array.isArray(STREETS) && STREETS.length > 0) {
-      loadStreetByIndex(0);
-    }
-
+    // =========================================================
     // Error banner close / auto-hide
+    // =========================================================
     if (errorBanner && errorBanner.dataset.error) {
       if (errorBannerClose) {
         errorBannerClose.addEventListener("click", () => {
@@ -1937,6 +2176,27 @@
         setTimeout(() => { errorBanner.style.display = "none"; }, 220);
       }, 7000);
     }
+
+    // =========================================================
+    // Start defaults + initial load
+    // =========================================================
+    // Video starts muted (checkbox controls later)
+    video.muted = true;
+
+    // Build initial list (so drawer has content)
+    renderStreetsList("");
+
+    // Load first street (selected or 0)
+    if (SELECTED) {
+      const idx = STREETS.findIndex(s => s?._id === SELECTED?._id);
+      loadStreetByIndex(idx !== -1 ? idx : 0);
+    } else if (Array.isArray(STREETS) && STREETS.length > 0) {
+      loadStreetByIndex(0);
+    }
+
+    // Done ✅
   </script>
 </body>
 </html>
+
+
