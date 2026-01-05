@@ -864,16 +864,16 @@
 
       <div class="top-right-dock">
         <div class="gender-buttons" aria-label="Avatar gender">
-          <button class="active" data-gender="male">Male</button>
-          <button data-gender="female">Female</button>
+          <button class="active" data-gender="male" type="button">Male</button>
+          <button data-gender="female" type="button">Female</button>
         </div>
 
-        <button id="fullscreenBtn" class="dock-btn" aria-label="Enter full screen" title="Full screen">
+        <button id="fullscreenBtn" class="dock-btn" aria-label="Enter full screen" title="Full screen" type="button">
           <span class="dock-icon" id="fsIcon"></span>
           <span class="dock-label" id="fsLabel">Fullscreen</span>
         </button>
 
-        <button id="autoWalkDockBtn" class="dock-btn autowalk-btn" aria-label="Toggle auto walk" title="Auto walk">
+        <button id="autoWalkDockBtn" class="dock-btn autowalk-btn" aria-label="Toggle auto walk" title="Auto walk" type="button">
           <span class="dot"></span>
           <span class="dock-label" id="autoWalkLabel">Auto Walk</span>
         </button>
@@ -885,8 +885,8 @@
       </div>
 
       <div class="left-dock">
-        <button id="settingsBtn" class="icon-btn" aria-label="Settings" title="Settings">⚙</button>
-        <button id="streetsBtn" class="icon-btn" aria-label="All streets" title="All streets">☰</button>
+        <button id="settingsBtn" class="icon-btn" aria-label="Settings" title="Settings" type="button">⚙</button>
+        <button id="streetsBtn" class="icon-btn" aria-label="All streets" title="All streets" type="button">☰</button>
       </div>
 
       <div class="brand-pill">
@@ -925,6 +925,7 @@
         <div id="joystickKnob"></div>
       </div>
 
+      <!-- ✅ SETTINGS PANEL -->
       <div id="settingsPanel" aria-label="View settings">
         <h3 style="margin:0 0 6px 0;font-size:13px;">View settings</h3>
 
@@ -967,7 +968,7 @@
           <p id="popupCity"></p>
           <p id="popupCategory"></p>
           <p id="popupDescription"></p>
-          <button id="popupClose">Close</button>
+          <button id="popupClose" type="button">Close</button>
         </div>
       </div>
 
@@ -992,6 +993,7 @@
             Press <strong>W / ↑</strong> or drag the joystick to start walking
           </span>
           <button id="startHintSkip"
+                  type="button"
                   style="margin-left:4px;border:none;background:transparent;
                          color:#9ca3af;font-size:11px;cursor:pointer;padding:0 2px;">
             Skip
@@ -1008,7 +1010,7 @@
       <div class="t-title">Better on Laptop/Desktop</div>
       <div class="t-sub">For the best experience, try this on a larger screen.</div>
     </div>
-    <button id="toastClose" aria-label="Dismiss">✕</button>
+    <button id="toastClose" aria-label="Dismiss" type="button">✕</button>
   </div>
 
   <audio id="footstepAudio" src="/static/audio/footsteps_loop.wav" loop preload="auto"></audio>
@@ -1060,7 +1062,7 @@
     function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
     /* =========================================================
-       ✅ Overlay interaction helper
+       ✅ Overlay interaction helper (for big overlays only)
     ========================================================= */
     function setCanvasTouchForOverlay(isOpen){
       if (!viewerCanvas) return;
@@ -1155,6 +1157,7 @@
     const toastClose = $("toastClose");
 
     const streetNameEl = $("streetName");
+    const streetLocationEl = $("streetLocation");
 
     const popupCard = $("streetPopup");
     const popupTitle = $("popupTitle");
@@ -1176,7 +1179,7 @@
     let currentVideoIndex = 0;
 
     let currentGender = "male";
-    let currentDir = 0;
+    let currentDir = 0; // -1 reverse, 0 idle, 1 forward
     let reversePlaying = false;
 
     let headBob = 0;
@@ -1213,7 +1216,6 @@
     document.addEventListener("fullscreenchange", () => {
       setViewportHeightVar();
       syncFsClass();
-
       if (streetsDrawerOverlay?.style.display === "block") ensureOverlayParent(streetsDrawerOverlay);
       if (fullMapOverlay?.style.display === "flex") ensureOverlayParent(fullMapOverlay);
       if (popupCard?.style.display === "flex") ensureOverlayParent(popupCard);
@@ -1222,7 +1224,6 @@
     document.addEventListener("webkitfullscreenchange", () => {
       setViewportHeightVar();
       syncFsClass();
-
       if (streetsDrawerOverlay?.style.display === "block") ensureOverlayParent(streetsDrawerOverlay);
       if (fullMapOverlay?.style.display === "flex") ensureOverlayParent(fullMapOverlay);
       if (popupCard?.style.display === "flex") ensureOverlayParent(popupCard);
@@ -1637,8 +1638,7 @@
     });
 
     /* =========================================================
-       Streets drawer ✅ FIXED
-       IMPORTANT: NO inert on viewerPanel
+       ✅ Streets drawer (kept same)
     ========================================================= */
     let lastFocusBeforeDrawer = null;
 
@@ -1655,7 +1655,6 @@
       streetsSearch.value = "";
       renderStreetsList("");
 
-      // ✅ focus search for quick typing (optional)
       setTimeout(() => streetsSearch?.focus?.({ preventScroll:true }), 0);
     }
 
@@ -1763,7 +1762,7 @@
     window.addEventListener("orientationchange", updateOrientationGate);
 
     /* =========================================================
-       Fullscreen button (your existing code kept)
+       Fullscreen
     ========================================================= */
     const ICON_ENTER = `
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -1853,10 +1852,8 @@
     });
 
     /* =========================================================
-       Map overlay + others (keep your existing logic)
-       NOTE: I didn’t remove anything here; you can keep as-is.
+       Map overlay
     ========================================================= */
-
     function updateMapMarkerHighlight() {
       markerEls.forEach(({ el, index }) => {
         el.classList.toggle("map-marker-selected", index === currentIndex);
@@ -1987,8 +1984,251 @@
       }, 7000);
     }
 
-    /* start defaults */
-    video.muted = true;
+    /* =========================================================
+       ✅ SETTINGS: open/close + apply (WORKING)
+    ========================================================= */
+    function closeSettingsPanel(){ settingsPanel.classList.remove("open"); }
+    function toggleSettingsPanel(){ settingsPanel.classList.toggle("open"); }
+
+    settingsBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // close other overlays
+      if (streetsDrawerOverlay?.style.display === "block") closeStreetsDrawer();
+      if (fullMapOverlay?.style.display === "flex") {
+        fullMapOverlay.style.display = "none";
+        restoreOverlayToBody(fullMapOverlay);
+        setCanvasTouchForOverlay(false);
+      }
+      if (popupCard?.style.display === "flex") {
+        popupCard.style.display = "none";
+        restoreOverlayToBody(popupCard);
+        setCanvasTouchForOverlay(false);
+      }
+
+      toggleSettingsPanel();
+    });
+
+    // click outside closes settings
+    document.addEventListener("pointerdown", (e) => {
+      if (!settingsPanel.classList.contains("open")) return;
+      const insidePanel = settingsPanel.contains(e.target);
+      const insideBtn = settingsBtn.contains(e.target);
+      if (!insidePanel && !insideBtn) closeSettingsPanel();
+    }, { passive:true });
+
+    function applySettings(){
+      video.muted = !!setVideoMuted.checked;
+
+      // slow motion affects forward, reverse uses delta
+      if (!reversePlaying && !video.paused){
+        video.playbackRate = setVideoSlow.checked ? 0.5 : 1;
+      }
+
+      // night overlay
+      nightOverlay.style.opacity = setNightMode.checked ? "1" : "0";
+
+      // hide avatar
+      const hideAll = !!setHideAvatar.checked;
+      avatarWrapper.style.display = hideAll ? "none" : "block";
+      shadowEl.style.display = hideAll ? "none" : "block";
+
+      // walk without avatar
+      if (!hideAll){
+        if (setWalkNoAvatar.checked && currentDir !== 0){
+          avatarWrapper.style.opacity = "0";
+          shadowEl.style.opacity = "0";
+        } else {
+          avatarWrapper.style.opacity = "1";
+          shadowEl.style.opacity = "1";
+        }
+      }
+    }
+
+    [setVideoMuted, setVideoSlow, setHideAvatar, setWalkNoAvatar, setNightMode].forEach(el=>{
+      el?.addEventListener("change", applySettings);
+    });
+
+    /* =========================================================
+       ✅ GENDER SWITCH (WORKING)
+    ========================================================= */
+    const genderBtns = document.querySelectorAll(".gender-buttons button");
+    function setGender(g){
+      currentGender = (g === "female") ? "female" : "male";
+      genderBtns.forEach(b => b.classList.toggle("active", b.dataset.gender === currentGender));
+      setAvatarState();
+      showAvatarSpeech(currentGender === "female" ? "Switched to female avatar." : "Switched to male avatar.", 1400);
+    }
+    genderBtns.forEach(btn=>{
+      btn.addEventListener("click", () => setGender(btn.dataset.gender));
+    });
+
+    /* =========================================================
+       ✅ JOYSTICK (WORKING)
+    ========================================================= */
+    const JOY_RADIUS = 34;
+    let joyPointerId = null;
+
+    function setMoveFromJoystick(nx, ny){
+      const prevDir = currentDir;
+
+      const dead = 0.18;
+      const absX = Math.abs(nx);
+      const absY = Math.abs(ny);
+
+      // strafe
+      strafe = (absX > dead) ? nx : 0;
+
+      // forward/back
+      if (absY > dead) currentDir = (ny < 0) ? 1 : -1;
+      else currentDir = 0;
+
+      // cancel autowalk if user touches joystick
+      if (currentDir !== 0 || strafe !== 0) cancelAutoWalkIfUserMoves();
+
+      // transition actions
+      if (currentDir !== prevDir){
+        if (currentDir === 1) playForward();
+        else if (currentDir === -1) playReverse();
+        else { cancelReverseLoop(); video.pause(); }
+
+        setAvatarState();
+        updateFootsteps();
+        applySettings();
+
+        if (currentDir !== 0) onWalkStart();
+      }
+
+      if (currentDir !== 0 || strafe !== 0){
+        motionMomentum = Math.min(motionMomentum + 0.12, 1);
+      }
+    }
+
+    function resetJoystick(){
+      joyActive = false;
+      joystickBase.classList.remove("joy-active");
+      joystickKnob.style.transform = `translate(0px, 0px)`;
+
+      strafe = 0;
+      currentDir = 0;
+      motionMomentum = 0.6;
+
+      cancelReverseLoop();
+      video.pause();
+      setAvatarState();
+      updateFootsteps();
+      applySettings();
+    }
+
+    joystickBase?.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      unlockAudio();
+
+      joyPointerId = e.pointerId;
+      joystickBase.setPointerCapture(joyPointerId);
+
+      joyActive = true;
+      joystickBase.classList.add("joy-active");
+    });
+
+    joystickBase?.addEventListener("pointermove", (e) => {
+      if (!joyActive || e.pointerId !== joyPointerId) return;
+
+      const rect = joystickBase.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+
+      let dx = e.clientX - cx;
+      let dy = e.clientY - cy;
+
+      const dist = Math.hypot(dx, dy);
+      if (dist > JOY_RADIUS){
+        dx = dx * (JOY_RADIUS / dist);
+        dy = dy * (JOY_RADIUS / dist);
+      }
+
+      joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+
+      const nx = dx / JOY_RADIUS;
+      const ny = dy / JOY_RADIUS;
+
+      setMoveFromJoystick(nx, ny);
+    });
+
+    function endJoy(e){
+      if (!joyActive) return;
+      if (e && joyPointerId !== null && e.pointerId !== joyPointerId) return;
+
+      try{ joystickBase.releasePointerCapture(joyPointerId); }catch(_){}
+      joyPointerId = null;
+      resetJoystick();
+    }
+
+    joystickBase?.addEventListener("pointerup", endJoy);
+    joystickBase?.addEventListener("pointercancel", endJoy);
+    joystickBase?.addEventListener("pointerleave", endJoy);
+
+    /* Optional: Keyboard WASD */
+    const keys = new Set();
+    function applyKeys(){
+      const overlayOpen =
+        settingsPanel.classList.contains("open") ||
+        streetsDrawerOverlay.style.display === "block" ||
+        fullMapOverlay.style.display === "flex" ||
+        popupCard.style.display === "flex";
+
+      if (overlayOpen) return;
+
+      let nx = 0, ny = 0;
+      if (keys.has("w") || keys.has("arrowup")) ny -= 1;
+      if (keys.has("s") || keys.has("arrowdown")) ny += 1;
+      if (keys.has("a") || keys.has("arrowleft")) nx -= 1;
+      if (keys.has("d") || keys.has("arrowright")) nx += 1;
+
+      const len = Math.hypot(nx, ny);
+      if (len > 1){ nx /= len; ny /= len; }
+
+      setMoveFromJoystick(nx, ny);
+
+      if (nx === 0 && ny === 0){
+        strafe = 0;
+        if (currentDir !== 0){
+          currentDir = 0;
+          cancelReverseLoop();
+          video.pause();
+          setAvatarState();
+          updateFootsteps();
+          applySettings();
+        }
+      }
+    }
+
+    window.addEventListener("keydown", (e) => {
+      const k = (e.key || "").toLowerCase();
+      if (["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"].includes(k)){
+        e.preventDefault();
+        unlockAudio();
+        keys.add(k);
+        applyKeys();
+        if (["w","s","arrowup","arrowdown"].includes(k)) onWalkStart();
+      }
+    });
+
+    window.addEventListener("keyup", (e) => {
+      const k = (e.key || "").toLowerCase();
+      if (keys.has(k)){
+        keys.delete(k);
+        applyKeys();
+      }
+    });
+
+    /* =========================================================
+       ✅ defaults / start
+    ========================================================= */
+    // keep UI state consistent
+    setGender(currentGender);
+    applySettings();
 
     renderStreetsList("");
 
