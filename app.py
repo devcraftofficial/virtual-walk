@@ -106,6 +106,7 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE=os.getenv("SESSION_COOKIE_SAMESITE", "Lax"),
 )
+
 # If you're behind HTTPS (Render/Cloudflare), set this true in prod:
 if os.getenv("SESSION_COOKIE_SECURE", "1" if IS_PROD else "0") == "1":
     app.config["SESSION_COOKIE_SECURE"] = True
@@ -245,6 +246,7 @@ def start_date_for_range(days: int):
         return None
     return datetime.utcnow() - timedelta(days=days)
 
+
 def current_user():
     uid = session.get("user_id")
     if not uid:
@@ -269,7 +271,7 @@ def is_admin_user(user) -> bool:
     return user.get("role") == "admin"
 
 
-# ✅ NEW: admin guard decorator
+# ✅ admin guard decorator
 def admin_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
@@ -511,6 +513,7 @@ def protect_protected_routes():
         "drive",
         "fly",
         "sit",
+        "how_it_works",  # ✅ NEW: public page
         "login",
         "signup",
         "forgot_password",
@@ -550,6 +553,14 @@ def index():
         tour_streets=tour_streets,
         map_style_url=MAP_STYLE_URL,
     )
+
+
+# --------------------------------------------------------
+# ✅ NEW: How ABTO Works (separate page)
+# --------------------------------------------------------
+@app.route("/how-it-works")
+def how_it_works():
+    return render_template("how_it_works.html")
 
 
 # --------------------------------------------------------
@@ -1240,9 +1251,8 @@ def dashboard():
     )
 
 
-
 # --------------------------------------------------------
-# ✅ ADMIN PAGES (NEW)
+# ✅ ADMIN PAGES
 # --------------------------------------------------------
 @app.route("/admin")
 @admin_required
@@ -1380,8 +1390,6 @@ def delete_street(street_id):
     except InvalidId:
         abort(404)
 
-    # Admin can delete any street
-    # Normal user can delete only their own street
     query = {"_id": oid, "deleted": False}
     if not is_admin_user(user):
         query["ownerId"] = ObjectId(user["_id"])
@@ -1392,12 +1400,10 @@ def delete_street(street_id):
     )
 
     if result.matched_count == 0:
-        # not found OR not authorized
         abort(404)
 
     flash("Street deleted.", "info")
     return redirect(url_for("dashboard"))
-
 
 
 # --------------------------------------------------------
@@ -1469,6 +1475,7 @@ def log_activity():
     activity_logs.insert_one(log_doc)
     return ("", 204)
 
+
 @app.get("/api/dashboard/summary")
 def api_dashboard_summary():
     user = current_user()
@@ -1478,7 +1485,6 @@ def api_dashboard_summary():
     days = int(request.args.get("days", "30"))
     since = start_date_for_range(days)
 
-    # Streets scope
     query_streets = {"deleted": False}
     if not is_admin_user(user):
         query_streets["ownerId"] = ObjectId(user["_id"])
@@ -1488,7 +1494,6 @@ def api_dashboard_summary():
         "createdAt": 1, "lat": 1, "lng": 1, "status": 1
     }))
 
-    # Totals
     def is_video_mode(doc, m):
         return doc.get("type") == "video" and doc.get("mode") == m
 
@@ -1502,7 +1507,6 @@ def api_dashboard_summary():
         "is_admin": bool(is_admin_user(user)),
     }
 
-    # Logs scope
     logs_query = {}
     if not is_admin_user(user):
         logs_query["userId"] = ObjectId(user["_id"])
@@ -1513,13 +1517,11 @@ def api_dashboard_summary():
         "eventType": 1, "streetId": 1, "mode": 1, "timestamp": 1
     }).sort("timestamp", -1).limit(500))
 
-    # What counts as a "view"
     view_types = set(["view_world", "open_world", "view_street", "open_street"])
     def is_view_event(e):
         et = (e.get("eventType") or "").lower()
         return et in view_types or et.startswith("view") or et.startswith("open")
 
-    # Day buckets
     day_counts = {}
     for e in events:
         if not is_view_event(e):
@@ -1530,7 +1532,6 @@ def api_dashboard_summary():
         day = ts.strftime("%Y-%m-%d")
         day_counts[day] = day_counts.get(day, 0) + 1
 
-    # Build a map of all streets (so top views can resolve name)
     street_map = {}
     streets_safe = []
     for s in streets:
@@ -1550,7 +1551,6 @@ def api_dashboard_summary():
             "status": s.get("status", ""),
         })
 
-    # Top views by street from logs
     view_by_street = {}
     for e in events:
         if not is_view_event(e):
@@ -1574,10 +1574,8 @@ def api_dashboard_summary():
             "country": st.get("country"),
         })
 
-    # Top likes
     top_likes_list = sorted(streets_safe, key=lambda x: x.get("likes", 0), reverse=True)[:8]
 
-    # Recent activity feed
     recent = []
     for e in events[:25]:
         sid = str(e.get("streetId")) if e.get("streetId") else None
@@ -1592,7 +1590,6 @@ def api_dashboard_summary():
             "country": st.get("country"),
         })
 
-    # Chart series
     labels, data = [], []
     if since:
         for i in range(days - 1, -1, -1):
