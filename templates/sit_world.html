@@ -10,762 +10,1182 @@
   <script src="{{ url_for('static', filename='js/maplibre-gl.js') }}"></script>
 
   <style>
-    :root {
-      --bg-page: #020617;
-      --text-main: #e5e7eb;
-      --text-muted: #9ca3af;
-      --accent: #f97316;
-      --accent-soft: rgba(249,115,22,0.14);
-      --accent-strong: #ea580c;
-      --radius-lg: 18px;
+    :root{
+      --bg-page:#020617;
+      --text-main:#e5e7eb;
+      --text-muted:#9ca3af;
+
+      --accent:#f97316;
+      --accent-soft:rgba(249,115,22,.14);
+      --accent-strong:#ea580c;
+
+      --glass:rgba(15,23,42,.84);
+      --glass-strong:rgba(15,23,42,.96);
+      --border:rgba(148,163,184,.40);
+      --border-strong:rgba(148,163,184,.55);
+
+      --radius-lg:18px;
+      --radius-md:14px;
+      --shadow-soft: 0 14px 32px rgba(0,0,0,.85);
+
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
     }
 
-    *, *::before, *::after { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-    }
-
-    body {
+    *,*::before,*::after{ box-sizing:border-box; }
+    html,body{ margin:0; padding:0; height:100%; }
+    body{
       background: radial-gradient(circle at top, #020617, #000 80%);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: var(--text-main);
-      overflow: hidden;
+      font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--text-main);
+      overflow:hidden;
     }
 
-    .viewer-panel {
-      position: relative;
-      width: 100%;
-      height: 100vh;   /* fallback */
-      height: 100dvh;  /* proper mobile viewport */
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    .viewer-panel{
+      position:relative;
+      width:100%;
+      height:100vh;
+      height:100dvh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+    }
+    .viewer-canvas{
+      position:relative;
+      width:100%;
+      height:100%;
+      background:black;
+      overflow:hidden;
     }
 
-    .viewer-canvas {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      background: black;
-      overflow: hidden;
+    /* cinematic overlays */
+    .vignette{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index: 5;
+      background:
+        radial-gradient(ellipse at center, rgba(0,0,0,0) 35%, rgba(0,0,0,.35) 72%, rgba(0,0,0,.65) 100%);
+    }
+    .top-fade{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index: 6;
+      background: linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,0) 35%);
+      opacity:.75;
     }
 
     /* ---------- Mode header (brand + location) ---------- */
-    .mode-header {
-      position: absolute;
-      top: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      z-index: 60;
-      pointer-events: none;
+    .mode-header{
+      position:absolute;
+      top: calc(16px + var(--safe-top));
+      left:50%;
+      transform:translateX(-50%);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      z-index:60;
+      pointer-events:none;
     }
-
-    .mode-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 6px 14px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #020617ee, #111827ee);
-      border: 1px solid rgba(148,163,184,0.6);
-      box-shadow: 0 14px 32px rgba(0,0,0,0.9);
-      pointer-events: auto;
-    }
-
-    .mode-dot {
-      width: 22px;
-      height: 22px;
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 20%, #fee2e2, #fecaca 40%, #991b1b 100%);
-      border: 2px solid rgba(15,23,42,0.9);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.8);
-    }
-
-    .mode-label {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.09em;
-      color: #e5e7eb;
-      opacity: 0.9;
-    }
-
-    .mode-tag {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-      color: #0b1120;
-      box-shadow: 0 10px 26px rgba(248, 113, 22, 0.55);
-    }
-
-    .mode-location {
-      margin-top: 3px;
-      padding: 4px 10px;
-      font-size: 11px;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.8);
-      border: 1px solid rgba(148,163,184,0.5);
-      color: #e5e7eb;
-      max-width: 260px;
-      text-align: center;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      pointer-events: auto;
-    }
-
-    /* ---------- Mini map + full map ---------- */
-    .mini-map {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      width: 100px;
-      height: 100px;
-      border-radius: 999px;
-      overflow: hidden;
-      background: var(--bg-page);
-      border: 2px solid rgba(148, 163, 184, 0.6);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.75);
-      z-index: 50;
-      cursor: pointer;
-    }
-    .mini-map canvas { border-radius: 999px; }
-
-    #fullMapOverlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(6px);
-      z-index: 200;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    #fullMapContainer {
-      width: 90%;
-      height: 80%;
-      background: #0b1120;
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9);
-    }
-    #closeMapBtn {
-      position: absolute;
-      top: 30px;
-      right: 40px;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: none;
-      background: rgba(0, 0, 0, 0.65);
-      color: white;
-      font-size: 22px;
-      cursor: pointer;
-      backdrop-filter: blur(4px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-    }
-
-    /* ---------- Street info (bottom-left) ---------- */
-    .street-info {
-      position: absolute;
-      bottom: 24px;
-      left: 16px;
-      padding: 10px 14px;
-      background: rgba(15, 23, 42, 0.78);
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      border-radius: 16px;
+    .mode-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:6px 12px;
+      border-radius:999px;
+      background: linear-gradient(135deg, rgba(2,6,23,.90), rgba(17,24,39,.88));
+      border:1px solid var(--border-strong);
+      box-shadow: var(--shadow-soft);
+      pointer-events:auto;
       backdrop-filter: blur(10px);
-      z-index: 50;
-      max-width: 260px;
-      user-select: none;
     }
-    .street-info h2 {
-      margin: 0;
-      font-size: 15px;
-      line-height: 1.2;
+    .mode-dot{
+      width:22px;
+      height:22px;
+      border-radius:999px;
+      background: radial-gradient(circle at 30% 20%, #fee2e2, #fecaca 40%, #991b1b 100%);
+      border:2px solid rgba(15,23,42,.9);
+      box-shadow: 0 8px 20px rgba(0,0,0,.8);
+      flex: 0 0 auto;
     }
-    .street-info p {
-      margin: 4px 0 0;
-      font-size: 12px;
-      color: #cbd5e1;
-      line-height: 1.3;
+    .mode-label{
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.09em;
+      color:#e5e7eb;
+      opacity:.9;
+      white-space:nowrap;
     }
-    .street-info .category-pill {
-      margin-top: 6px;
-      font-size: 11px;
-      padding: 3px 9px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      border: 1px solid rgba(248, 250, 252, 0.12);
-      color: #fed7aa;
-      display: inline-block;
-    }
-
-    /* ---------- Video + fade + subtle parallax ---------- */
-    #streetVideo {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      pointer-events: none;
-      z-index: 1;
-      transition: transform 0.18s ease-out;
-      user-select: none;
-      -webkit-user-select: none;
-      will-change: transform;
-      transform: translate3d(0,0,0);
-      backface-visibility: hidden;
-    }
-
-    #fadeLayer {
-      position: absolute;
-      inset: 0;
-      background: black;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.35s;
-      z-index: 110;
-      user-select: none;
-    }
-
-    /* ---------- Sound toggle button ---------- */
-    .sound-toggle {
-      position: absolute;
-      right: 18px;
-      bottom: 24px;
-      width: 42px;
-      height: 42px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.7);
-      background: rgba(15,23,42,0.9);
-      color: #e5e7eb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 60;
-      box-shadow: 0 14px 32px rgba(0,0,0,0.9);
-      transition:
-        background 0.16s ease,
-        border-color 0.16s ease,
-        transform 0.12s ease,
-        box-shadow 0.16s ease;
-    }
-
-    .sound-toggle span {
-      font-size: 18px;
-      line-height: 1;
-    }
-
-    .sound-toggle:hover {
-      background: rgba(15,23,42,1);
-      border-color: var(--accent);
-      transform: translateY(-1px);
-      box-shadow: 0 18px 40px rgba(248,113,22,0.35);
-    }
-
-    .sound-toggle.active {
+    .mode-tag{
+      font-size:11px;
+      font-weight:700;
+      padding:4px 10px;
+      border-radius:999px;
       background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-      border-color: rgba(248,250,252,0.8);
-      color: #0b1120;
+      color:#0b1120;
+      box-shadow: 0 10px 26px rgba(248,113,22,.55);
+      white-space:nowrap;
     }
-
-    /* ---------- FULLSCREEN BUTTON (mobile focus) ---------- */
-    .fullscreen-btn {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      width: 40px;
-      height: 40px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.7);
-      background: rgba(15,23,42,0.9);
-      color: #e5e7eb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      cursor: pointer;
-      z-index: 70;
-      box-shadow: 0 14px 32px rgba(0,0,0,0.9);
+    .mode-switch{
+      font-size:11px;
+      font-weight:650;
+      padding:4px 10px;
+      border-radius:999px;
+      background: rgba(56,189,248,.14);
+      border: 1px solid rgba(56,189,248,.28);
+      color:#7dd3fc;
+      text-decoration:none;
+      pointer-events:auto;
+      white-space:nowrap;
+    }
+    .mode-switch:hover{
+      background: rgba(56,189,248,.20);
+      border-color: rgba(56,189,248,.45);
+    }
+    .mode-location{
+      margin-top:3px;
+      padding:4px 10px;
+      font-size:11px;
+      border-radius:999px;
+      background: rgba(15,23,42,.80);
+      border:1px solid rgba(148,163,184,.50);
+      color:#e5e7eb;
+      max-width: 280px;
+      text-align:center;
+      white-space:nowrap;
+      text-overflow:ellipsis;
+      overflow:hidden;
+      pointer-events:auto;
       backdrop-filter: blur(8px);
     }
 
-    @media (min-width: 1024px) {
-      .fullscreen-btn {
-        display: none;
-      }
+    /* ---------- Mini map + full map ---------- */
+    .mini-map{
+      position:absolute;
+      top: calc(16px + var(--safe-top));
+      left: calc(16px + var(--safe-left));
+      width:100px;
+      height:100px;
+      border-radius:999px;
+      overflow:hidden;
+      background:var(--bg-page);
+      border:2px solid rgba(148,163,184,.60);
+      box-shadow: 0 12px 30px rgba(0,0,0,.75);
+      z-index:50;
+      cursor:pointer;
+    }
+    .mini-map canvas{ border-radius:999px; }
+
+    #fullMapOverlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.75);
+      backdrop-filter: blur(8px);
+      z-index:200;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 20px;
+    }
+    #fullMapContainer{
+      width:min(980px, 92vw);
+      height:min(640px, 82vh);
+      background:#0b1120;
+      border-radius: var(--radius-lg);
+      overflow:hidden;
+      border:1px solid rgba(148,163,184,.50);
+      box-shadow: 0 25px 70px rgba(0,0,0,.90);
+    }
+    #closeMapBtn{
+      position:absolute;
+      top: calc(18px + var(--safe-top));
+      right: calc(18px + var(--safe-right));
+      width:46px;
+      height:46px;
+      border-radius:50%;
+      border:1px solid rgba(148,163,184,.35);
+      background: rgba(0,0,0,.55);
+      color:#fff;
+      font-size: 22px;
+      cursor:pointer;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 10px 30px rgba(0,0,0,.80);
+    }
+
+    /* ---------- Street info (bottom-left) ---------- */
+    .street-info{
+      position:absolute;
+      bottom: calc(24px + var(--safe-bottom));
+      left: calc(16px + var(--safe-left));
+      padding: 10px 14px;
+      background: rgba(15,23,42,.78);
+      border:1px solid rgba(148,163,184,.40);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      z-index:50;
+      max-width: 320px;
+      user-select:none;
+      box-shadow: 0 18px 44px rgba(0,0,0,.55);
+    }
+    .street-info h2{
+      margin:0;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+    .street-info p{
+      margin:4px 0 0;
+      font-size: 12px;
+      color:#cbd5e1;
+      line-height: 1.3;
+    }
+    .street-info .category-pill{
+      margin-top:6px;
+      font-size:11px;
+      padding: 3px 9px;
+      border-radius:999px;
+      background: var(--accent-soft);
+      border:1px solid rgba(248,250,252,.12);
+      color:#fed7aa;
+      display:inline-block;
+    }
+
+    /* ---------- Video + fade + subtle parallax ---------- */
+    #streetVideo{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      pointer-events:none;
+      z-index:1;
+      transition: transform .18s ease-out;
+      user-select:none;
+      -webkit-user-select:none;
+      will-change: transform;
+      transform: translate3d(0,0,0);
+      backface-visibility:hidden;
+      filter: saturate(1.05) contrast(1.02);
+    }
+
+    /* loading shimmer */
+    .loading-scrim{
+      position:absolute;
+      inset:0;
+      z-index: 20;
+      pointer-events:none;
+      background:
+        linear-gradient(110deg, rgba(2,6,23,.85) 0%, rgba(15,23,42,.80) 40%, rgba(2,6,23,.85) 70%);
+      background-size: 200% 100%;
+      opacity: 0;
+      transition: opacity .25s ease;
+      animation: shimmer 1.1s linear infinite;
+    }
+    .loading-scrim.show{ opacity: 1; }
+    @keyframes shimmer{
+      0%{ background-position: 200% 0; }
+      100%{ background-position: -200% 0; }
+    }
+
+    #fadeLayer{
+      position:absolute;
+      inset:0;
+      background:black;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .35s;
+      z-index:110;
+      user-select:none;
+    }
+
+    /* ---------- SOUND BUTTON (kept, but we also add a dock on desktop) ---------- */
+    .sound-toggle{
+      position:absolute;
+      right: calc(18px + var(--safe-right));
+      bottom: calc(24px + var(--safe-bottom));
+      width:42px;
+      height:42px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.70);
+      background: rgba(15,23,42,.90);
+      color:#e5e7eb;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      z-index:60;
+      box-shadow: var(--shadow-soft);
+      transition: background .16s ease, border-color .16s ease, transform .12s ease, box-shadow .16s ease;
+      backdrop-filter: blur(8px);
+    }
+    .sound-toggle span{ font-size:18px; line-height:1; }
+    .sound-toggle:hover{
+      background: rgba(15,23,42,1);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: 0 18px 40px rgba(248,113,22,.35);
+    }
+    .sound-toggle.active{
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      border-color: rgba(248,250,252,.80);
+      color: #0b1120;
+    }
+
+    /* ---------- TOP-RIGHT DOCK (desktop + tablet) ---------- */
+    .top-right-dock{
+      position:absolute;
+      top: calc(16px + var(--safe-top));
+      right: calc(16px + var(--safe-right));
+      display:flex;
+      gap:10px;
+      z-index:80;
+    }
+    .dock-btn{
+      width:40px;
+      height:40px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.60);
+      background: rgba(15,23,42,.90);
+      color:#e5e7eb;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      backdrop-filter: blur(8px);
+      box-shadow: var(--shadow-soft);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+      user-select:none;
+    }
+    .dock-btn:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 18px 40px rgba(0,0,0,.90);
+      border-color: rgba(148,163,184,.80);
+    }
+    .dock-btn.active{
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      border-color: rgba(248,250,252,.75);
+      color:#0b1120;
+    }
+
+    /* Hide mobile fullscreen button when dock exists */
+    @media (min-width: 1024px){
+      .fullscreen-btn{ display:none; }
+    }
+    @media (max-width: 1023px){
+      .top-right-dock{ display:none; } /* keep mobile button + bottom sound */
+    }
+
+    /* ---------- FULLSCREEN BUTTON (mobile focus) ---------- */
+    .fullscreen-btn{
+      position:absolute;
+      top: calc(16px + var(--safe-top));
+      right: calc(16px + var(--safe-right));
+      width:40px;
+      height:40px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.70);
+      background: rgba(15,23,42,.90);
+      color:#e5e7eb;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+      cursor:pointer;
+      z-index:70;
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(8px);
     }
 
     /* ---------- ORIENTATION GATE (mobile portrait) ---------- */
-    .orientation-gate {
-      position: fixed;
-      inset: 0;
+    .orientation-gate{
+      position:fixed;
+      inset:0;
       background: radial-gradient(circle at top, #020617, #000 80%);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 40px 24px;
-      z-index: 300;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:40px 24px;
+      z-index:300;
     }
-
-    .orientation-inner {
-      max-width: 340px;
-    }
-
-    .orientation-icon {
-      font-size: 46px;
-      margin-bottom: 18px;
-      display: inline-block;
+    .orientation-inner{ max-width: 360px; }
+    .orientation-icon{
+      font-size:46px;
+      margin-bottom:18px;
+      display:inline-block;
       animation: rotateHint 1.8s ease-in-out infinite;
     }
-
-    .orientation-title {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 8px;
+    .orientation-title{
+      font-size:18px;
+      font-weight:700;
+      margin-bottom:8px;
     }
-
-    .orientation-text {
-      font-size: 14px;
+    .orientation-text{
+      font-size:14px;
       color: var(--text-muted);
+      line-height: 1.45;
+    }
+    @keyframes rotateHint{
+      0%,100%{ transform: rotate(0deg); }
+      50%{ transform: rotate(90deg); }
+    }
+    @media (max-width: 768px) and (orientation: portrait){
+      .orientation-gate{ display:flex; }
     }
 
-    @keyframes rotateHint {
-      0%, 100% { transform: rotate(0deg); }
-      50%      { transform: rotate(90deg); }
+    /* ---------- Streets Drawer ---------- */
+    .streets-overlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.62);
+      backdrop-filter: blur(10px);
+      display:none;
+      z-index:240;
+    }
+    .streets-drawer{
+      width: min(380px, 92vw);
+      height: 100%;
+      background: rgba(2,6,23,.96);
+      border-right: 1px solid rgba(148,163,184,.22);
+      padding: 14px;
+      box-shadow: 26px 0 70px rgba(0,0,0,.80);
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .drawer-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 6px 4px;
+    }
+    .drawer-title{
+      font-weight: 750;
+      letter-spacing: .01em;
+    }
+    .drawer-close{
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      border:1px solid rgba(148,163,184,.35);
+      background: rgba(15,23,42,.75);
+      color:#fff;
+      cursor:pointer;
+    }
+    .drawer-search{
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(148,163,184,.22);
+      background: rgba(15,23,42,.65);
+      color: var(--text-main);
+      outline: none;
+    }
+    .drawer-search::placeholder{ color: rgba(148,163,184,.75); }
+
+    .streets-list{
+      overflow:auto;
+      padding-right: 2px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .street-item{
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(15,23,42,.58);
+      border: 1px solid rgba(148,163,184,.18);
+      cursor:pointer;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+    .street-item:hover{
+      transform: translateY(-1px);
+      border-color: rgba(148,163,184,.35);
+      background: rgba(15,23,42,.70);
+    }
+    .street-item strong{
+      display:block;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+    .street-item small{
+      color: rgba(203,213,225,.90);
+      font-size: 11px;
+    }
+    .street-item .pill{
+      display:inline-block;
+      margin-top: 6px;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(249,115,22,.12);
+      border:1px solid rgba(249,115,22,.20);
+      color:#fed7aa;
+    }
+    .street-item.active{
+      border-color: rgba(249,115,22,.55);
+      box-shadow: 0 10px 24px rgba(249,115,22,.12);
     }
 
-    /* Show orientation gate on small screens in PORTRAIT */
-    @media (max-width: 768px) and (orientation: portrait) {
-      .orientation-gate {
-        display: flex;
-      }
+    /* ---------- Toast (best on desktop) ---------- */
+    .device-toast{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: calc(18px + var(--safe-bottom));
+      width: min(540px, 92vw);
+      background: rgba(15,23,42,.95);
+      border: 1px solid rgba(148,163,184,.26);
+      border-radius: 16px;
+      padding: 12px 12px;
+      display:none;
+      z-index: 260;
+      box-shadow: 0 18px 50px rgba(0,0,0,.70);
+      backdrop-filter: blur(10px);
+    }
+    .toast-row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .toast-row strong{
+      display:block;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+    .toast-row span{
+      font-size: 12px;
+      color: rgba(203,213,225,.92);
+      line-height: 1.35;
+    }
+    .toast-close{
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border:1px solid rgba(148,163,184,.25);
+      background: rgba(2,6,23,.55);
+      color:#fff;
+      cursor:pointer;
+      flex: 0 0 auto;
     }
 
-    @media (max-width: 900px) {
-      .mini-map {
-        width: 80px !important;
-        height: 80px !important;
-        top: 14px !important;
-        left: 14px !important;
-      }
+    /* ---------- Responsive tweaks ---------- */
+    @media (max-width: 900px){
+      .mini-map{ width:80px !important; height:80px !important; top: calc(14px + var(--safe-top)) !important; left: calc(14px + var(--safe-left)) !important; }
     }
-
-    @media (max-width: 480px) {
-      .street-info {
-        left: 12px;
-        right: 12px;
+    @media (max-width: 480px){
+      .street-info{
+        left: calc(12px + var(--safe-left));
+        right: calc(12px + var(--safe-right));
         max-width: none;
-        bottom: 18px;
+        bottom: calc(18px + var(--safe-bottom));
       }
-      .mode-header {
-        top: 10px;
-      }
-      .mode-location {
-        max-width: 200px;
-      }
-      .sound-toggle {
-        right: 14px;
-        bottom: 18px;
-        width: 40px;
-        height: 40px;
-      }
+      .mode-header{ top: calc(10px + var(--safe-top)); }
+      .mode-location{ max-width: 220px; }
+      .sound-toggle{ right: calc(14px + var(--safe-right)); bottom: calc(18px + var(--safe-bottom)); width:40px; height:40px; }
+    }
+
+    /* Reduce motion for accessibility */
+    @media (prefers-reduced-motion: reduce){
+      #streetVideo, .loading-scrim{ transition: none !important; animation: none !important; }
+      .orientation-icon{ animation: none !important; }
     }
   </style>
 </head>
 
 <body>
-
-<!-- Full map overlay -->
-<div id="fullMapOverlay" role="dialog" aria-modal="true" aria-label="Full map view">
-  <div id="fullMapContainer" tabindex="0" aria-live="polite"></div>
-  <button id="closeMapBtn" aria-label="Close full map">✕</button>
-</div>
-
-<!-- Orientation gate for mobile portrait -->
-<div id="orientationGate" class="orientation-gate">
-  <div class="orientation-inner">
-    <div class="orientation-icon">📱</div>
-    <div class="orientation-title">Rotate your phone for Sit Mode</div>
-    <p class="orientation-text">
-      Sit Mode is best experienced in <strong>landscape</strong>.<br>
-      Please rotate your phone sideways to see the full street view.
-    </p>
+  <!-- Full map overlay -->
+  <div id="fullMapOverlay" role="dialog" aria-modal="true" aria-label="Full map view">
+    <div id="fullMapContainer" tabindex="0" aria-live="polite"></div>
+    <button id="closeMapBtn" aria-label="Close full map">✕</button>
   </div>
-</div>
 
-<div class="viewer-panel" role="main" aria-live="polite">
-  <div class="viewer-canvas" id="viewerCanvas">
-
-    <!-- Mode header -->
-    <div class="mode-header">
-      <div class="mode-pill">
-        <div class="mode-dot"></div>
-        <div class="mode-label">ABTO · Virtual Street Walk</div>
-        <div class="mode-tag">SIT MODE</div>
+  <!-- Streets drawer overlay -->
+  <div id="streetsDrawerOverlay" class="streets-overlay" aria-hidden="true">
+    <div class="streets-drawer" role="dialog" aria-modal="true" aria-label="All sit spots">
+      <div class="drawer-header">
+        <div class="drawer-title">All Sit Spots</div>
+        <button class="drawer-close" id="closeDrawerBtn" aria-label="Close">✕</button>
       </div>
-      <div class="mode-location" id="topLocationPill">Pick a seat to begin</div>
+      <input id="streetSearch" class="drawer-search" placeholder="Search city, country, or name…" autocomplete="off" />
+      <div id="streetsList" class="streets-list" aria-live="polite"></div>
     </div>
-
-    <!-- Mini map -->
-    <div id="miniMap" class="mini-map" aria-label="Mini map preview" role="button" tabindex="0"></div>
-
-    <!-- Street info -->
-    <div class="street-info" aria-live="polite" aria-atomic="true">
-      <h2 id="streetName">Select a Sit Spot</h2>
-      <p id="streetLocation">Waiting for a view…</p>
-      <span class="category-pill" id="categoryLabel">Ambient view</span>
-    </div>
-
-    <!-- Sound toggle -->
-    <button
-      type="button"
-      class="sound-toggle"
-      id="soundToggle"
-      aria-label="Unmute ambience (press M)">
-      <span>🔇</span>
-    </button>
-
-    <!-- Fullscreen button (mobile) -->
-    <button id="fullscreenBtn" class="fullscreen-btn" aria-label="Enter full screen">⤢</button>
-
-    <!-- Sit video -->
-    <video
-      id="streetVideo"
-      preload="auto"
-      playsinline
-      disablepictureinpicture
-      controlslist="nodownload nofullscreen noplaybackrate"
-      aria-label="Sit view video">
-      <source id="videoSource" src="">
-    </video>
-
-    <div id="fadeLayer" aria-hidden="true"></div>
-
   </div>
-</div>
 
-<!-- Streets data from Flask -->
-<script id="streets-data" type="application/json">
-  {{ streets | tojson | safe }}
-</script>
-<script id="selected-street-data" type="application/json">
-  {{ selected_street | tojson | safe if selected_street else 'null' }}
-</script>
+  <!-- Orientation gate for mobile portrait -->
+  <div id="orientationGate" class="orientation-gate">
+    <div class="orientation-inner">
+      <div class="orientation-icon">📱</div>
+      <div class="orientation-title">Rotate your phone for Sit Mode</div>
+      <p class="orientation-text">
+        Sit Mode is best experienced in <strong>landscape</strong>.<br>
+        Please rotate your phone sideways to see the full street view.
+      </p>
+    </div>
+  </div>
 
-<script type="module">
-  const MAP_STYLE_URL = "{{ map_style_url or '' }}";
-  const BASE_MAP_STYLE = MAP_STYLE_URL || "https://demotiles.maplibre.org/style.json";
+  <!-- Best on desktop toast -->
+  <div id="deviceToast" class="device-toast" role="status" aria-live="polite">
+    <div class="toast-row">
+      <div>
+        <strong>Best on Desktop</strong>
+        <span>Sit Mode looks calmer on a bigger screen. You can still use mobile—try landscape + fullscreen.</span>
+      </div>
+      <button class="toast-close" id="toastClose" aria-label="Close">✕</button>
+    </div>
+  </div>
 
-  const STREETS = JSON.parse(
-    document.getElementById('streets-data').textContent
-  );
-  const SELECTED_STREET = JSON.parse(
-    document.getElementById('selected-street-data').textContent
-  );
+  <div class="viewer-panel" role="main" aria-live="polite">
+    <div class="viewer-canvas" id="viewerCanvas">
 
-  let miniMap, miniMarker;
-  let fullMap, fullMapReady = false;
+      <!-- cinematic overlays -->
+      <div class="vignette" aria-hidden="true"></div>
+      <div class="top-fade" aria-hidden="true"></div>
 
-  function initMiniMap() {
-    miniMap = new maplibregl.Map({
-      container: "miniMap",
-      style: BASE_MAP_STYLE,
-      center: [0, 20],
-      zoom: 1.5,
-      interactive: false,
-      attributionControl: false,
-    });
-  }
+      <!-- Mode header -->
+      <div class="mode-header">
+        <div class="mode-pill">
+          <div class="mode-dot"></div>
+          <div class="mode-label">ABTO · Virtual Street Walk</div>
+          <div class="mode-tag">SIT MODE</div>
+          <a class="mode-switch" href="/world" title="Go to Walk Mode">Walk</a>
+        </div>
+        <div class="mode-location" id="topLocationPill">Pick a seat to begin</div>
+      </div>
 
-  function ensureFullMap() {
-    if (fullMapReady) return;
+      <!-- Mini map -->
+      <div id="miniMap" class="mini-map" aria-label="Mini map preview" role="button" tabindex="0"></div>
 
-    fullMap = new maplibregl.Map({
-      container: "fullMapContainer",
-      style: BASE_MAP_STYLE,
-      center: [0, 20],
-      zoom: 2.5,
-    });
-    fullMap.addControl(new maplibregl.NavigationControl());
+      <!-- Street info -->
+      <div class="street-info" aria-live="polite" aria-atomic="true">
+        <h2 id="streetName">Select a Sit Spot</h2>
+        <p id="streetLocation">Waiting for a view…</p>
+        <span class="category-pill" id="categoryLabel">Ambient view</span>
+      </div>
 
-    STREETS.forEach((st, index) => {
-      const lat = parseFloat(st.lat);
-      const lng = parseFloat(st.lng);
+      <!-- Desktop dock -->
+      <div class="top-right-dock" id="topRightDock" aria-label="Controls">
+        <button class="dock-btn" id="dockSoundBtn" aria-label="Toggle sound (M)">
+          <span id="dockSoundIcon">🔇</span>
+        </button>
+        <button class="dock-btn" id="dockStreetsBtn" aria-label="All sit spots (L)">☰</button>
+        <button class="dock-btn" id="dockFullscreenBtn" aria-label="Fullscreen (F)">⤢</button>
+      </div>
+
+      <!-- Sound toggle (mobile button) -->
+      <button type="button" class="sound-toggle" id="soundToggle" aria-label="Unmute ambience (press M)">
+        <span>🔇</span>
+      </button>
+
+      <!-- Fullscreen button (mobile) -->
+      <button id="fullscreenBtn" class="fullscreen-btn" aria-label="Enter full screen">⤢</button>
+
+      <!-- Video loading shimmer -->
+      <div id="loadingScrim" class="loading-scrim" aria-hidden="true"></div>
+
+      <!-- Sit video -->
+      <video
+        id="streetVideo"
+        preload="auto"
+        playsinline
+        disablepictureinpicture
+        controlslist="nodownload nofullscreen noplaybackrate"
+        aria-label="Sit view video">
+        <source id="videoSource" src="">
+      </video>
+
+      <div id="fadeLayer" aria-hidden="true"></div>
+
+    </div>
+  </div>
+
+  <!-- Streets data from Flask -->
+  <script id="streets-data" type="application/json">
+    {{ streets | tojson | safe }}
+  </script>
+  <script id="selected-street-data" type="application/json">
+    {{ selected_street | tojson | safe if selected_street else 'null' }}
+  </script>
+
+  <script type="module">
+    const MAP_STYLE_URL = "{{ map_style_url or '' }}";
+    const BASE_MAP_STYLE = MAP_STYLE_URL || "https://demotiles.maplibre.org/style.json";
+
+    const STREETS = JSON.parse(document.getElementById('streets-data').textContent || "[]");
+    const SELECTED_STREET = JSON.parse(document.getElementById('selected-street-data').textContent || "null");
+
+    // ---------- DOM ----------
+    const miniMapEl = document.getElementById("miniMap");
+    const fullMapOverlay = document.getElementById("fullMapOverlay");
+    const closeMapBtn = document.getElementById("closeMapBtn");
+
+    const video = document.getElementById("streetVideo");
+    const vsrc = document.getElementById("videoSource");
+    const fadeLayer = document.getElementById("fadeLayer");
+    const loadingScrim = document.getElementById("loadingScrim");
+
+    const streetNameEl = document.getElementById("streetName");
+    const streetLocationEl = document.getElementById("streetLocation");
+    const topLocationEl = document.getElementById("topLocationPill");
+    const categoryEl = document.getElementById("categoryLabel");
+    const viewerCanvas = document.getElementById("viewerCanvas");
+
+    const soundToggleBtn = document.getElementById("soundToggle");
+    const soundIconSpan = soundToggleBtn?.querySelector("span");
+
+    const dockSoundBtn = document.getElementById("dockSoundBtn");
+    const dockSoundIcon = document.getElementById("dockSoundIcon");
+    const dockStreetsBtn = document.getElementById("dockStreetsBtn");
+    const dockFullscreenBtn = document.getElementById("dockFullscreenBtn");
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
+
+    const orientationGate = document.getElementById("orientationGate");
+
+    const drawerOverlay = document.getElementById("streetsDrawerOverlay");
+    const streetsListEl = document.getElementById("streetsList");
+    const streetSearch = document.getElementById("streetSearch");
+    const closeDrawerBtn = document.getElementById("closeDrawerBtn");
+
+    const deviceToast = document.getElementById("deviceToast");
+    const toastClose = document.getElementById("toastClose");
+
+    // ---------- MAPS ----------
+    let miniMap, miniMarker;
+    let fullMap, fullMapReady = false;
+
+    function initMiniMap(){
+      try{
+        miniMap = new maplibregl.Map({
+          container: "miniMap",
+          style: BASE_MAP_STYLE,
+          center: [0, 20],
+          zoom: 1.5,
+          interactive: false,
+          attributionControl: false,
+        });
+      } catch(e){
+        console.warn("Mini map init failed:", e);
+      }
+    }
+
+    function ensureFullMap(){
+      if (fullMapReady) return;
+
+      try{
+        fullMap = new maplibregl.Map({
+          container: "fullMapContainer",
+          style: BASE_MAP_STYLE,
+          center: [0, 20],
+          zoom: 2.5,
+        });
+        fullMap.addControl(new maplibregl.NavigationControl());
+
+        STREETS.forEach((st, index) => {
+          const lat = parseFloat(st.lat);
+          const lng = parseFloat(st.lng);
+          if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+
+          const marker = new maplibregl.Marker().setLngLat([lng, lat]).addTo(fullMap);
+          marker.getElement().addEventListener("click", () => {
+            loadStreetByIndex(index);
+            hideFullMap();
+          });
+        });
+
+        fullMapReady = true;
+      } catch(e){
+        console.warn("Full map init failed:", e);
+      }
+    }
+
+    function updateMiniMapForStreet(street){
+      if (!miniMap) return;
+      const lat = parseFloat(street.lat);
+      const lng = parseFloat(street.lng);
       if (Number.isNaN(lat) || Number.isNaN(lng)) return;
 
-      const marker = new maplibregl.Marker().setLngLat([lng, lat]).addTo(fullMap);
-      marker.getElement().addEventListener("click", () => {
-        loadStreetByIndex(index);
-        hideFullMap();
-      });
+      miniMap.jumpTo({ center: [lng, lat], zoom: 14 });
+
+      if (!miniMarker){
+        miniMarker = new maplibregl.Marker({ color: "#ef4444", scale: 0.9 })
+          .setLngLat([lng, lat])
+          .addTo(miniMap);
+      } else {
+        miniMarker.setLngLat([lng, lat]);
+      }
+    }
+
+    function showFullMap(){
+      fullMapOverlay.style.display = "flex";
+      ensureFullMap();
+      // MapLibre sometimes needs resize when container becomes visible
+      setTimeout(() => { try{ fullMap?.resize(); } catch(_){} }, 50);
+    }
+    function hideFullMap(){
+      fullMapOverlay.style.display = "none";
+    }
+
+    miniMapEl?.addEventListener("click", showFullMap);
+    miniMapEl?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") showFullMap();
     });
+    closeMapBtn?.addEventListener("click", hideFullMap);
 
-    fullMapReady = true;
-  }
+    initMiniMap();
 
-  function updateMiniMapForStreet(street) {
-    if (!miniMap) return;
-    const lat = parseFloat(street.lat);
-    const lng = parseFloat(street.lng);
-    if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+    // ---------- VIDEO STATE ----------
+    let currentStreetIndex = -1;
+    let currentVideos = [];
+    let currentVideoIndex = 0;
+    let userHasInteracted = false;
 
-    miniMap.jumpTo({ center: [lng, lat], zoom: 14 });
-
-    if (!miniMarker) {
-      miniMarker = new maplibregl.Marker({ color: "#ef4444", scale: 0.9 })
-        .setLngLat([lng, lat])
-        .addTo(miniMap);
-    } else {
-      miniMarker.setLngLat([lng, lat]);
-    }
-  }
-
-  const miniMapEl = document.getElementById("miniMap");
-  const fullMapOverlay = document.getElementById("fullMapOverlay");
-  const closeMapBtn = document.getElementById("closeMapBtn");
-
-  function showFullMap() {
-    fullMapOverlay.style.display = "flex";
-    ensureFullMap();
-  }
-  function hideFullMap() {
-    fullMapOverlay.style.display = "none";
-  }
-
-  miniMapEl.addEventListener("click", showFullMap);
-  miniMapEl.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") showFullMap();
-  });
-  closeMapBtn.addEventListener("click", hideFullMap);
-
-  initMiniMap();
-
-  const video = document.getElementById("streetVideo");
-  const vsrc = document.getElementById("videoSource");
-  const fadeLayer = document.getElementById("fadeLayer");
-  const streetNameEl = document.getElementById("streetName");
-  const streetLocationEl = document.getElementById("streetLocation");
-  const topLocationEl = document.getElementById("topLocationPill");
-  const categoryEl = document.getElementById("categoryLabel");
-  const viewerCanvas = document.getElementById("viewerCanvas");
-  const soundToggleBtn = document.getElementById("soundToggle");
-  const soundIconSpan = soundToggleBtn?.querySelector("span");
-  const orientationGate = document.getElementById("orientationGate");
-  const fullscreenBtn = document.getElementById("fullscreenBtn");
-
-  let currentStreetIndex = -1;
-  let currentVideos = [];
-  let currentVideoIndex = 0;
-
-  // start with sound ON by default
-  if (video) {
-    video.muted = false;
-    video.volume = 1.0;
-  }
-
-  function updateSoundUI() {
-    if (!soundToggleBtn || !video) return;
-    if (video.muted) {
-      soundToggleBtn.classList.remove("active");
-      soundToggleBtn.setAttribute("aria-label", "Unmute ambience (press M)");
-      if (soundIconSpan) soundIconSpan.textContent = "🔇";
-    } else {
-      soundToggleBtn.classList.add("active");
-      soundToggleBtn.setAttribute("aria-label", "Mute ambience (press M)");
-      if (soundIconSpan) soundIconSpan.textContent = "🔊";
-    }
-  }
-
-  function toggleSound() {
-    if (!video) return;
-    video.muted = !video.muted;
-    video.play().catch(() => {});
-    updateSoundUI();
-  }
-
-  soundToggleBtn?.addEventListener("click", toggleSound);
-
-  // Keyboard shortcut: M to mute/unmute
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "m" || e.key === "M") {
-      toggleSound();
-    }
-  });
-
-  updateSoundUI();
-
-  function safePlay() {
-    if (!video || !video.paused) return;
-    video.play().catch(() => {});
-  }
-
-  function safePause() {
-    if (!video || video.paused) return;
-    video.pause();
-  }
-
-  function doLoadStreet(street) {
-    const name = street.name || "Sit Spot";
-    const city = street.city || "";
-    const country = street.country || "";
-    const category = street.category || "Ambient view";
-
-    const locationText = `${city}${city && country ? ", " : ""}${country}`;
-
-    streetNameEl.textContent = name;
-    streetLocationEl.textContent = locationText || "Somewhere in the world";
-    if (topLocationEl) topLocationEl.textContent = locationText || "Pick a seat to begin";
-    if (categoryEl) categoryEl.textContent = category;
-
-    currentVideos = [];
-    currentVideoIndex = 0;
-    if (Array.isArray(street.videos) && street.videos.length > 0) {
-      currentVideos = street.videos.map(v => v.url).filter(Boolean);
+    // default: muted ON to avoid autoplay issues (then user can unmute)
+    if (video){
+      video.muted = true;
+      video.volume = 1.0;
     }
 
-    const videoUrl = currentVideos[0] || "";
-    if (vsrc) vsrc.src = videoUrl;
-    video.load();
-    video.currentTime = 0;
-    safePlay();
+    function showLoading(on){
+      if (!loadingScrim) return;
+      loadingScrim.classList.toggle("show", !!on);
+    }
 
-    updateMiniMapForStreet(street);
-  }
+    function updateSoundUI(){
+      const isMuted = !!video?.muted;
 
-  function loadStreet(street) {
-    if (!street) return;
-    fadeLayer.style.opacity = 1;
-    setTimeout(() => {
-      doLoadStreet(street);
-      fadeLayer.style.opacity = 0;
-    }, 220);
-  }
+      // mobile button
+      if (soundToggleBtn){
+        soundToggleBtn.classList.toggle("active", !isMuted);
+        soundToggleBtn.setAttribute("aria-label", isMuted ? "Unmute ambience (press M)" : "Mute ambience (press M)");
+        if (soundIconSpan) soundIconSpan.textContent = isMuted ? "🔇" : "🔊";
+      }
 
-  function loadStreetByIndex(index) {
-    if (index < 0 || index >= STREETS.length) return;
-    currentStreetIndex = index;
-    loadStreet(STREETS[index]);
-  }
+      // desktop dock
+      if (dockSoundBtn){
+        dockSoundBtn.classList.toggle("active", !isMuted);
+        if (dockSoundIcon) dockSoundIcon.textContent = isMuted ? "🔇" : "🔊";
+      }
+    }
 
-  // Always loop gently between all videos for that sit spot
-  video.addEventListener("ended", () => {
-    if (currentVideos.length > 0) {
-      currentVideoIndex = (currentVideoIndex + 1) % currentVideos.length;
-      const nextUrl = currentVideos[currentVideoIndex];
-      if (vsrc) vsrc.src = nextUrl;
-      video.load();
-      video.currentTime = 0;
-      safePlay();
-    } else {
-      video.currentTime = 0;
+    async function safePlay(){
+      if (!video) return;
+      try{
+        await video.play();
+      } catch(_){
+        // autoplay can fail on some devices
+      }
+    }
+
+    function setMuted(muted){
+      if (!video) return;
+      video.muted = muted;
+      updateSoundUI();
       safePlay();
     }
-  });
 
-  // subtle parallax
-  if (viewerCanvas && video) {
-    const maxShift = 10;
-    viewerCanvas.addEventListener("pointermove", (e) => {
-      const rect = viewerCanvas.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width - 0.5;
-      const y = (e.clientY - rect.top) / rect.height - 0.5;
-      const tx = -x * maxShift;
-      const ty = -y * maxShift;
-      video.style.transform = `translate(${tx}px, ${ty}px) scale(1.03)`;
+    function toggleSound(){
+      if (!video) return;
+      userHasInteracted = true;
+      setMuted(!video.muted);
+    }
+
+    soundToggleBtn?.addEventListener("click", toggleSound);
+    dockSoundBtn?.addEventListener("click", toggleSound);
+
+    // Mark interaction (helps iOS autoplay + audio)
+    ["pointerdown","touchstart","keydown"].forEach(evt=>{
+      window.addEventListener(evt, ()=>{ userHasInteracted = true; }, { once:false, passive:true });
     });
-    viewerCanvas.addEventListener("pointerleave", () => {
-      video.style.transform = "translate(0,0) scale(1)";
-    });
-  }
 
-  // Initial street selection
-  if (SELECTED_STREET) {
-    const idx = STREETS.findIndex(s => s._id === SELECTED_STREET._id);
-    if (idx !== -1) {
-      loadStreetByIndex(idx);
-    } else if (Array.isArray(STREETS) && STREETS.length > 0) {
-      loadStreetByIndex(0);
-    }
-  } else if (Array.isArray(STREETS) && STREETS.length > 0) {
-    loadStreetByIndex(0);
-  }
-
-  // ---------- JS fallback for orientation gate ----------
-  function updateOrientationGate() {
-    if (!orientationGate) return;
-    const isMobile = window.innerWidth <= 768;
-    const isPortrait = window.innerHeight >= window.innerWidth;
-    if (isMobile && isPortrait) {
-      orientationGate.style.display = "flex";
-    } else {
-      orientationGate.style.display = "none";
-    }
-  }
-
-  updateOrientationGate();
-  window.addEventListener("resize", updateOrientationGate);
-  window.addEventListener("orientationchange", updateOrientationGate);
-
-  // ---------- Fullscreen handling ----------
-  function isFullscreen() {
-    return document.fullscreenElement ||
-           document.webkitFullscreenElement ||
-           document.msFullscreenElement;
-  }
-
-  function updateFullscreenIcon() {
-    if (!fullscreenBtn) return;
-    if (isFullscreen()) {
-      fullscreenBtn.textContent = "⤡";
-      fullscreenBtn.setAttribute("aria-label", "Exit full screen");
-    } else {
-      fullscreenBtn.textContent = "⤢";
-      fullscreenBtn.setAttribute("aria-label", "Enter full screen");
-    }
-  }
-
-  if (fullscreenBtn) {
-    fullscreenBtn.addEventListener("click", async () => {
-      try {
-        if (!isFullscreen()) {
-          const el = document.documentElement; // or viewerCanvas
-          if (el.requestFullscreen) {
-            await el.requestFullscreen();
-          } else if (el.webkitRequestFullscreen) {
-            el.webkitRequestFullscreen();
-          }
-        } else {
-          if (document.exitFullscreen) {
-            await document.exitFullscreen();
-          } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-          }
-        }
-        updateFullscreenIcon();
-      } catch (err) {
-        console.log("Fullscreen error:", err);
+    // Gentle loop through sit videos
+    video?.addEventListener("ended", () => {
+      if (currentVideos.length > 0){
+        currentVideoIndex = (currentVideoIndex + 1) % currentVideos.length;
+        const nextUrl = currentVideos[currentVideoIndex];
+        if (vsrc) vsrc.src = nextUrl || "";
+        showLoading(true);
+        video.load();
+        video.currentTime = 0;
+        safePlay().finally(()=>showLoading(false));
+      } else {
+        video.currentTime = 0;
+        safePlay();
       }
     });
 
-    document.addEventListener("fullscreenchange", updateFullscreenIcon);
-    document.addEventListener("webkitfullscreenchange", updateFullscreenIcon);
-    updateFullscreenIcon();
-  }
-</script>
+    // Loading + errors
+    video?.addEventListener("loadstart", ()=>showLoading(true));
+    video?.addEventListener("canplay", ()=>showLoading(false));
+    video?.addEventListener("playing", ()=>showLoading(false));
+    video?.addEventListener("error", ()=>{
+      showLoading(false);
+      // fallback message if video fails
+      if (streetLocationEl) streetLocationEl.textContent = "Video unavailable. Try another sit spot.";
+    });
 
+    function buildLocationText(city, country){
+      const c1 = (city || "").trim();
+      const c2 = (country || "").trim();
+      return `${c1}${c1 && c2 ? ", " : ""}${c2}`.trim();
+    }
+
+    function doLoadStreet(street){
+      if (!street) return;
+
+      const name = street.name || "Sit Spot";
+      const city = street.city || "";
+      const country = street.country || "";
+      const category = street.category || "Ambient view";
+
+      const locationText = buildLocationText(city, country);
+
+      if (streetNameEl) streetNameEl.textContent = name;
+      if (streetLocationEl) streetLocationEl.textContent = locationText || "Somewhere in the world";
+      if (topLocationEl) topLocationEl.textContent = locationText || "Pick a seat to begin";
+      if (categoryEl) categoryEl.textContent = category;
+
+      // gather videos
+      currentVideos = [];
+      currentVideoIndex = 0;
+
+      if (Array.isArray(street.videos) && street.videos.length > 0){
+        currentVideos = street.videos
+          .map(v => (typeof v === "string" ? v : v?.url))
+          .filter(Boolean);
+      }
+
+      const videoUrl = currentVideos[0] || "";
+      if (vsrc) vsrc.src = videoUrl;
+
+      showLoading(true);
+      video.load();
+      video.currentTime = 0;
+
+      // If user already interacted, try unmuted state they chose
+      safePlay().finally(()=>showLoading(false));
+
+      updateMiniMapForStreet(street);
+      renderDrawerList(); // keep active highlight in sync
+    }
+
+    function loadStreet(street){
+      if (!street) return;
+      fadeLayer.style.opacity = 1;
+      setTimeout(() => {
+        doLoadStreet(street);
+        fadeLayer.style.opacity = 0;
+      }, 220);
+    }
+
+    function loadStreetByIndex(index){
+      if (!Array.isArray(STREETS) || index < 0 || index >= STREETS.length) return;
+      currentStreetIndex = index;
+      loadStreet(STREETS[index]);
+    }
+
+    // ---------- PARALLAX (desktop only-ish) ----------
+    if (viewerCanvas && video){
+      const maxShift = 10;
+      viewerCanvas.addEventListener("pointermove", (e) => {
+        // avoid when reduced-motion
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+        const rect = viewerCanvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        const tx = -x * maxShift;
+        const ty = -y * maxShift;
+        video.style.transform = `translate(${tx}px, ${ty}px) scale(1.03)`;
+      });
+      viewerCanvas.addEventListener("pointerleave", () => {
+        video.style.transform = "translate(0,0) scale(1)";
+      });
+    }
+
+    // ---------- ORIENTATION GATE ----------
+    function updateOrientationGate(){
+      if (!orientationGate) return;
+      const isMobile = window.innerWidth <= 768;
+      const isPortrait = window.innerHeight >= window.innerWidth;
+      orientationGate.style.display = (isMobile && isPortrait) ? "flex" : "none";
+    }
+    updateOrientationGate();
+    window.addEventListener("resize", updateOrientationGate);
+    window.addEventListener("orientationchange", updateOrientationGate);
+
+    // ---------- FULLSCREEN ----------
+    function isFullscreen(){
+      return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+    }
+    async function enterFullscreen(){
+      const el = document.documentElement; // or viewerCanvas
+      if (el.requestFullscreen) return el.requestFullscreen();
+      if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
+    }
+    async function exitFullscreen(){
+      if (document.exitFullscreen) return document.exitFullscreen();
+      if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+    }
+    function updateFullscreenIcons(){
+      const fs = !!isFullscreen();
+      if (fullscreenBtn){
+        fullscreenBtn.textContent = fs ? "⤡" : "⤢";
+        fullscreenBtn.setAttribute("aria-label", fs ? "Exit full screen" : "Enter full screen");
+      }
+      if (dockFullscreenBtn){
+        dockFullscreenBtn.textContent = fs ? "⤡" : "⤢";
+        dockFullscreenBtn.setAttribute("aria-label", fs ? "Exit full screen (F)" : "Enter full screen (F)");
+      }
+    }
+
+    async function toggleFullscreen(){
+      try{
+        if (!isFullscreen()) await enterFullscreen();
+        else await exitFullscreen();
+      } catch(e){
+        console.warn("Fullscreen error:", e);
+      } finally {
+        updateFullscreenIcons();
+      }
+    }
+
+    fullscreenBtn?.addEventListener("click", toggleFullscreen);
+    dockFullscreenBtn?.addEventListener("click", toggleFullscreen);
+
+    document.addEventListener("fullscreenchange", updateFullscreenIcons);
+    document.addEventListener("webkitfullscreenchange", updateFullscreenIcons);
+    updateFullscreenIcons();
+
+    // ---------- DRAWER ----------
+    function openDrawer(){
+      if (!drawerOverlay) return;
+      drawerOverlay.style.display = "block";
+      drawerOverlay.setAttribute("aria-hidden","false");
+      setTimeout(()=>streetSearch?.focus(), 50);
+      renderDrawerList();
+    }
+    function closeDrawer(){
+      if (!drawerOverlay) return;
+      drawerOverlay.style.display = "none";
+      drawerOverlay.setAttribute("aria-hidden","true");
+    }
+    dockStreetsBtn?.addEventListener("click", openDrawer);
+    closeDrawerBtn?.addEventListener("click", closeDrawer);
+
+    // click outside drawer to close
+    drawerOverlay?.addEventListener("click", (e)=>{
+      if (e.target === drawerOverlay) closeDrawer();
+    });
+
+    function normalize(s){ return (s || "").toString().toLowerCase().trim(); }
+
+    function renderDrawerList(){
+      if (!streetsListEl) return;
+      const q = normalize(streetSearch?.value);
+      const rows = (Array.isArray(STREETS) ? STREETS : []).map((s, i) => ({ s, i }))
+        .filter(({s})=>{
+          if (!q) return true;
+          const hay = normalize([s.name, s.city, s.country, s.category].filter(Boolean).join(" "));
+          return hay.includes(q);
+        });
+
+      streetsListEl.innerHTML = rows.map(({s,i})=>{
+        const loc = buildLocationText(s.city, s.country) || "Somewhere";
+        const cat = s.category || "Ambient view";
+        const active = i === currentStreetIndex ? "active" : "";
+        return `
+          <div class="street-item ${active}" data-index="${i}" role="button" tabindex="0">
+            <strong>${escapeHtml(s.name || "Sit Spot")}</strong>
+            <small>${escapeHtml(loc)}</small>
+            <div class="pill">${escapeHtml(cat)}</div>
+          </div>
+        `;
+      }).join("");
+
+      streetsListEl.querySelectorAll(".street-item").forEach(el=>{
+        const idx = Number(el.getAttribute("data-index"));
+        el.addEventListener("click", ()=>{
+          loadStreetByIndex(idx);
+          closeDrawer();
+        });
+        el.addEventListener("keydown", (e)=>{
+          if (e.key === "Enter" || e.key === " "){
+            e.preventDefault();
+            loadStreetByIndex(idx);
+            closeDrawer();
+          }
+        });
+      });
+    }
+
+    streetSearch?.addEventListener("input", renderDrawerList);
+
+    // ---------- TOAST ----------
+    try{
+      const shouldToast = window.innerWidth < 980 && !localStorage.getItem("abto_sit_toast_seen");
+      if (shouldToast && deviceToast){
+        deviceToast.style.display = "block";
+      }
+      toastClose?.addEventListener("click", ()=>{
+        if (deviceToast) deviceToast.style.display = "none";
+        localStorage.setItem("abto_sit_toast_seen", "1");
+      });
+    } catch(_) {}
+
+    // ---------- KEYBOARD SHORTCUTS ----------
+    document.addEventListener("keydown", (e)=>{
+      if (e.key === "m" || e.key === "M"){
+        toggleSound();
+      } else if (e.key === "f" || e.key === "F"){
+        toggleFullscreen();
+      } else if (e.key === "l" || e.key === "L"){
+        // list
+        if (drawerOverlay?.style.display === "block") closeDrawer();
+        else openDrawer();
+      } else if (e.key === "Escape"){
+        // close overlays
+        if (drawerOverlay?.style.display === "block") closeDrawer();
+        if (fullMapOverlay?.style.display === "flex") hideFullMap();
+      }
+    });
+
+    // ---------- ESCAPE HTML (for drawer) ----------
+    function escapeHtml(str){
+      return (str || "").toString()
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    // ---------- INIT: choose initial street ----------
+    function pickInitialStreet(){
+      if (SELECTED_STREET && Array.isArray(STREETS)){
+        const idx = STREETS.findIndex(s => s?._id && SELECTED_STREET?._id && s._id === SELECTED_STREET._id);
+        if (idx !== -1) return idx;
+      }
+      return (Array.isArray(STREETS) && STREETS.length > 0) ? 0 : -1;
+    }
+
+    const initialIdx = pickInitialStreet();
+    if (initialIdx !== -1){
+      loadStreetByIndex(initialIdx);
+    } else {
+      // no streets available
+      if (streetNameEl) streetNameEl.textContent = "No Sit Spots Found";
+      if (streetLocationEl) streetLocationEl.textContent = "Please add sit spots in your database.";
+      if (topLocationEl) topLocationEl.textContent = "No sit spots";
+      showLoading(false);
+    }
+
+    // Make sure sound UI reflects current mute state
+    updateSoundUI();
+  </script>
 </body>
 </html>
