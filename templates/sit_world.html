@@ -365,7 +365,7 @@
       .fullscreen-btn{ display:none; }
     }
     @media (max-width: 1023px){
-      .top-right-dock{ display:none; } /* keep mobile buttons */
+      .top-right-dock{ display:none; }
     }
 
     /* ---------- FULLSCREEN BUTTON (mobile) ---------- */
@@ -390,11 +390,11 @@
       touch-action: manipulation;
     }
 
-    /* ---------- MOBILE: LIST BUTTON (fix for “street list not showing”) ---------- */
+    /* ---------- MOBILE LIST BUTTON ---------- */
     .list-btn{
       position:absolute;
       top: calc(16px + var(--safe-top));
-      right: calc(64px + var(--safe-right)); /* sits left of fullscreen */
+      right: calc(64px + var(--safe-right));
       width:40px;
       height:40px;
       border-radius:999px;
@@ -415,7 +415,7 @@
       .list-btn{ display:none; }
     }
 
-    /* ---------- ORIENTATION GATE (mobile portrait) ---------- */
+    /* ---------- ORIENTATION GATE ---------- */
     .orientation-gate{
       position:fixed;
       inset:0;
@@ -452,9 +452,8 @@
       backdrop-filter: blur(10px);
       display:none;
       z-index:240;
-      /* IMPORTANT: allow taps/scrolls inside on mobile */
       pointer-events:auto;
-      touch-action: none; /* we manage scroll only inside drawer */
+      touch-action: none;
     }
     .streets-drawer{
       width: min(380px, 92vw);
@@ -595,7 +594,6 @@
       }
     }
 
-    /* Reduce motion */
     @media (prefers-reduced-motion: reduce){
       #streetVideo, .loading-scrim{ transition: none !important; animation: none !important; }
       .orientation-icon{ animation: none !important; }
@@ -682,7 +680,7 @@
         <button class="dock-btn" id="dockFullscreenBtn" aria-label="Fullscreen (F)">⤢</button>
       </div>
 
-      <!-- Mobile: Streets list button (NEW) -->
+      <!-- Mobile list button -->
       <button id="listBtn" class="list-btn" aria-label="All sit spots (tap)">☰</button>
 
       <!-- Sound toggle (mobile) -->
@@ -753,7 +751,7 @@
     const dockFullscreenBtn = document.getElementById("dockFullscreenBtn");
     const fullscreenBtn = document.getElementById("fullscreenBtn");
 
-    const listBtn = document.getElementById("listBtn"); // NEW mobile list button
+    const listBtn = document.getElementById("listBtn");
 
     const orientationGate = document.getElementById("orientationGate");
 
@@ -852,10 +850,6 @@
     let currentVideos = [];
     let currentVideoIndex = 0;
 
-    // ✅ IMPORTANT: "sound ON by default" is not possible as true autoplay on mobile
-    // unless user interacts. So we:
-    // 1) start muted=false and try play
-    // 2) if browser blocks, we auto-mute and show a gentle hint
     if (video){
       video.muted = false;
       video.volume = 1.0;
@@ -869,14 +863,12 @@
     function updateSoundUI(){
       const isMuted = !!video?.muted;
 
-      // mobile button
       if (soundToggleBtn){
         soundToggleBtn.classList.toggle("active", !isMuted);
         soundToggleBtn.setAttribute("aria-label", isMuted ? "Unmute ambience (press M)" : "Mute ambience (press M)");
         if (soundIconSpan) soundIconSpan.textContent = isMuted ? "🔇" : "🔊";
       }
 
-      // desktop dock
       if (dockSoundBtn){
         dockSoundBtn.classList.toggle("active", !isMuted);
         if (dockSoundIcon) dockSoundIcon.textContent = isMuted ? "🔇" : "🔊";
@@ -884,7 +876,6 @@
     }
 
     function showTapToUnmuteHint(){
-      // reuse existing toast if available, otherwise just update street text
       try{
         if (deviceToast){
           deviceToast.style.display = "block";
@@ -901,7 +892,6 @@
       try{
         await video.play();
       } catch(e){
-        // If autoplay with sound is blocked, fallback to muted autoplay
         if (video && !video.muted){
           video.muted = true;
           updateSoundUI();
@@ -926,15 +916,12 @@
     soundToggleBtn?.addEventListener("click", toggleSound);
     dockSoundBtn?.addEventListener("click", toggleSound);
 
-    // Ensure first user interaction tries to enable sound (keeps your “sound on default” feel)
     const enableSoundOnFirstTap = async () => {
       if (!video) return;
-      // if already unmuted, nothing
       if (!video.muted) return;
       video.muted = false;
       updateSoundUI();
       try{ await video.play(); } catch(_) {
-        // if still blocked, keep muted
         video.muted = true;
         updateSoundUI();
       }
@@ -944,7 +931,6 @@
     window.addEventListener("pointerdown", enableSoundOnFirstTap, true);
     window.addEventListener("touchstart", enableSoundOnFirstTap, true);
 
-    // Gentle loop through sit videos
     video?.addEventListener("ended", () => {
       if (currentVideos.length > 0){
         currentVideoIndex = (currentVideoIndex + 1) % currentVideos.length;
@@ -960,7 +946,6 @@
       }
     });
 
-    // Loading + errors
     video?.addEventListener("loadstart", ()=>showLoading(true));
     video?.addEventListener("canplay", ()=>showLoading(false));
     video?.addEventListener("playing", ()=>showLoading(false));
@@ -989,7 +974,6 @@
       if (topLocationEl) topLocationEl.textContent = locationText || "Pick a seat to begin";
       if (categoryEl) categoryEl.textContent = category;
 
-      // gather videos
       currentVideos = [];
       currentVideoIndex = 0;
 
@@ -1008,7 +992,7 @@
 
       safePlay().finally(()=>showLoading(false));
       updateMiniMapForStreet(street);
-      renderDrawerList(); // keep active highlight in sync
+      renderDrawerList();
     }
 
     function loadStreet(street){
@@ -1024,24 +1008,6 @@
       if (!Array.isArray(STREETS) || index < 0 || index >= STREETS.length) return;
       currentStreetIndex = index;
       loadStreet(STREETS[index]);
-    }
-
-    // ---------- PARALLAX (desktop only-ish) ----------
-    if (viewerCanvas && video){
-      const maxShift = 10;
-      viewerCanvas.addEventListener("pointermove", (e) => {
-        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-        const rect = viewerCanvas.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width - 0.5;
-        const y = (e.clientY - rect.top) / rect.height - 0.5;
-        const tx = -x * maxShift;
-        const ty = -y * maxShift;
-        video.style.transform = `translate(${tx}px, ${ty}px) scale(1.03)`;
-      });
-      viewerCanvas.addEventListener("pointerleave", () => {
-        video.style.transform = "translate(0,0) scale(1)";
-      });
     }
 
     // ---------- ORIENTATION GATE ----------
@@ -1079,7 +1045,6 @@
         dockFullscreenBtn.setAttribute("aria-label", fs ? "Exit full screen (F)" : "Enter full screen (F)");
       }
     }
-
     async function toggleFullscreen(){
       try{
         if (!isFullscreen()) await enterFullscreen();
@@ -1090,17 +1055,14 @@
         updateFullscreenIcons();
       }
     }
-
     fullscreenBtn?.addEventListener("click", toggleFullscreen);
     dockFullscreenBtn?.addEventListener("click", toggleFullscreen);
-
     document.addEventListener("fullscreenchange", updateFullscreenIcons);
     document.addEventListener("webkitfullscreenchange", updateFullscreenIcons);
     updateFullscreenIcons();
 
-    // ---------- DRAWER (FIXED FOR MOBILE) ----------
+    // ---------- DRAWER (NO AUTO KEYBOARD) ----------
     function lockBodyScroll(lock){
-      // prevent background page scrolling while drawer is open
       document.documentElement.style.overflow = lock ? "hidden" : "";
       document.body.style.overflow = lock ? "hidden" : "";
     }
@@ -1111,28 +1073,28 @@
       drawerOverlay.setAttribute("aria-hidden","false");
       lockBodyScroll(true);
       renderDrawerList();
-      setTimeout(()=>streetSearch?.focus(), 60);
+      // ✅ removed auto-focus (prevents keyboard opening)
+      // setTimeout(()=>streetSearch?.focus(), 60);
     }
+
     function closeDrawer(){
       if (!drawerOverlay) return;
+      // ✅ close keyboard if it was open
+      streetSearch?.blur();
+
       drawerOverlay.style.display = "none";
       drawerOverlay.setAttribute("aria-hidden","true");
       lockBodyScroll(false);
     }
 
-    // Desktop dock list
     dockStreetsBtn?.addEventListener("click", openDrawer);
-    // ✅ Mobile list button
     listBtn?.addEventListener("click", openDrawer);
-
     closeDrawerBtn?.addEventListener("click", closeDrawer);
 
-    // click outside drawer to close
     drawerOverlay?.addEventListener("click", (e)=>{
       if (e.target === drawerOverlay) closeDrawer();
     }, { passive:true });
 
-    // stop tap inside drawer from closing
     document.querySelector(".streets-drawer")?.addEventListener("click", (e)=>e.stopPropagation(), { passive:true });
 
     function normalize(s){ return (s || "").toString().toLowerCase().trim(); }
@@ -1225,7 +1187,7 @@
         .replaceAll("'", "&#039;");
     }
 
-    // ---------- INIT: choose initial street ----------
+    // ---------- INIT ----------
     function pickInitialStreet(){
       if (SELECTED_STREET && Array.isArray(STREETS)){
         const idx = STREETS.findIndex(s => s?._id && SELECTED_STREET?._id && s._id === SELECTED_STREET._id);
@@ -1244,7 +1206,6 @@
       showLoading(false);
     }
 
-    // Make sure sound UI reflects current mute state
     updateSoundUI();
   </script>
 </body>
