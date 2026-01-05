@@ -320,13 +320,18 @@
       touch-action:none;
     }
 
+    /* ✅ FIX 1 (Improved):
+       - BEFORE fullscreen: always keep joystick at true bottom (NO env inset)
+       - AFTER fullscreen: allow safe-area inset */
     @media (max-width:768px){
       #joystickBase{
-        bottom: max(12px, env(safe-area-inset-bottom));
         right:16px;
+        bottom: 14px; /* stable low position BEFORE fullscreen */
+      }
+      body.is-fs #joystickBase{
+        bottom: max(14px, env(safe-area-inset-bottom)); /* safe only in fullscreen */
       }
     }
-    @media (max-width:768px){ #joystickBase{ bottom:90px; } }
 
     /* ===== AVATAR ===== */
     #avatarShadow{
@@ -808,7 +813,17 @@
         <div class="drawer-title">All Streets</div>
         <button id="streetsDrawerClose" class="drawer-close" aria-label="Close">✕</button>
       </div>
-      <input id="streetsSearch" class="drawer-search" placeholder="Search street / city / country..." />
+
+      <!-- ✅ FIX 2: keyboard only opens when user taps -->
+      <input id="streetsSearch"
+             class="drawer-search"
+             placeholder="Search street / city / country..."
+             autocomplete="off"
+             autocapitalize="off"
+             autocorrect="off"
+             spellcheck="false"
+             inputmode="search" />
+
       <div id="streetsList" class="drawer-list"></div>
     </div>
   </div>
@@ -1008,6 +1023,10 @@
       return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
     }
 
+    function syncFsClass(){
+      document.body.classList.toggle("is-fs", isFullscreenActive());
+    }
+
     function ensureOverlayParent(overlayEl){
       if (!overlayEl) return;
       const parent = isFullscreenActive() ? viewerPanel : document.body;
@@ -1020,7 +1039,6 @@
     }
 
     function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
-
     function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
     /* =========================================================
@@ -1162,10 +1180,26 @@
        Viewport height
     ========================================================= */
     setViewportHeightVar();
+    syncFsClass();
+
     window.addEventListener("resize", setViewportHeightVar);
     window.addEventListener("orientationchange", setViewportHeightVar);
-    document.addEventListener("fullscreenchange", setViewportHeightVar);
-    document.addEventListener("webkitfullscreenchange", setViewportHeightVar);
+
+    document.addEventListener("fullscreenchange", () => {
+      setViewportHeightVar();
+      syncFsClass();
+
+      // keep overlays inside fullscreen element if they are open
+      if (streetsDrawerOverlay?.style.display === "block") ensureOverlayParent(streetsDrawerOverlay);
+      if (fullMapOverlay?.style.display === "flex") ensureOverlayParent(fullMapOverlay);
+    });
+
+    document.addEventListener("webkitfullscreenchange", () => {
+      setViewportHeightVar();
+      syncFsClass();
+      if (streetsDrawerOverlay?.style.display === "block") ensureOverlayParent(streetsDrawerOverlay);
+      if (fullMapOverlay?.style.display === "flex") ensureOverlayParent(fullMapOverlay);
+    });
 
     /* =========================================================
        Audio unlock
@@ -1339,7 +1373,6 @@
         const delta = setVideoSlow.checked ? 0.008 : 0.016;
         const dur = Number.isFinite(video.duration) ? video.duration : 0;
 
-        // If duration not ready, just wait
         if (!dur || dur < 0.05){
           reverseRAF = requestAnimationFrame(step);
           return;
@@ -1461,7 +1494,6 @@
         }
       });
 
-      // If too far or no good match, fallback next index
       if (best === -1 || !Number.isFinite(bestDist) || bestDist > 0.8){
         return (currentIndex + 1) % STREETS.length;
       }
@@ -1485,7 +1517,6 @@
       fadeLayer.style.opacity = "0";
     }
 
-    // When current video ends -> next in list or teleport
     video.addEventListener("ended", async () => {
       if (currentVideos.length > 1 && currentVideoIndex < currentVideos.length - 1){
         currentVideoIndex++;
@@ -1559,7 +1590,6 @@
 
       requestAnimationFrame(tick);
     }
-
     requestAnimationFrame(tick);
 
     /* =========================================================
@@ -1600,15 +1630,13 @@
       setAutoWalk(!autoWalkEnabled);
     });
 
-        // =========================================================
-    // Keyboard controls (remaining)
-    // =========================================================
+    /* =========================================================
+       Keyboard controls
+    ========================================================= */
     window.addEventListener("keydown", (e) => {
       const key = e.key;
 
-      // Global escapes
       if (key === "Escape") {
-        // Close overlays / panels
         if (fullMapOverlay?.style.display === "flex") {
           fullMapOverlay.style.display = "none";
           restoreOverlayToBody(fullMapOverlay);
@@ -1619,10 +1647,8 @@
         return;
       }
 
-      // Prevent arrow keys from scrolling the page
       if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(key)) e.preventDefault();
 
-      // While map/drawer open, don't move
       const anyOverlayOpen =
         (fullMapOverlay?.style.display === "flex") ||
         (streetsDrawerOverlay?.style.display === "block") ||
@@ -1631,19 +1657,9 @@
 
       const k = key.toLowerCase();
 
-      // Strafe
-      if (k === "arrowleft" || k === "a") {
-        cancelAutoWalkIfUserMoves();
-        strafe = -1;
-        return;
-      }
-      if (k === "arrowright" || k === "d") {
-        cancelAutoWalkIfUserMoves();
-        strafe = 1;
-        return;
-      }
+      if (k === "arrowleft" || k === "a") { cancelAutoWalkIfUserMoves(); strafe = -1; return; }
+      if (k === "arrowright" || k === "d") { cancelAutoWalkIfUserMoves(); strafe = 1; return; }
 
-      // Forward
       if (k === "arrowup" || k === "w") {
         cancelAutoWalkIfUserMoves();
         const wasStopped = (currentDir === 0);
@@ -1655,7 +1671,6 @@
         return;
       }
 
-      // Reverse
       if (k === "arrowdown" || k === "s") {
         cancelAutoWalkIfUserMoves();
         currentDir = -1;
@@ -1665,16 +1680,9 @@
         return;
       }
 
-      // Quick actions
-      if (k === "m") { // map
-        openMapOverlay();
-        return;
-      }
-      if (k === "l") { // list
-        openStreetsDrawer();
-        return;
-      }
-      if (k === "p") { // pause
+      if (k === "m") { openMapOverlay(); return; }
+      if (k === "l") { openStreetsDrawer(); return; }
+      if (k === "p") {
         currentDir = 0;
         motionMomentum = 0.8;
         cancelReverseLoop();
@@ -1683,14 +1691,8 @@
         updateFootsteps();
         return;
       }
-      if (k === "t") { // teleport
-        teleportNearest();
-        return;
-      }
-      if (k === "f") { // fullscreen
-        fullscreenBtn?.click();
-        return;
-      }
+      if (k === "t") { teleportNearest(); return; }
+      if (k === "f") { fullscreenBtn?.click(); return; }
     }, { passive: false });
 
     window.addEventListener("keyup", (e) => {
@@ -1710,9 +1712,9 @@
       }
     });
 
-    // =========================================================
-    // Joystick controls
-    // =========================================================
+    /* =========================================================
+       Joystick controls
+    ========================================================= */
     function joyMove(ev) {
       cancelAutoWalkIfUserMoves();
 
@@ -1731,11 +1733,9 @@
 
       const prevDir = currentDir;
 
-      // Forward/back
       if (Math.abs(ny) > 0.22) currentDir = (ny < 0) ? 1 : -1;
       else currentDir = 0;
 
-      // Left/right strafe
       if (Math.abs(nx) > 0.22) strafe = (nx > 0) ? 1 : -1;
       else strafe = 0;
 
@@ -1782,9 +1782,9 @@
     joystickBase.addEventListener("pointerup", resetJoystick);
     joystickBase.addEventListener("pointercancel", resetJoystick);
 
-    // =========================================================
-    // Gender switch
-    // =========================================================
+    /* =========================================================
+       Gender switch
+    ========================================================= */
     document.querySelectorAll(".gender-buttons button").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".gender-buttons button").forEach(b => b.classList.remove("active"));
@@ -1794,9 +1794,9 @@
       });
     });
 
-    // =========================================================
-    // Settings panel + toggles
-    // =========================================================
+    /* =========================================================
+       Settings panel + toggles
+    ========================================================= */
     settingsBtn.addEventListener("click", () => settingsPanel.classList.toggle("open"));
 
     document.addEventListener("click", (e) => {
@@ -1806,14 +1806,9 @@
       settingsPanel.classList.remove("open");
     });
 
-    setVideoMuted.addEventListener("change", () => {
-      video.muted = setVideoMuted.checked;
-    });
-
+    setVideoMuted.addEventListener("change", () => { video.muted = setVideoMuted.checked; });
     setVideoSlow.addEventListener("change", () => {
-      if (!video.paused && !reversePlaying) {
-        video.playbackRate = setVideoSlow.checked ? 0.5 : 1;
-      }
+      if (!video.paused && !reversePlaying) video.playbackRate = setVideoSlow.checked ? 0.5 : 1;
     });
 
     function applyAvatarVisibility() {
@@ -1832,28 +1827,55 @@
       applyAvatarVisibility();
     });
 
-    setNightMode.addEventListener("change", () => {
-      nightOverlay.style.opacity = setNightMode.checked ? "1" : "0";
-    });
-
+    setNightMode.addEventListener("change", () => { nightOverlay.style.opacity = setNightMode.checked ? "1" : "0"; });
     applyAvatarVisibility();
 
-    // =========================================================
-    // Streets drawer
-    // =========================================================
+    /* =========================================================
+       Streets drawer (FIXED: no auto keyboard + no aria-hidden focus warning)
+    ========================================================= */
+    let lastFocusBeforeDrawer = null;
+
     function openStreetsDrawer() {
+      lastFocusBeforeDrawer = document.activeElement;
+
       ensureOverlayParent(streetsDrawerOverlay);
       streetsDrawerOverlay.style.display = "block";
       streetsDrawerOverlay.setAttribute("aria-hidden", "false");
+
+      // optional: block background focus/clicks for accessibility
+      try{
+        viewerPanel?.setAttribute("inert", "");
+        viewerPanel?.setAttribute("aria-hidden", "true");
+      }catch(_){}
+
+      // clear but DO NOT focus (prevents mobile keyboard)
       streetsSearch.value = "";
+      streetsSearch.blur();
+
       renderStreetsList("");
-      streetsSearch.focus();
     }
 
     function closeStreetsDrawer() {
+      // ✅ prevent aria-hidden warning by removing focus from inside drawer
+      const active = document.activeElement;
+      if (active && streetsDrawerOverlay.contains(active)) active.blur();
+
       streetsDrawerOverlay.style.display = "none";
       streetsDrawerOverlay.setAttribute("aria-hidden", "true");
       restoreOverlayToBody(streetsDrawerOverlay);
+
+      // restore background interaction
+      try{
+        viewerPanel?.removeAttribute("inert");
+        viewerPanel?.removeAttribute("aria-hidden");
+      }catch(_){}
+
+      // restore focus
+      if (lastFocusBeforeDrawer && document.contains(lastFocusBeforeDrawer)) {
+        lastFocusBeforeDrawer.focus({ preventScroll: true });
+      } else {
+        streetsBtn?.focus({ preventScroll: true });
+      }
     }
 
     streetsBtn.addEventListener("click", openStreetsDrawer);
@@ -1901,9 +1923,9 @@
       });
     }
 
-    // =========================================================
-    // Popup card (street info)
-    // =========================================================
+    /* =========================================================
+       Popup card (street info)
+    ========================================================= */
     streetNameEl.addEventListener("click", () => {
       const name = streetNameEl.textContent || "";
       const st = STREETS.find(s => (s?.name || "") === name);
@@ -1917,17 +1939,12 @@
       popupCard.style.display = "flex";
     });
 
-    popupClose.addEventListener("click", () => {
-      popupCard.style.display = "none";
-    });
+    popupClose.addEventListener("click", () => { popupCard.style.display = "none"; });
+    popupCard.addEventListener("click", (e) => { if (e.target === popupCard) popupCard.style.display = "none"; });
 
-    popupCard.addEventListener("click", (e) => {
-      if (e.target === popupCard) popupCard.style.display = "none";
-    });
-
-    // =========================================================
-    // Orientation gate fallback
-    // =========================================================
+    /* =========================================================
+       Orientation gate
+    ========================================================= */
     function updateOrientationGate() {
       const isMobile = window.innerWidth <= 768;
       const isPortrait = window.innerHeight >= window.innerWidth;
@@ -1937,9 +1954,9 @@
     window.addEventListener("resize", updateOrientationGate);
     window.addEventListener("orientationchange", updateOrientationGate);
 
-    // =========================================================
-    // Fullscreen
-    // =========================================================
+    /* =========================================================
+       Fullscreen
+    ========================================================= */
     const ICON_ENTER = `
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1956,30 +1973,23 @@
     function fsElement() {
       return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || null;
     }
-
     function canFullscreen() {
       const el = viewerPanel || viewerCanvas || document.documentElement;
       return !!(el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen);
     }
-
     async function requestFullscreenOn(el) {
       try {
         if (el.requestFullscreen) return await el.requestFullscreen({ navigationUI: "hide" });
         if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
         if (el.msRequestFullscreen) return el.msRequestFullscreen();
-      } catch (err) {
-        if (DEBUG) console.log("Fullscreen error:", err);
-      }
+      } catch (err) { if (DEBUG) console.log("Fullscreen error:", err); }
     }
-
     async function exitFullscreen() {
       try {
         if (document.exitFullscreen) return await document.exitFullscreen();
         if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
         if (document.msExitFullscreen) return document.msExitFullscreen();
-      } catch (err) {
-        if (DEBUG) console.log("Exit fullscreen error:", err);
-      }
+      } catch (err) { if (DEBUG) console.log("Exit fullscreen error:", err); }
     }
 
     function updateFullscreenButton() {
@@ -2001,14 +2011,12 @@
     }
 
     updateFullscreenButton();
-    document.addEventListener("fullscreenchange", updateFullscreenButton);
-    document.addEventListener("webkitfullscreenchange", updateFullscreenButton);
-    document.addEventListener("msfullscreenchange", updateFullscreenButton);
+    document.addEventListener("fullscreenchange", () => { updateFullscreenButton(); syncFsClass(); });
+    document.addEventListener("webkitfullscreenchange", () => { updateFullscreenButton(); syncFsClass(); });
 
     fullscreenBtn.addEventListener("click", async (e) => {
       e.preventDefault();
 
-      // Close panels before switching
       if (settingsPanel.classList.contains("open")) settingsPanel.classList.remove("open");
       if (streetsDrawerOverlay.style.display === "block") closeStreetsDrawer();
       if (popupCard.style.display === "flex") popupCard.style.display = "none";
@@ -2027,22 +2035,13 @@
 
       updateFullscreenButton();
       setViewportHeightVar();
-    });
-
-    // When fullscreen changes: close overlays + resize map safely
-    document.addEventListener("fullscreenchange", () => {
-      if (streetsDrawerOverlay.style.display === "block") closeStreetsDrawer();
-      if (popupCard.style.display === "flex") popupCard.style.display = "none";
-      if (fullMapOverlay.style.display === "flex") {
-        fullMapOverlay.style.display = "none";
-        restoreOverlayToBody(fullMapOverlay);
-      }
+      syncFsClass();
       setTimeout(() => { if (fullMap) fullMap.resize(); }, 220);
     });
 
-    // =========================================================
-    // Full map (MapLibre)
-    // =========================================================
+    /* =========================================================
+       Full map (MapLibre)
+    ========================================================= */
     function updateMapMarkerHighlight() {
       markerEls.forEach(({ el, index }) => {
         el.classList.toggle("map-marker-selected", index === currentIndex);
@@ -2125,16 +2124,13 @@
       setTimeout(() => { if (fullMap) fullMap.resize(); }, 120);
     }
 
-    // Mini map click
     $("miniMap").addEventListener("click", openMapOverlay);
 
-    // Close map
     closeMapBtn.addEventListener("click", () => {
       fullMapOverlay.style.display = "none";
       restoreOverlayToBody(fullMapOverlay);
     });
 
-    // Click outside map to close
     fullMapOverlay.addEventListener("click", (e) => {
       if (e.target === fullMapOverlay) {
         fullMapOverlay.style.display = "none";
@@ -2142,16 +2138,15 @@
       }
     });
 
-    // =========================================================
-    // Mobile/Tablet toast
-    // =========================================================
+    /* =========================================================
+       Mobile/Tablet toast
+    ========================================================= */
     function showDeviceToastOnce() {
       const isSmall = window.innerWidth < 980;
       const already = localStorage.getItem("abto_device_toast_dismissed") === "1";
       if (!isSmall || already) return;
       deviceToast.style.display = "flex";
     }
-
     showDeviceToastOnce();
 
     toastClose.addEventListener("click", () => {
@@ -2159,9 +2154,9 @@
       localStorage.setItem("abto_device_toast_dismissed", "1");
     });
 
-    // =========================================================
-    // Error banner close / auto-hide
-    // =========================================================
+    /* =========================================================
+       Error banner close / auto-hide
+    ========================================================= */
     if (errorBanner && errorBanner.dataset.error) {
       if (errorBannerClose) {
         errorBannerClose.addEventListener("click", () => {
@@ -2177,16 +2172,13 @@
       }, 7000);
     }
 
-    // =========================================================
-    // Start defaults + initial load
-    // =========================================================
-    // Video starts muted (checkbox controls later)
+    /* =========================================================
+       Start defaults + initial load
+    ========================================================= */
     video.muted = true;
 
-    // Build initial list (so drawer has content)
     renderStreetsList("");
 
-    // Load first street (selected or 0)
     if (SELECTED) {
       const idx = STREETS.findIndex(s => s?._id === SELECTED?._id);
       loadStreetByIndex(idx !== -1 ? idx : 0);
@@ -2198,5 +2190,3 @@
   </script>
 </body>
 </html>
-
-
