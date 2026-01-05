@@ -207,6 +207,7 @@
       align-items: center;
       z-index: 200;
       padding: 20px;
+      pointer-events: auto;
     }
     #fullMapContainer {
       width: 90%;
@@ -580,6 +581,7 @@
       backdrop-filter: blur(6px);
       display: none;
       z-index: 220;
+      pointer-events: auto;
     }
     #streetsDrawer {
       position: absolute;
@@ -1102,6 +1104,27 @@
     let lastGreetingAt = 0;
 
     let autoWalkEnabled = false;
+
+    // ---------- FULLSCREEN + OVERLAYS FIX ----------
+    function isFullscreenActive() {
+      return !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.msFullscreenElement
+      );
+    }
+
+    function ensureOverlayParent(overlayEl) {
+      if (!overlayEl) return;
+      const parent = isFullscreenActive() ? viewerPanel : document.body;
+      if (overlayEl.parentElement !== parent) parent.appendChild(overlayEl);
+    }
+
+    function restoreOverlayToBody(overlayEl) {
+      if (!overlayEl) return;
+      if (overlayEl.parentElement !== document.body) document.body.appendChild(overlayEl);
+    }
+    // --------------------------------------------
 
     const avatarSources = {
       male: { idle: "/static/avatars/male/idle.glb", walk: "/static/avatars/male/walk.glb" },
@@ -1669,6 +1692,7 @@
           fullMap.flyTo({ center: [coords.lng, coords.lat], zoom: 13, speed: 0.9 });
           popup.addTo(fullMap);
           fullMapOverlay.style.display = "none";
+          restoreOverlayToBody(fullMapOverlay);
         });
       });
 
@@ -1680,11 +1704,19 @@
       fullMapReady = true;
     }
 
+    // ✅ Open map: attach overlay inside fullscreen container, then resize map
     document.getElementById("miniMap").onclick = () => {
+      ensureOverlayParent(fullMapOverlay);
       fullMapOverlay.style.display = "flex";
       loadMap();
+      setTimeout(() => { if (fullMap) fullMap.resize(); }, 120);
     };
-    document.getElementById("closeMapBtn").onclick = () => { fullMapOverlay.style.display = "none"; };
+
+    // ✅ Close map: hide and restore to body
+    document.getElementById("closeMapBtn").onclick = () => {
+      fullMapOverlay.style.display = "none";
+      restoreOverlayToBody(fullMapOverlay);
+    };
 
     // Street popup on name click
     const popupCard = document.getElementById("streetPopup");
@@ -1775,7 +1807,10 @@
       e.preventDefault();
       if (settingsPanel.classList.contains("open")) settingsPanel.classList.remove("open");
       if (streetsDrawerOverlay.style.display === "block") closeStreetsDrawer();
-      if (fullMapOverlay && fullMapOverlay.style.display === "flex") fullMapOverlay.style.display = "none";
+      if (fullMapOverlay && fullMapOverlay.style.display === "flex") {
+        fullMapOverlay.style.display = "none";
+        restoreOverlayToBody(fullMapOverlay);
+      }
 
       const active = !!fsElement();
       if (!active) {
@@ -1788,8 +1823,19 @@
       setViewportHeightVar();
     });
 
+    // ✅ IMPORTANT: when fullscreen changes, close overlays + resize map
+    document.addEventListener("fullscreenchange", () => {
+      if (streetsDrawerOverlay.style.display === "block") closeStreetsDrawer();
+      if (fullMapOverlay.style.display === "flex") {
+        fullMapOverlay.style.display = "none";
+        restoreOverlayToBody(fullMapOverlay);
+      }
+      setTimeout(() => { if (fullMap) fullMap.resize(); }, 220);
+    });
+
     // Streets drawer logic
     function openStreetsDrawer() {
+      ensureOverlayParent(streetsDrawerOverlay);
       streetsDrawerOverlay.style.display = "block";
       streetsSearch.value = "";
       renderStreetsList("");
@@ -1797,6 +1843,7 @@
     }
     function closeStreetsDrawer() {
       streetsDrawerOverlay.style.display = "none";
+      restoreOverlayToBody(streetsDrawerOverlay);
     }
     streetsBtn.addEventListener("click", openStreetsDrawer);
     streetsDrawerClose.addEventListener("click", closeStreetsDrawer);
