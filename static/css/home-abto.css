@@ -1,6 +1,8 @@
 /* =========================
    ABTO Home (home-abto.css)
-   Full Updated CSS (with flash messages + small fixes)
+   FULL UPDATED CSS
+   ✅ Includes: flash messages + drawer fixes + dark select fixes
+   ✅ Includes: LIKE button styles (match your new index.html)
 ========================= */
 
 :root{
@@ -418,9 +420,7 @@ body.nav-open{
 }
 
 /* =========================
-   ✅ Flash Messages (NEW)
-   Works with:
-   <div class="flash-wrap"><div class="flash success">...</div></div>
+   ✅ Flash Messages
 ========================= */
 .flash-wrap{
   margin: 0 0 12px;
@@ -457,7 +457,7 @@ body.nav-open{
   line-height: 1.35;
 }
 
-/* Category mappings (Flask: success, warning, danger, error, info) */
+/* Category mappings */
 .flash.success, .flash.ok{
   border-color: rgba(52,211,153,.22);
 }
@@ -931,6 +931,7 @@ main{ padding-bottom:26px; }
   font-size:12px;
   color:var(--text);
   font-weight:900;
+  z-index:2;
 }
 .thumb-tag .pin{
   width:10px; height:10px; border-radius:50%;
@@ -944,6 +945,37 @@ main{ padding-bottom:26px; }
   color:rgba(255,255,255,.88);
   font-size:26px;
 }
+
+/* ✅ LIKE button (matches index.html) */
+.like-fab{
+  position:absolute;
+  right:10px;
+  bottom:10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:999px;
+  background: rgba(7,16,24,.70);
+  border:1px solid rgba(255,255,255,.14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text);
+  cursor:pointer;
+  user-select:none;
+  transition: transform .12s ease, border-color .12s ease, background .12s ease, opacity .12s ease;
+  z-index:3;
+}
+.like-fab:hover{
+  transform: translateY(-1px);
+  border-color: rgba(34,211,238,.30);
+  background: rgba(7,16,24,.82);
+}
+.like-fab:active{ transform: translateY(0) scale(.98); }
+.like-fab i{ opacity:.95; }
+.like-fab .like-count{ font-weight:900; font-size:13px; letter-spacing:.2px; }
+.like-fab.liked i{ color: var(--coral); }
+.like-fab[disabled]{ opacity:.65; cursor:not-allowed; }
 
 .card-body{ padding:12px 12px 14px; }
 .card-body h4{
