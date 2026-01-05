@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>How ABTO Works</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#071018" />
+
+  <!-- Fonts & Icons (same as home) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Use same CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home-abto.css') }}">
+</head>
+
+<body>
+  <a href="#main" class="skip-link">Skip to main content</a>
+
+  <!-- Optional: reuse preloader look -->
+  <div class="loading" id="preloader" aria-label="Loading" role="status">
+    <div class="loading-inner">
+      <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+      <span>Loading...</span>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <!-- Sidebar (simple) -->
+    <nav id="navbar" role="navigation" aria-label="Main navigation">
+      <div class="sidebar-inner">
+        <div class="drawer-header">
+          <a href="{{ url_for('index') }}" class="logo" aria-label="ABTO Home">
+            <div class="logo-badge" aria-hidden="true">
+              <img src="{{ url_for('static', filename='img/logo.png') }}" alt="" />
+            </div>
+            <div class="logo-text">
+              <span class="logo-title">ABTO</span>
+              <span class="logo-sub">A Better Travel Observer</span>
+            </div>
+          </a>
+
+          <button class="mobile-close" id="closeSidebar" type="button" aria-label="Close menu">
+            <i class="fas fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="sidebar-scroll" id="navLinks">
+          <div class="sidebar-section-label">Menu</div>
+          <div class="nav-links">
+            <a href="{{ url_for('index') }}" class="nav-link">
+              <i class="fas fa-house" aria-hidden="true"></i><span>Home</span>
+            </a>
+            <a href="{{ url_for('how_it_works') }}" class="nav-link" aria-current="page">
+              <i class="fas fa-circle-info" aria-hidden="true"></i><span>How it works</span>
+            </a>
+            <a href="{{ url_for('world_walk') }}" class="nav-link">
+              <i class="fas fa-person-walking" aria-hidden="true"></i><span>Walk</span>
+            </a>
+            <a href="{{ url_for('world_drive') }}" class="nav-link">
+              <i class="fas fa-car" aria-hidden="true"></i><span>Drive</span>
+            </a>
+            <a href="{{ url_for('world_sit') }}" class="nav-link">
+              <i class="fas fa-chair" aria-hidden="true"></i><span>Sit</span>
+            </a>
+            <a href="{{ url_for('world_fly') }}" class="nav-link">
+              <i class="fas fa-plane" aria-hidden="true"></i><span>Fly</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-pill">
+            <span class="pill-dot"></span>
+            <span>ABTO • Live Streets</span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main -->
+    <div class="app-main">
+      <div class="topbar-wrap">
+        <header class="topbar" aria-label="Top bar">
+          <button class="mobile-open" id="openSidebar" type="button" aria-label="Open menu">
+            <i class="fas fa-bars"></i>
+          </button>
+
+          <div class="topbar-search">
+            <i class="fas fa-circle-info" aria-hidden="true"></i>
+            <input class="topbar-search-input" value="How ABTO Works" readonly />
+          </div>
+
+          <div class="topbar-right">
+            <a href="{{ url_for('index') }}" class="btn">
+              <i class="fas fa-arrow-left" aria-hidden="true"></i>
+              <span>Back</span>
+            </a>
+          </div>
+        </header>
+      </div>
+
+      <main id="main">
+        <!-- HERO -->
+        <section class="banner" aria-label="How ABTO Works">
+          <div>
+            <div class="hero-kicker">
+              <span class="pill">Simple</span>
+              <span>No headset • No controls</span>
+            </div>
+
+            <h1 class="hero-title">
+              How <span class="grad">ABTO</span> Works
+            </h1>
+
+            <p class="hero-sub">
+              ABTO turns real-world videos into a “press play and travel” experience.
+              Choose a street, choose a mode, and explore instantly.
+            </p>
+
+            <div class="hero-actions">
+              <a href="{{ url_for('index') }}#streets" class="cta-primary">
+                <i class="fas fa-play" aria-hidden="true"></i>
+                Start exploring
+              </a>
+              <a href="{{ url_for('index') }}" class="cta-secondary">
+                <i class="fas fa-house" aria-hidden="true"></i>
+                Go home
+              </a>
+            </div>
+          </div>
+
+          <div class="hero-right">
+            <div class="mini-map">
+              <img src="{{ url_for('static', filename='img/main.png') }}" alt="ABTO preview" />
+              <div class="badge-float">
+                <span class="pin"></span>
+                <span>Real places • Real footage</span>
+              </div>
+            </div>
+
+            <div class="hero-stats" aria-label="Quick points">
+              <div class="stat">
+                <strong>01</strong>
+                <span>Pick a street</span>
+              </div>
+              <div class="stat">
+                <strong>02</strong>
+                <span>Choose mode</span>
+              </div>
+              <div class="stat">
+                <strong>03</strong>
+                <span>Press play</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CONTENT (moved from home) -->
+        <section class="section" aria-labelledby="how-title">
+          <div class="section-header">
+            <h2 id="how-title">Step-by-step</h2>
+            <p>Creators upload real footage, ABTO prepares it for smooth viewing, and you explore instantly.</p>
+            <p class="section-subline">NO HEADSET • NO CONTROLS • JUST PRESS PLAY</p>
+          </div>
+
+          <div class="how-grid">
+            <article class="how-step">
+              <div class="how-step-badge">01</div>
+              <h3>Upload real footage</h3>
+              <p>Creators upload walking, driving, sitting or flying videos from any city using a simple upload flow.</p>
+            </article>
+            <article class="how-step">
+              <div class="how-step-badge">02</div>
+              <h3>We optimize the session</h3>
+              <p>We prepare pacing and quality so viewers get smooth, distraction-free travel sessions.</p>
+            </article>
+            <article class="how-step">
+              <div class="how-step-badge">03</div>
+              <h3>Explore instantly</h3>
+              <p>Pick a street, choose a mode (walk/drive/sit/fly) and drop into a real place in seconds.</p>
+            </article>
+          </div>
+
+          <div class="usecases-strip" aria-label="Use cases">
+            <div class="usecase-pill"><i class="fas fa-coffee" aria-hidden="true"></i> Ambient travel while working</div>
+            <div class="usecase-pill"><i class="fas fa-brain" aria-hidden="true"></i> Relaxing focus backgrounds</div>
+            <div class="usecase-pill"><i class="fas fa-plane-departure" aria-hidden="true"></i> Pre-trip scouting</div>
+            <div class="usecase-pill"><i class="fas fa-city" aria-hidden="true"></i> Explore cities you may never visit</div>
+          </div>
+        </section>
+
+        <footer>
+          <p class="footer-main">&copy; 2025 ABTO</p>
+          <p class="footer-sub">A Better Travel Observer • Walk • Drive • Sit • Fly</p>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <!-- Mobile drawer overlay (same behavior) -->
+  <div class="overlay" id="overlay" aria-hidden="true"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Preloader
+      const preloader = document.getElementById('preloader');
+      setTimeout(() => {
+        if (!preloader) return;
+        preloader.style.opacity = '0';
+        preloader.style.transform = 'scale(0.98)';
+        setTimeout(() => preloader.remove(), 240);
+      }, 350);
+
+      // Mobile sidebar drawer
+      const navbar = document.getElementById('navbar');
+      const overlay = document.getElementById('overlay');
+      const openBtn = document.getElementById('openSidebar');
+      const closeBtn = document.getElementById('closeSidebar');
+
+      let scrollY = 0;
+      let lastFocus = null;
+
+      const lockBody = () => {
+        scrollY = window.scrollY || 0;
+        document.body.classList.add('nav-open');
+        document.body.style.top = `-${scrollY}px`;
+      };
+
+      const unlockBody = () => {
+        document.body.classList.remove('nav-open');
+        document.body.style.top = '';
+        window.scrollTo(0, scrollY);
+      };
+
+      const openSidebar = () => {
+        if (!navbar || !overlay) return;
+        lastFocus = document.activeElement;
+        navbar.classList.add('open');
+        overlay.classList.add('show');
+        lockBody();
+        closeBtn && closeBtn.focus();
+      };
+
+      const closeSidebar = () => {
+        if (!navbar || !overlay) return;
+        navbar.classList.remove('open');
+        overlay.classList.remove('show');
+        unlockBody();
+        if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+      };
+
+      openBtn && openBtn.addEventListener('click', openSidebar);
+      closeBtn && closeBtn.addEventListener('click', closeSidebar);
+      overlay && overlay.addEventListener('click', closeSidebar);
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && navbar && navbar.classList.contains('open')) closeSidebar();
+      });
+    });
+  </script>
+</body>
+</html>
