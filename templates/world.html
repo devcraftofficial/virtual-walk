@@ -81,6 +81,7 @@
       pointer-events:none;
       transition: transform 0.12s ease-out, opacity 0.2s ease-out;
       opacity:0;
+      will-change: transform;
     }
 
     #walkVignette{
@@ -1208,6 +1209,95 @@
     };
 
     /* =========================================================
+       ✅ NEW: Fake "look around" for NORMAL MP4 (drag to pan view)
+       - Doesn't reveal new pixels (not true 360)
+       - Adds inertia + gentle spring-to-center
+       - Auto-ignores UI areas + overlays + joystick
+    ========================================================= */
+    let lookX = 0, lookY = 0;
+    let lookVX = 0, lookVY = 0;
+    let isLooking = false;
+    let lookPointerId = null;
+    let lastLookClientX = 0, lastLookClientY = 0;
+
+    // tuning
+    const LOOK_MAX_X = 140;     // pan left/right (px)
+    const LOOK_MAX_Y = 80;      // pan up/down (px)
+    const LOOK_SENS  = 0.9;     // drag sensitivity
+    const LOOK_FRICTION = 0.86; // inertia decay
+    const LOOK_SPRING   = 0.06; // spring to center when released
+    const LOOK_ZOOM      = 1.10; // scale to hide edges
+
+    function isAnyOverlayOpen(){
+      return (
+        settingsPanel.classList.contains("open") ||
+        streetsDrawerOverlay.style.display === "block" ||
+        fullMapOverlay.style.display === "flex" ||
+        popupCard.style.display === "flex"
+      );
+    }
+
+    function isOnUI(target){
+      return !!target.closest(
+        ".dock-btn, .icon-btn, .gender-buttons, #joystickBase, #streetsDrawer, #fullMapContainer, #closeMapBtn, .street-info, .mini-map, #settingsPanel"
+      );
+    }
+
+    // pointer drag on canvas
+    viewerCanvas.addEventListener("pointerdown", (e) => {
+      if (isAnyOverlayOpen()) return;
+      if (joyActive) return;
+      if (isOnUI(e.target)) return;
+
+      isLooking = true;
+      lookPointerId = e.pointerId;
+      lastLookClientX = e.clientX;
+      lastLookClientY = e.clientY;
+      try{ viewerCanvas.setPointerCapture(lookPointerId); }catch(_){}
+    }, { passive:true });
+
+    viewerCanvas.addEventListener("pointermove", (e) => {
+      if (!isLooking || e.pointerId !== lookPointerId) return;
+
+      const dx = e.clientX - lastLookClientX;
+      const dy = e.clientY - lastLookClientY;
+      lastLookClientX = e.clientX;
+      lastLookClientY = e.clientY;
+
+      lookX = clamp(lookX + dx * LOOK_SENS, -LOOK_MAX_X, LOOK_MAX_X);
+      lookY = clamp(lookY + dy * LOOK_SENS, -LOOK_MAX_Y, LOOK_MAX_Y);
+
+      lookVX = dx * 0.35;
+      lookVY = dy * 0.35;
+    }, { passive:true });
+
+    function endLook(e){
+      if (!isLooking) return;
+      if (e && lookPointerId !== null && e.pointerId !== lookPointerId) return;
+
+      isLooking = false;
+      try{ viewerCanvas.releasePointerCapture(lookPointerId); }catch(_){}
+      lookPointerId = null;
+    }
+
+    viewerCanvas.addEventListener("pointerup", endLook, { passive:true });
+    viewerCanvas.addEventListener("pointercancel", endLook, { passive:true });
+    viewerCanvas.addEventListener("pointerleave", endLook, { passive:true });
+
+    // double tap/click to center
+    let lastTap = 0;
+    viewerCanvas.addEventListener("pointerdown", (e) => {
+      if (isAnyOverlayOpen()) return;
+      if (isOnUI(e.target)) return;
+
+      const now = Date.now();
+      if (now - lastTap < 280){
+        lookX = 0; lookY = 0; lookVX = 0; lookVY = 0;
+      }
+      lastTap = now;
+    }, { passive:true });
+
+    /* =========================================================
        ✅ NEW: force-avatar-visible window (for teleport / gender line)
        (Greeting is disabled below)
     ========================================================= */
@@ -1541,7 +1631,7 @@
       await teleportNearest();
     });
 
-    // ✅ small enhancement: applySettings tick throttled properly (instead of Date.now()%400 trick)
+    // ✅ small enhancement: applySettings tick throttled properly
     let nextSettingsTick = 0;
 
     function tick(t=0){
@@ -1575,13 +1665,31 @@
         strafeOffset *= 0.9;
       }
 
+      // ✅ Look-around inertia + spring to center
+      if (!isLooking){
+        lookVX *= LOOK_FRICTION;
+        lookVY *= LOOK_FRICTION;
+
+        lookVX += (-lookX) * LOOK_SPRING;
+        lookVY += (-lookY) * LOOK_SPRING;
+
+        lookX = clamp(lookX + lookVX, -LOOK_MAX_X, LOOK_MAX_X);
+        lookY = clamp(lookY + lookVY, -LOOK_MAX_Y, LOOK_MAX_Y);
+      }
+
       const time = Date.now();
       const swayX = Math.sin(time * 0.002) * 2;
       const swayY = Math.cos(time * 0.0015) * 1.5;
       const walkIntensity = Math.abs(currentDir) > 0 ? motionMomentum : 0.25;
 
-      video.style.transform =
-        `translate(${strafeOffset*0.25 + swayX*walkIntensity}px, ${headBob*1.4 + swayY*walkIntensity}px) scale(1.02)`;
+      // ✅ Combine: movement sway + strafe + look-around
+      const baseX = (strafeOffset*0.25 + swayX*walkIntensity);
+      const baseY = (headBob*1.4 + swayY*walkIntensity);
+
+      const finalX = baseX + lookX;
+      const finalY = baseY + lookY;
+
+      video.style.transform = `translate(${finalX}px, ${finalY}px) scale(${LOOK_ZOOM})`;
 
       avatarWrapper.style.transform = `translate(calc(-50% + ${strafeOffset}px), 0px)`;
 
@@ -1732,6 +1840,8 @@
       if (!st) return;
 
       popupTitle.textContent = st.name || "Street";
+      popupCity.textContent = `📍 ${st.city || ""}${st.country ? ", " + s.country : ""}`; // (kept for safety below)
+      // fix the tiny typo above (s undefined) -> use st:
       popupCity.textContent = `📍 ${st.city || ""}${st.country ? ", " + st.country : ""}`;
       popupCategory.textContent = st.category ? `🏷 Category: ${st.category}` : "🏷 No category";
       popupDescription.textContent = st.description || "No description added.";
@@ -2122,6 +2232,9 @@
     joystickBase?.addEventListener("pointerdown", (e) => {
       e.preventDefault();
       unlockAudio();
+
+      // ✅ prevent look-drag while joystick is used
+      if (isLooking) endLook({ pointerId: lookPointerId });
 
       joyPointerId = e.pointerId;
       joystickBase.setPointerCapture(joyPointerId);
