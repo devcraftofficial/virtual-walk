@@ -54,6 +54,33 @@
     "url":"{{ url_for('index', _external=True) }}"
   }
   </script>
+
+  <!-- ✅ Likes: small CSS (works even if you don’t edit home-abto.css yet) -->
+  <style>
+    .like-fab{
+      position:absolute; right:10px; bottom:10px;
+      display:flex; align-items:center; gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      background:rgba(2,6,23,.72);
+      border:1px solid rgba(148,163,184,.25);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color:#e5e7eb;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+    .like-fab:hover{ transform: translateY(-1px); border-color: rgba(56,189,248,.35); background: rgba(2,6,23,.82); }
+    .like-fab:active{ transform: translateY(0px) scale(.98); }
+    .like-fab i{ opacity:.95; }
+    .like-fab .like-count{ font-weight:700; font-size:13px; letter-spacing:.2px; }
+    .like-fab.liked i{ color:#fb7185; }
+    .like-fab[disabled]{ opacity:.65; cursor:not-allowed; }
+
+    /* Make sure thumb can host absolute elements */
+    .thumb{ position:relative; }
+  </style>
 </head>
 
 <body>
@@ -122,9 +149,11 @@
             <a href="#tour-preview" class="nav-link">
               <i class="fas fa-location-dot" aria-hidden="true"></i><span>Tour places</span>
             </a>
-            <a href="#how-it-works" class="nav-link">
-              <i class="fas fa-circle-info" aria-hidden="true"></i><span>How it works</span>
-            </a>
+            <a href="{{ url_for('how_it_works') }}" class="nav-link">
+  <i class="fas fa-circle-info" aria-hidden="true"></i><span>How it works</span>
+</a>
+
+             
             <a href="#trip-price" class="nav-link">
               <i class="fas fa-ticket-alt" aria-hidden="true"></i><span>Trip price check</span>
             </a>
@@ -212,7 +241,7 @@
       </div>
 
       <main id="main">
-        <!-- ✅ Flash messages (so you see login/logout/reset notices) -->
+        <!-- ✅ Flash messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             <div class="flash-wrap" aria-live="polite">
@@ -305,39 +334,7 @@
           </div>
         </section>
 
-        <!-- HOW IT WORKS -->
-        <section class="section" id="how-it-works" aria-labelledby="how-title">
-          <div class="section-header">
-            <h2 id="how-title">How ABTO Works</h2>
-            <p>ABTO converts real-world footage into a simple “press play and travel” experience.</p>
-            <p class="section-subline">NO HEADSET • NO CONTROLS • JUST PRESS PLAY</p>
-          </div>
-
-          <div class="how-grid">
-            <article class="how-step">
-              <div class="how-step-badge">01</div>
-              <h3>Upload real footage</h3>
-              <p>Creators upload walking, driving, sitting or flying videos from any city using a simple upload flow.</p>
-            </article>
-            <article class="how-step">
-              <div class="how-step-badge">02</div>
-              <h3>We optimize the session</h3>
-              <p>We prepare pacing and quality so viewers get smooth, distraction-free travel sessions.</p>
-            </article>
-            <article class="how-step">
-              <div class="how-step-badge">03</div>
-              <h3>Explore instantly</h3>
-              <p>Pick a street, choose a mode (walk/drive/sit/fly) and drop into a real place in seconds.</p>
-            </article>
-          </div>
-
-          <div class="usecases-strip" aria-label="Popular ways people use ABTO">
-            <div class="usecase-pill"><i class="fas fa-coffee" aria-hidden="true"></i> Ambient travel while working</div>
-            <div class="usecase-pill"><i class="fas fa-brain" aria-hidden="true"></i> Relaxing focus backgrounds</div>
-            <div class="usecase-pill"><i class="fas fa-plane-departure" aria-hidden="true"></i> Pre-trip scouting</div>
-            <div class="usecase-pill"><i class="fas fa-city" aria-hidden="true"></i> Explore cities you may never visit</div>
-          </div>
-        </section>
+        
 
         <!-- TOUR PLACES -->
         {% set effective_tour_streets = tour_streets if tour_streets is defined
@@ -373,7 +370,6 @@
                   {% set thumb_url_tour = st.videos[0].url|replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_400,c_fill,g_center') %}
                   {% set is_placeholder_tour = False %}
                 {% else %}
-                  <!-- ✅ use same folder as your project (img/...) -->
                   {% set thumb_url_tour = url_for('static', filename='img/placeholder-street.jpg') %}
                   {% set is_placeholder_tour = True %}
                 {% endif %}
@@ -385,6 +381,19 @@
                    data-category="{{ (st.tour_category or '')|lower }}">
                   <div class="thumb" style="background-image:url('{{ thumb_url_tour }}')">
                     <div class="thumb-tag"><span class="pin"></span> Tour</div>
+
+                    <!-- ✅ LIKE button (tour card) -->
+                    <button
+                      class="like-fab like-btn"
+                      type="button"
+                      data-street-id="{{ st._id }}"
+                      aria-label="Like this place">
+                      <i class="fa-regular fa-heart" aria-hidden="true"></i>
+                      <span class="like-count" data-likes="{{ st.likes if st.likes is defined else 0 }}">
+                        {{ st.likes if st.likes is defined else 0 }}
+                      </span>
+                    </button>
+
                     {% if is_placeholder_tour %}
                       <div class="thumb-placeholder"><i class="fas fa-map-marked-alt" aria-hidden="true"></i></div>
                     {% endif %}
@@ -467,6 +476,19 @@
                    data-search="{{ (st.name ~ ' ' ~ (st.city or '') ~ ' ' ~ (st.country or ''))|lower }}">
                   <div class="thumb" style="background-image:url('{{ thumb_url }}')">
                     <div class="thumb-tag"><span class="pin"></span> Street</div>
+
+                    <!-- ✅ LIKE button (featured streets) -->
+                    <button
+                      class="like-fab like-btn"
+                      type="button"
+                      data-street-id="{{ st._id }}"
+                      aria-label="Like this street">
+                      <i class="fa-regular fa-heart" aria-hidden="true"></i>
+                      <span class="like-count" data-likes="{{ st.likes if st.likes is defined else 0 }}">
+                        {{ st.likes if st.likes is defined else 0 }}
+                      </span>
+                    </button>
+
                     {% if is_placeholder %}
                       <div class="thumb-placeholder"><i class="fas fa-map-marked-alt" aria-hidden="true"></i></div>
                     {% endif %}
@@ -764,6 +786,69 @@
       }
 
       priceForm?.addEventListener('submit', runPriceCheck);
+
+      // ✅ LIKE SYSTEM (uses your /like/<street_id> endpoint)
+      async function likeStreet(streetId) {
+        const resp = await fetch(`/like/${encodeURIComponent(streetId)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error((data && data.error) || "Like failed");
+        return data; // { likes: number }
+      }
+
+      // Prevent card navigation when clicking like button
+      document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const streetId = btn.getAttribute('data-street-id');
+          if (!streetId) return;
+
+          const icon = btn.querySelector('i');
+          const countEl = btn.querySelector('.like-count');
+
+          // UI: disable while sending
+          btn.setAttribute('disabled', 'disabled');
+
+          // Optimistic UI (optional)
+          const before = parseInt((countEl?.textContent || '0').trim(), 10);
+          if (!isNaN(before) && countEl) countEl.textContent = String(before + 1);
+          btn.classList.add('liked');
+          if (icon) {
+            icon.classList.remove('fa-regular');
+            icon.classList.add('fa-solid');
+          }
+
+          try {
+            const data = await likeStreet(streetId);
+            const likes = (data && typeof data.likes === 'number') ? data.likes : null;
+
+            if (likes !== null && countEl) countEl.textContent = String(likes);
+
+            // If server didn't increment (already liked), still show liked state
+            btn.classList.add('liked');
+            if (icon) {
+              icon.classList.remove('fa-regular');
+              icon.classList.add('fa-solid');
+            }
+          } catch (err) {
+            console.error(err);
+
+            // rollback optimistic update on error
+            if (countEl && !isNaN(before)) countEl.textContent = String(before);
+            btn.classList.remove('liked');
+            if (icon) {
+              icon.classList.add('fa-regular');
+              icon.classList.remove('fa-solid');
+            }
+          } finally {
+            btn.removeAttribute('disabled');
+          }
+        }, { passive: false });
+      });
     });
   </script>
 </body>
