@@ -142,7 +142,7 @@
       backdrop-filter: blur(10px);
       transition: transform .15s ease;
     }
-    .icon-btn:hover{ transform: translateY(-1px); }
+    .icon-btn:hover{ transformtransform: translateY(-1px); }
     .icon-btn:active{ transform: translateY(0) scale(.98); }
 
     /* ===== STREET INFO (top center) ===== */
@@ -310,78 +310,99 @@
     }
     @media (max-width:908px){
       #dashOverlay{
-        bottom:20px;
+        bottom:-30px;
         width: 100vw;
       }
     }
 
-    /* ===== SPEED HUD (bottom center) ===== */
-    /* ===== SPEED HUD (right side) ===== */
-#speedHud{
-  position:absolute;
-  right:18px;
-  bottom:140px;          /* lift above bike overlay */
-  left:auto;
-  transform:none;
+    /* =========================================================
+       ✅ SPEED (HIDDEN PANEL + SMALL ICON)
+       - Small pill near joystick
+       - Tap to open options, tap outside to close
+    ========================================================= */
+    #speedBtn{
+      position:absolute;
+      right:18px;
+      bottom:140px; /* sits above joystick */
+      height:40px;
+      padding:0 12px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.45);
+      background: rgba(15,23,42,.82);
+      color:#e5e7eb;
+      box-shadow:0 18px 45px rgba(0,0,0,.75);
+      backdrop-filter: blur(12px);
+      display:flex;
+      align-items:center;
+      gap:8px;
+      z-index:185;
+      cursor:pointer;
+      transition: transform .15s ease, border-color .15s ease, opacity .15s ease;
+      white-space:nowrap;
+    }
+    #speedBtn:hover{ transform: translateY(-1px); border-color: rgba(56,189,248,.45); }
+    #speedBtn:active{ transform: translateY(0) scale(.98); }
 
-  background: rgba(15,23,42,.72);
-  border:1px solid rgba(148,163,184,.35);
-  box-shadow:0 18px 45px rgba(0,0,0,.85);
-  border-radius:16px;    /* compact on side */
-  padding:10px 12px;
-  z-index:170;
-  backdrop-filter: blur(12px);
-
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-direction:column; /* stack */
-  min-width:130px;
-}
-
-    #speedHud .chip{
+    .speed-ico{
+      width:18px; height:18px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:999px;
+      background: rgba(56,189,248,.14);
+      border:1px solid rgba(56,189,248,.55);
+      font-size:12px;
+      color:#7dd3fc;
+    }
+    #speedBtnLabel{
       font-size:11px;
-      padding:6px 10px;
+      font-weight:850;
+      letter-spacing:.06em;
+      opacity:.95;
+    }
+
+    #speedPop{
+      position:absolute;
+      right:18px;
+      bottom:190px;
+      width:132px;
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.35);
+      background: rgba(15,23,42,.92);
+      box-shadow:0 20px 60px rgba(0,0,0,.85);
+      backdrop-filter: blur(12px);
+      padding:10px;
+      display:none;
+      z-index:186;
+    }
+    .speed-opt{
+      width:100%;
+      padding:10px 10px;
+      margin:6px 0;
       border-radius:999px;
       border:1px solid rgba(148,163,184,.22);
       background: rgba(0,0,0,.18);
-      cursor:pointer;
       color:#e5e7eb;
+      font-size:12px;
+      cursor:pointer;
       transition: transform .12s ease, border-color .12s ease;
-      user-select:none;
+      text-align:center;
     }
-    #speedHud .chip:hover{ transform: translateY(-1px); border-color: rgba(56,189,248,.38); }
-    #speedHud .chip.active{
+    .speed-opt:hover{ transform: translateY(-1px); border-color: rgba(56,189,248,.38); }
+    .speed-opt.active{
       border-color: rgba(56,189,248,.75);
       background: rgba(56,189,248,.14);
       color:#e0f2fe;
     }
-    #speedHud .readout{
-      font-weight:850;
-      letter-spacing:.08em;
-      font-size:11px;
-      opacity:.9;
-      display:flex;
-      align-items:center;
-      gap:8px;
-      padding-left:4px;
-    }
-    #speedHud .readout b{ font-size:12px; letter-spacing:.02em; }
-    #speedHud #speedChips{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  width:100%;
-}
-#speedHud .chip{
-  width:100%;
-  text-align:center;
-}
-#speedHud .readout{
-  padding-left:0;        /* no left padding needed now */
-  justify-content:center;
-}
 
+    /* click-outside catcher */
+    #speedBackdrop{
+      position:absolute;
+      inset:0;
+      display:none;
+      z-index:184;
+      background: transparent;
+    }
 
     /* ===== JOYSTICK ===== */
     #joystickBase{
@@ -412,6 +433,10 @@
     @media (max-width:768px){
       #joystickBase{ right:16px; bottom: 14px; }
       body.is-fs #joystickBase{ bottom: max(14px, env(safe-area-inset-bottom)); }
+
+      /* keep speed near joystick on mobile */
+      #speedBtn{ right:16px; bottom: 124px; }
+      #speedPop{ right:16px; bottom: 176px; }
     }
 
     /* ===== LOADING ===== */
@@ -748,14 +773,10 @@
       .dock-label{ display:none; }
       .dock-btn{ padding: 0 10px; }
       #settingsPanel{ top:58px; }
-      #speedHud{ bottom: 18px; }
     }
 
     /* =========================================================
        ✅ MOBILE PORTRAIT LOCK OVERLAY (ROTATE PROMPT)
-       - On small screens: allow ONLY landscape
-       - In portrait: block UI + show rotate message
-       - Also suggests laptop/desktop
     ========================================================= */
     #rotateOverlay{
       position:fixed;
@@ -980,15 +1001,19 @@
         <div id="joystickKnob"></div>
       </div>
 
-      <!-- Speed HUD -->
-      <div id="speedHud" aria-label="Speed controls">
-        <div class="readout">SPEED <b id="speedReadout">1.0×</b></div>
-        <div id="speedChips" style="display:flex;gap:6px;">
-          <div class="chip" data-speed="0.75">0.75×</div>
-          <div class="chip active" data-speed="1">1×</div>
-          <div class="chip" data-speed="1.5">1.5×</div>
-          <div class="chip" data-speed="2">2×</div>
-        </div>
+      <!-- ✅ SPEED (small icon + popup) -->
+      <div id="speedBackdrop" aria-hidden="true"></div>
+
+      <button id="speedBtn" type="button" aria-label="Speed" title="Speed">
+        <span class="speed-ico">⏩</span>
+        <span id="speedBtnLabel">1×</span>
+      </button>
+
+      <div id="speedPop" aria-hidden="true">
+        <button class="speed-opt" data-speed="0.75" type="button">0.75×</button>
+        <button class="speed-opt active" data-speed="1" type="button">1×</button>
+        <button class="speed-opt" data-speed="1.5" type="button">1.5×</button>
+        <button class="speed-opt" data-speed="2" type="button">2×</button>
       </div>
 
       <!-- Settings panel -->
@@ -1118,6 +1143,7 @@
   <script>
     /* =========================================================
        ✅ DRIVE MODE
+       + Speed button (small) instead of big HUD
        + Mobile portrait lock: show rotate overlay, block controls
     ========================================================= */
 
@@ -1229,9 +1255,6 @@
     const autoDriveBtn = $("autoDriveBtn");
     const autoDriveLabel = $("autoDriveLabel");
 
-    const speedReadout = $("speedReadout");
-    const speedChips = $("speedChips");
-
     const joystickBase = $("joystickBase");
     const joystickKnob = $("joystickKnob");
 
@@ -1250,6 +1273,42 @@
 
     const engineAudio = $("engineAudio");
 
+    /* ===== SPEED (NEW UI) ===== */
+    const speedBtn = $("speedBtn");
+    const speedBtnLabel = $("speedBtnLabel");
+    const speedPop = $("speedPop");
+    const speedBackdrop = $("speedBackdrop");
+
+    function openSpeed(){
+      if (!speedPop || !speedBackdrop) return;
+      speedPop.style.display = "block";
+      speedBackdrop.style.display = "block";
+      speedPop.setAttribute("aria-hidden", "false");
+      speedBackdrop.setAttribute("aria-hidden", "false");
+    }
+    function closeSpeed(){
+      if (!speedPop || !speedBackdrop) return;
+      speedPop.style.display = "none";
+      speedBackdrop.style.display = "none";
+      speedPop.setAttribute("aria-hidden", "true");
+      speedBackdrop.setAttribute("aria-hidden", "true");
+    }
+    function isSpeedOpen(){
+      return speedPop && speedPop.style.display === "block";
+    }
+
+    speedBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      applyPortraitLock();
+      if (document.body.classList.contains("is-portrait")) return;
+
+      isSpeedOpen() ? closeSpeed() : openSpeed();
+    });
+
+    speedBackdrop?.addEventListener("pointerdown", () => closeSpeed(), { passive:true });
+
     /* ===== ROTATE OVERLAY ===== */
     const rotateOverlay = $("rotateOverlay");
     const rotateTryAgain = $("rotateTryAgain");
@@ -1261,20 +1320,19 @@
       return window.innerWidth <= 980;
     }
     function isPortrait(){
-      // Use both for reliability
       return window.matchMedia && window.matchMedia("(orientation: portrait)").matches
         ? true
         : (window.innerHeight > window.innerWidth);
     }
 
     function pauseForPortraitLock(){
-      // stop movement + pause media to avoid "ghost driving" behind overlay
       try{ video.pause(); }catch(_){}
       try{ engineAudio.pause(); }catch(_){}
     }
 
     function closeAllOverlaysHard(){
       settingsPanel.classList.remove("open");
+      closeSpeed(); // ✅ close speed pop too
 
       if (streetsDrawerOverlay?.style.display === "block"){
         streetsDrawerOverlay.style.display = "none";
@@ -1298,7 +1356,6 @@
       document.body.classList.toggle("is-portrait", shouldBlock);
 
       if (shouldBlock){
-        // ensure overlay appears above fullscreen too
         ensureOverlayParent(rotateOverlay);
         rotateOverlay.style.display = "flex";
         closeAllOverlaysHard();
@@ -1310,7 +1367,6 @@
     }
 
     rotateTryAgain?.addEventListener("click", () => {
-      // user rotated; re-check
       applyPortraitLock();
     });
 
@@ -1382,7 +1438,6 @@
 
       nightOverlay.style.opacity = setNightMode.checked ? "1" : "0";
 
-      // cinematic filter (very light)
       if (setVideoSharp.checked){
         video.style.filter = setNightMode.checked
           ? "brightness(0.62) contrast(1.18) saturate(1.05)"
@@ -1391,12 +1446,10 @@
         video.style.filter = setNightMode.checked ? "brightness(0.62) contrast(1.18)" : "none";
       }
 
-      // dash
       const hideDash = !!setHideDash.checked;
       dashOverlay.style.opacity = hideDash ? "0" : String(parseFloat(setDashOpacity.value || "1") || 1);
       dashOverlay.style.pointerEvents = "none";
 
-      // engine
       engineAudio.volume = currentDir ? (parseFloat(setEngineVol.value || "0.55") || 0.55) : 0.18;
     }
 
@@ -1408,7 +1461,7 @@
     function setViewport(){
       setViewportHeightVar();
       syncFsClass();
-      applyPortraitLock(); // ✅ re-check orientation
+      applyPortraitLock();
     }
     setViewport();
 
@@ -1488,12 +1541,12 @@
     fullscreenBtn?.addEventListener("click", async (e) => {
       e.preventDefault();
 
-      // If portrait-lock is active, don't fullscreen (keeps UX clean)
       applyPortraitLock();
       if (document.body.classList.contains("is-portrait")) return;
 
-      // close overlays before toggling
+      closeSpeed(); // ✅
       settingsPanel.classList.remove("open");
+
       if (streetsDrawerOverlay.style.display === "block") closeStreetsDrawer();
       if (popupCard.style.display === "flex"){
         popupCard.style.display = "none";
@@ -1523,6 +1576,8 @@
     function openStreetsDrawer(){
       applyPortraitLock();
       if (document.body.classList.contains("is-portrait")) return;
+
+      closeSpeed(); // ✅
 
       lastFocusBeforeDrawer = document.activeElement;
       document.activeElement?.blur?.();
@@ -1607,6 +1662,8 @@
       applyPortraitLock();
       if (document.body.classList.contains("is-portrait")) return;
 
+      closeSpeed(); // ✅
+
       if (streetsDrawerOverlay.style.display === "block") closeStreetsDrawer();
       if (fullMapOverlay.style.display === "flex"){
         fullMapOverlay.style.display = "none";
@@ -1629,18 +1686,33 @@
       if (!insidePanel && !insideBtn) closeSettingsPanel();
     }, { passive:true });
 
-    /* ===== SPEED CHIPS ===== */
+    /* ===== SPEED (logic) ===== */
+    function normalizeRateLabel(v){
+      const n = parseFloat(v);
+      if (!Number.isFinite(n)) return "1×";
+      return (n % 1 === 0) ? `${n}×` : `${n}×`;
+    }
+
     function setSpeed(v){
       walkSpeed = clamp(parseFloat(v) || 1, 0.25, 3);
-      speedReadout.textContent = `${walkSpeed.toFixed(2).replace(/\.00$/,'') }×`;
-      speedChips.querySelectorAll(".chip").forEach(ch => {
-        ch.classList.toggle("active", (parseFloat(ch.dataset.speed) || 1) === walkSpeed);
+
+      // update UI
+      if (speedBtnLabel) speedBtnLabel.textContent = normalizeRateLabel(walkSpeed);
+      speedPop?.querySelectorAll(".speed-opt").forEach(btn => {
+        const rate = parseFloat(btn.dataset.speed || "1");
+        btn.classList.toggle("active", rate === walkSpeed);
       });
+
+      // apply
       if (!video.paused && currentDir === 1) video.playbackRate = walkSpeed;
       updateEngineSound();
     }
-    speedChips?.querySelectorAll(".chip").forEach(ch => {
-      ch.addEventListener("click", () => setSpeed(ch.dataset.speed));
+
+    speedPop?.querySelectorAll(".speed-opt").forEach(btn => {
+      btn.addEventListener("click", () => {
+        setSpeed(btn.dataset.speed);
+        closeSpeed();
+      });
     });
 
     /* ===== VIDEO SOURCE (HLS aware) ===== */
@@ -1887,7 +1959,6 @@
       }
       lastFrameTime = t;
 
-      // If portrait lock overlay is active, freeze movement visuals
       if (document.body.classList.contains("is-portrait")){
         requestAnimationFrame(tick);
         return;
@@ -1979,7 +2050,6 @@
       if (absY > dead) nextDir = (ny < 0) ? 1 : -1;
 
       if (nextDir !== 0 || strafe !== 0) cancelAutoDriveIfUserMoves();
-
       setDir(nextDir);
 
       if (nextDir !== 0 || strafe !== 0){
@@ -2003,6 +2073,8 @@
     joystickBase?.addEventListener("pointerdown", (e) => {
       applyPortraitLock();
       if (document.body.classList.contains("is-portrait")) return;
+
+      closeSpeed(); // ✅ don’t overlap with joystick
 
       e.preventDefault();
       unlockAudio();
@@ -2061,7 +2133,8 @@
         streetsDrawerOverlay.style.display === "block" ||
         fullMapOverlay.style.display === "flex" ||
         popupCard.style.display === "flex" ||
-        (rotateOverlay && rotateOverlay.style.display === "flex")
+        (rotateOverlay && rotateOverlay.style.display === "flex") ||
+        isSpeedOpen()
       );
     }
 
@@ -2081,7 +2154,7 @@
       strafe = lean;
 
       if (lean === -1) tiltAngle = clamp(tiltAngle - TILT_STEP, -MAX_TILT, MAX_TILT);
-      else if (lean === 1) tiltAngle = clamp(tiltAngle + TILT_STEP, -MAX_TILT, MAX_TILT);
+      else if (lean === 1) tiltAngle = clamp(tiltAngle + TILT_STEP, MAX_TILT, MAX_TILT);
       else tiltAngle *= 0.85;
 
       setDir(dir);
@@ -2095,6 +2168,8 @@
       const k = (e.key || "").toLowerCase();
 
       if (k === "escape"){
+        if (isSpeedOpen()){ closeSpeed(); return; }
+
         if (fullMapOverlay.style.display === "flex"){
           fullMapOverlay.style.display = "none";
           restoreOverlayToBody(fullMapOverlay);
@@ -2119,6 +2194,7 @@
 
       if (["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"].includes(k)){
         e.preventDefault();
+        closeSpeed();
         unlockAudio();
         if (engineAudio.paused) engineAudio.play().catch(()=>{});
         keys.add(k);
@@ -2141,6 +2217,8 @@
     streetHud?.addEventListener("click", () => {
       applyPortraitLock();
       if (document.body.classList.contains("is-portrait")) return;
+
+      closeSpeed();
 
       const st = STREETS[currentIndex];
       if (!st) return;
@@ -2253,6 +2331,8 @@
       applyPortraitLock();
       if (document.body.classList.contains("is-portrait")) return;
 
+      closeSpeed();
+
       ensureOverlayParent(fullMapOverlay);
       fullMapOverlay.style.display = "flex";
       setCanvasTouchForOverlay(true);
@@ -2303,6 +2383,7 @@
     }
 
     viewerCanvas?.addEventListener("pointerdown", (e) => {
+      if (isSpeedOpen() && !(speedPop.contains(e.target) || speedBtn.contains(e.target))) closeSpeed();
       if (!settingsPanel.classList.contains("open")) return;
       if (settingsPanel.contains(e.target) || settingsBtn.contains(e.target)) return;
       closeSettingsPanel();
@@ -2320,7 +2401,6 @@
     }
 
     setSpeed(1);
-    speedReadout.textContent = "1×";
 
     document.addEventListener("pointerdown", () => {
       if (!audioUnlocked) return;
