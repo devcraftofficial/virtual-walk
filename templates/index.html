@@ -70,6 +70,7 @@
       cursor:pointer;
       user-select:none;
       transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      z-index: 3;
     }
     .like-fab:hover{ transform: translateY(-1px); border-color: rgba(56,189,248,.35); background: rgba(2,6,23,.82); }
     .like-fab:active{ transform: translateY(0px) scale(.98); }
@@ -150,10 +151,9 @@
               <i class="fas fa-location-dot" aria-hidden="true"></i><span>Tour places</span>
             </a>
             <a href="{{ url_for('how_it_works') }}" class="nav-link">
-  <i class="fas fa-circle-info" aria-hidden="true"></i><span>How it works</span>
-</a>
+              <i class="fas fa-circle-info" aria-hidden="true"></i><span>How it works</span>
+            </a>
 
-             
             <a href="#trip-price" class="nav-link">
               <i class="fas fa-ticket-alt" aria-hidden="true"></i><span>Trip price check</span>
             </a>
@@ -334,8 +334,6 @@
           </div>
         </section>
 
-        
-
         <!-- TOUR PLACES -->
         {% set effective_tour_streets = tour_streets if tour_streets is defined
             else (streets|selectattr('is_tour')|list if streets else []) %}
@@ -366,8 +364,16 @@
 
             <div class="tour-grid" id="tourGrid">
               {% for st in effective_tour_streets[:8] %}
-                {% if st.videos and st.videos|length > 0 and st.videos[0].url %}
-                  {% set thumb_url_tour = st.videos[0].url|replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_400,c_fill,g_center') %}
+
+                {# ✅ THUMB PRIORITY: thumbnail_url > first video > placeholder #}
+                {% if st.thumbnail_url %}
+                  {# If your thumbnail is from Cloudinary image/upload you can transform it here #}
+                  {% set thumb_url_tour = st.thumbnail_url
+                      |replace('image/upload', 'image/upload/q_auto,w_400,c_fill,g_center') %}
+                  {% set is_placeholder_tour = False %}
+                {% elif st.videos and st.videos|length > 0 and st.videos[0].url %}
+                  {% set thumb_url_tour = st.videos[0].url
+                      |replace('video/upload', 'video/upload/so_1,f_jpg,q_auto,w_400,c_fill,g_center') %}
                   {% set is_placeholder_tour = False %}
                 {% else %}
                   {% set thumb_url_tour = url_for('static', filename='img/placeholder-street.jpg') %}
