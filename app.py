@@ -82,6 +82,9 @@ MAX_CONTENT_LENGTH = MAX_REQUEST_MB * 1024 * 1024
 # Per-file limits
 MAX_VIDEO_SIZE = int(os.getenv("MAX_VIDEO_SIZE_MB", "100")) * 1024 * 1024  # default 100MB
 MAX_GLB_SIZE = int(os.getenv("MAX_GLB_SIZE_MB", "50")) * 1024 * 1024      # default 50MB
+MAX_THUMB_SIZE = int(os.getenv("MAX_THUMB_SIZE_MB", "5")) * 1024 * 1024  # default 5MB
+ALLOWED_THUMB_EXT = {"jpg", "jpeg", "png", "webp"}
+
 
 # --------------------------------------------------------
 # Cloudinary Config
@@ -219,6 +222,12 @@ def distinct_categories_for_mode(mode: str):
     )
     cats = [c for c in cats if c]
     return sorted(cats)
+def allowed_thumb(filename: str) -> bool:
+    if not filename:
+        return False
+    ext = filename.rsplit(".", 1)[-1].lower()
+    return ext in ALLOWED_THUMB_EXT
+
 
 
 def format_date(dt):
@@ -319,6 +328,18 @@ def upload_video_cloudinary(file):
         logger.error("Cloudinary video upload failed", exc_info=True)
         raise
 
+def upload_image_cloudinary(file):
+    try:
+        upload = cloudinary.uploader.upload(
+            file,
+            folder="streetwalk_thumbs",
+            resource_type="image",
+            timeout=int(os.getenv("CLOUDINARY_TIMEOUT", "180")),
+        )
+        return upload["secure_url"]
+    except Exception:
+        logger.error("Cloudinary thumbnail upload failed", exc_info=True)
+        raise
 
 def get_street_by_id(street_id):
     if not street_id:
@@ -1080,6 +1101,7 @@ def upload():
         category = clean_text(request.form.get("category"), 80)
         description = clean_text(request.form.get("description"), 500)
 
+        # ---------------- VIDEO ----------------
         if street_type == "video":
             if mode not in ["walk", "drive", "fly", "sit"]:
                 mode = "walk"
@@ -1088,6 +1110,29 @@ def upload():
             is_tour = True if is_tour_flag in ("on", "true", "1") else False
             tour_category = clean_text(request.form.get("tour_category"), 80)
             tour_best_time = clean_text(request.form.get("tour_best_time"), 80)
+
+            # ✅ NEW: Thumbnail (optional)
+            thumbnail_url = None
+            thumb_file = request.files.get("thumbnail")
+            if thumb_file and thumb_file.filename:
+                if not allowed_thumb(thumb_file.filename):
+                    flash("Thumbnail must be JPG / PNG / WEBP.", "error")
+                    return redirect(url_for("upload"))
+
+                thumb_file.seek(0, os.SEEK_END)
+                thumb_size = thumb_file.tell()
+                thumb_file.seek(0)
+
+                if thumb_size > MAX_THUMB_SIZE:
+                    flash(f"Thumbnail must be under {MAX_THUMB_SIZE // (1024*1024)}MB", "error")
+                    return redirect(url_for("upload"))
+
+                try:
+                    thumbnail_url = upload_image_cloudinary(thumb_file)
+                except Exception as e:
+                    flash("Thumbnail upload failed.", "error")
+                    logger.error("Thumbnail upload failed: %s", e)
+                    return redirect(url_for("upload"))
 
             files = request.files.getlist("video")
             links_raw = request.form.get("video_links")
@@ -1133,6 +1178,7 @@ def upload():
                 "lng": lng,
                 "description": description,
                 "videos": [{"url": url, "title": f"Part {i + 1}"} for i, url in enumerate(video_urls)],
+                "thumbnail_url": thumbnail_url,  # ✅ NEW FIELD
                 "likes": 0,
                 "createdAt": datetime.utcnow(),
                 "updatedAt": datetime.utcnow(),
@@ -1143,6 +1189,7 @@ def upload():
                 "tour_best_time": tour_best_time,
             }
 
+        # ---------------- 3D ----------------
         elif street_type == "3d":
             file = request.files.get("model")
             link = request.form.get("model_link")
@@ -1197,6 +1244,7 @@ def upload():
         return redirect(url_for("dashboard"))
 
     return render_template("upload.html")
+
 
 
 # --------------------------------------------------------
