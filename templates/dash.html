@@ -3,214 +3,351 @@
 <head>
   <meta charset="UTF-8" />
   <title>ABTO – Creator Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#020617">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#020617" />
 
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/fav.png') }}">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <script src="{{ url_for('static', filename='js/chart.umd.js') }}"></script>
+
   <link rel="stylesheet" href="{{ url_for('static', filename='css/maplibre-gl.css') }}">
   <script src="{{ url_for('static', filename='js/maplibre-gl.js') }}"></script>
 
   <style>
     :root{
       --bg:#020617;
-      --glass:rgba(15,23,42,.86);
-      --glass2:rgba(15,23,42,.94);
-      --border:rgba(148,163,184,.28);
       --text:#e5e7eb;
       --muted:#9ca3af;
-      --accent:#38bdf8;
-      --accent2:#60a5fa;
-      --success:#22c55e;
-      --warning:#f97316;
+
+      --card: rgba(15,23,42,.70);
+      --card2: rgba(2,6,23,.52);
+      --stroke: rgba(148,163,184,.18);
+
+      --a1:#38bdf8;
+      --a2:#60a5fa;
+      --good:#22c55e;
+      --warn:#f97316;
       --purple:#a855f7;
-      --danger:#ef4444;
-      --r18:18px;
-      --r12:12px;
-      --shadow:0 22px 55px rgba(0,0,0,.68);
+      --danger:#fb7185;
+
+      --r24:24px;
+      --shadow: 0 18px 55px rgba(0,0,0,.35);
+
+      --grad: linear-gradient(135deg, var(--a1), var(--a2));
+      --glow: radial-gradient(900px 500px at 12% 0%, rgba(56,189,248,.18), transparent 55%),
+              radial-gradient(900px 500px at 88% 10%, rgba(168,85,247,.14), transparent 60%),
+              radial-gradient(900px 500px at 60% 100%, rgba(34,197,94,.10), transparent 60%);
     }
+
     *{box-sizing:border-box}
+    html,body{height:auto; min-height:100%}
     body{
-      margin:0; font-family:Inter,system-ui,-apple-system,sans-serif; color:var(--text);
-      background:
-        radial-gradient(circle at top left,#0f172a,transparent 55%),
-        radial-gradient(circle at bottom right,#022c3a,#000 70%);
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif;
+      color:var(--text);
+      background: var(--bg);
+      overflow-x:hidden;
+      overflow-y:auto;
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background: var(--glow);
+      opacity:.9;
+    }
+
+    .wrap{
+      position:relative;
+      width:100%;
+      max-width:1480px;
+      margin:0 auto;
+      padding:18px 14px 90px;
       min-height:100vh;
-      padding:14px 0;
     }
-    .shell{
-      max-width:1480px; margin:0 auto; padding:22px;
-      background:linear-gradient(135deg, rgba(15,23,42,.96), rgba(15,23,42,.90));
-      border:1px solid rgba(148,163,184,.35);
-      border-radius:var(--r18);
-      box-shadow:var(--shadow);
-      backdrop-filter: blur(14px);
+
+    /* ✅ NON-STICKY TOPBAR */
+    .topbar-wrap{
+      position: relative;              /* was sticky */
+      top:auto;
+      z-index:50;
+      padding:12px 0 14px;
+      background: linear-gradient(180deg, rgba(2,6,23,.92), rgba(2,6,23,.70), rgba(2,6,23,0));
+      border-bottom: 1px solid rgba(148,163,184,.14);
+      backdrop-filter: blur(10px);
     }
-    .top{
-      display:flex; justify-content:space-between; align-items:center; gap:14px;
-      padding-bottom:16px; border-bottom:1px solid rgba(148,163,184,.22);
-      margin-bottom:18px;
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:12px 14px;
+      border-radius: var(--r24);
+      background: rgba(15,23,42,.62);
+      border:1px solid rgba(148,163,184,.16);
+      box-shadow: var(--shadow);
+      flex-wrap:wrap;
     }
-    .brand{display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit}
-    .brand img{width:44px; height:44px; border-radius:14px; object-fit:contain; box-shadow:0 10px 30px rgba(56,189,248,.55)}
-    .brand h1{margin:0; font-size:18px; letter-spacing:.18em; text-transform:uppercase;
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-      font-weight:800;
+
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      text-decoration:none; color:inherit;
+      flex:1 1 260px;
+      min-width:0;
     }
-    .brand .sub{color:var(--muted); font-size:12px; margin-top:2px}
-    .actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    .brand img{
+      width:44px;height:44px;border-radius:14px;
+      object-fit:contain;
+      background: rgba(2,6,23,.6);
+      border:1px solid rgba(148,163,184,.14);
+      box-shadow: 0 14px 40px rgba(56,189,248,.22);
+      flex-shrink:0;
+    }
+    .brand .t{min-width:0; line-height:1.05}
+    .brand .t strong{
+      display:block;
+      font-size:14px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      font-weight:950;
+      background: var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+      white-space:nowrap;
+    }
+    .brand .t span{
+      display:block;
+      font-size:12px;
+      margin-top:4px;
+      color:var(--muted);
+      font-weight:650;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .top-right{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      flex:1 1 560px;
+      min-width:0;
+    }
+
     .pill{
-      display:flex; align-items:center; gap:10px; padding:8px 12px;
-      border:1px solid rgba(148,163,184,.45); border-radius:999px; background:rgba(15,23,42,.85);
-      max-width:560px;
+      display:flex; align-items:center; gap:10px;
+      padding:8px 10px;
+      border-radius:999px;
+      background: rgba(2,6,23,.55);
+      border:1px solid rgba(148,163,184,.16);
+      min-width:220px;
+      flex:1 1 260px;
+      max-width:100%;
     }
-    .avatar{width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-      font-weight:800; background:radial-gradient(circle at top, rgba(56,189,248,.25), rgba(15,23,42,1));
-      border:1px solid rgba(56,189,248,.55);
+    .avatar{
+      width:34px;height:34px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-weight:950;
+      background: radial-gradient(circle at top, rgba(56,189,248,.28), rgba(2,6,23,1));
+      border:1px solid rgba(56,189,248,.40);
       flex-shrink:0;
     }
     .meta{min-width:0}
-    .meta .name{font-weight:800; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-    .meta .email{font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .meta .name{
+      display:flex; align-items:center; gap:8px;
+      font-weight:900; font-size:12px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .meta .email{
+      font-size:11px; color:var(--muted); font-weight:650;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      margin-top:2px;
+    }
     .adminBadge{
-      margin-left:8px;
       padding:3px 8px;
       border-radius:999px;
-      font-size:11px;
-      font-weight:800;
-      letter-spacing:.06em;
-      background:rgba(168,85,247,.16);
-      border:1px solid rgba(168,85,247,.45);
+      font-size:10px;
+      font-weight:950;
+      letter-spacing:.08em;
+      background:rgba(168,85,247,.14);
+      border:1px solid rgba(168,85,247,.38);
       color:#f3e8ff;
       display:none;
       flex-shrink:0;
     }
-    .btn{
-      border:0; cursor:pointer; text-decoration:none;
-      padding:9px 16px; border-radius:999px; display:inline-flex; gap:8px; align-items:center;
-      font-size:13px; font-weight:700; transition:.2s ease;
+
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background: rgba(2,6,23,.55);
+      border:1px solid rgba(148,163,184,.16);
+      font-size:12px;
+      font-weight:850;
       white-space:nowrap;
     }
-    .btn.primary{background:linear-gradient(135deg,var(--accent),#0ea5e9); color:#06121f; box-shadow:0 10px 28px rgba(56,189,248,.26)}
-    .btn.primary:hover{transform:translateY(-2px)}
-    .btn.ghost{background:rgba(15,23,42,.85); color:var(--text); border:1px solid rgba(148,163,184,.45)}
-    .btn.ghost:hover{border-color:rgba(56,189,248,.7); background:rgba(56,189,248,.10)}
-    .grid{
-      display:grid;
-      grid-template-columns: 1.25fr .75fr;
-      gap:18px;
-      align-items:start;
+    .chip .dot{
+      width:8px;height:8px;border-radius:50%;
+      background:var(--a1);
+      box-shadow:0 0 16px rgba(56,189,248,.55);
     }
-    .stats{
-      display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:14px; margin-bottom:16px;
-    }
-    .card{
-      background:rgba(15,23,42,.90);
-      border:1px solid rgba(148,163,184,.26);
-      border-radius:var(--r18);
-      padding:16px;
-      position:relative; overflow:hidden;
-    }
-    .card:hover{border-color:rgba(56,189,248,.35)}
-    .card .num{font-size:26px; font-weight:900; line-height:1.05}
-    .card .lbl{font-size:12px; color:var(--muted); font-weight:700; margin-top:6px}
-    .bar{position:absolute; left:0; right:0; top:0; height:4px; opacity:.75}
-    .b-accent{background:linear-gradient(90deg,var(--accent),transparent)}
-    .b-warn{background:linear-gradient(90deg,var(--warning),transparent)}
-    .b-succ{background:linear-gradient(90deg,var(--success),transparent)}
-    .b-purple{background:linear-gradient(90deg,var(--purple),transparent)}
-    .b-danger{background:linear-gradient(90deg,var(--danger),transparent)}
-    .section-title{display:flex; align-items:end; justify-content:space-between; gap:10px; margin-bottom:12px}
-    .section-title h2{margin:0; font-size:15px}
-    .section-title p{margin:0; color:var(--muted); font-size:12px; font-weight:600}
+
     .select{
-      background:rgba(15,23,42,.92);
-      border:1px solid rgba(148,163,184,.45);
+      background: rgba(2,6,23,.55);
+      border:1px solid rgba(148,163,184,.16);
       color:var(--text);
       border-radius:999px;
-      padding:6px 10px;
+      padding:8px 12px;
       font-size:12px;
-      font-weight:700;
+      font-weight:850;
+      outline:none;
+      cursor:pointer;
     }
-    .chartWrap{height:290px}
+
+    .btn{
+      border:0; cursor:pointer; text-decoration:none;
+      padding:9px 14px;
+      border-radius:999px;
+      display:inline-flex; gap:8px; align-items:center;
+      font-size:12px; font-weight:950;
+      transition:.16s ease;
+      white-space:nowrap;
+      justify-content:center;
+    }
+    .btn.primary{
+      background: var(--grad);
+      color:#06121f;
+      box-shadow: 0 16px 40px rgba(56,189,248,.18);
+    }
+    .btn.ghost{
+      background: rgba(2,6,23,.55);
+      color:var(--text);
+      border:1px solid rgba(148,163,184,.16);
+    }
+
+    /* stats */
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(6, minmax(0,1fr));
+      gap:12px;
+      margin-top:14px;
+    }
+    .statCard{
+      position:relative;
+      padding:14px;
+      border-radius: 20px;
+      background: rgba(2,6,23,.45);
+      border:1px solid rgba(148,163,184,.14);
+      overflow:hidden;
+      min-height:88px;
+    }
+    .bar{position:absolute; left:0; right:0; top:0; height:4px; opacity:.9}
+    .b-accent{background:linear-gradient(90deg,var(--a1),transparent)}
+    .b-warn{background:linear-gradient(90deg,var(--warn),transparent)}
+    .b-succ{background:linear-gradient(90deg,var(--good),transparent)}
+    .b-purple{background:linear-gradient(90deg,var(--purple),transparent)}
+    .statCard .num{font-size:26px; font-weight:1000; line-height:1.05}
+    .statCard .lbl{font-size:12px; color:var(--muted); font-weight:850; margin-top:6px}
+
+    /* grid/cards */
+    .grid{
+      display:grid;
+      grid-template-columns: 1.35fr .65fr;
+      gap:16px;
+      align-items:start;
+      margin-top:12px;
+      width:100%;
+    }
+    .card{
+      background: rgba(15,23,42,.66);
+      border: 1px solid rgba(148,163,184,.16);
+      border-radius: var(--r24);
+      padding:16px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      min-width:0;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .section-title{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:12px;
+      flex-wrap:wrap;
+    }
+    .section-title h2{margin:0;font-size:14px;font-weight:950}
+    .section-title p{margin:0;color:var(--muted);font-size:12px;font-weight:650}
+    .small{font-size:11px;color:var(--muted);font-weight:650}
+
+    .chartWrap{
+      position:relative;
+      width:100%;
+      height:290px;
+      border-radius: 18px;
+      background: rgba(2,6,23,.25);
+      border: 1px solid rgba(148,163,184,.10);
+      overflow:hidden;
+    }
+    .chartWrap canvas{
+      position:absolute;
+      inset:0;
+      width:100% !important;
+      height:100% !important;
+      display:block;
+    }
 
     .two{
       display:grid;
       grid-template-columns: 1fr 1fr;
-      gap:14px;
-      margin-top:14px;
+      gap:12px;
+      margin-top:12px;
     }
-    .list{
-      display:flex; flex-direction:column; gap:10px;
-    }
+    .list{display:flex; flex-direction:column; gap:10px}
 
-    /* ROW as grid so we can add buttons */
     .row{
-      display:grid;
-      grid-template-columns: 1fr auto auto;
-      gap:10px;
+      display:flex;
       align-items:center;
+      gap:10px;
       padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(148,163,184,.20);
-      background:rgba(15,23,42,.80);
+      border-radius: 18px;
+      border:1px solid rgba(148,163,184,.14);
+      background: rgba(2,6,23,.44);
+      transition:.16s ease;
+      flex-wrap:wrap;
+      min-width:0;
     }
     .row.clickable{cursor:pointer}
-    .row.clickable:hover{background:rgba(56,189,248,.10); border-color:rgba(56,189,248,.22)}
-    .row .left{min-width:0}
-    .row .t{font-weight:800; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-    .row .s{font-size:11px; color:var(--muted); margin-top:2px; font-weight:600}
+    .row .left{flex:1 1 240px; min-width:0}
+    .row .t{font-weight:950; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .row .s{font-size:11px; color:var(--muted); margin-top:2px; font-weight:650}
 
     .tag{
-      font-size:11px; font-weight:900;
-      padding:4px 10px; border-radius:999px;
-      border:1px solid rgba(148,163,184,.35);
-      color:var(--text);
-      background:rgba(15,23,42,.85);
-      flex-shrink:0;
-    }
-    .tag.walk{border-color:rgba(34,197,94,.5); color:#bbf7d0; background:rgba(34,197,94,.12)}
-    .tag.drive{border-color:rgba(56,189,248,.55); color:#e0f2fe; background:rgba(56,189,248,.12)}
-    .tag.fly{border-color:rgba(168,85,247,.55); color:#f3e8ff; background:rgba(168,85,247,.12)}
-    .tag.sit{border-color:rgba(249,115,22,.65); color:#ffedd5; background:rgba(249,115,22,.12)}
-
-    .mini{
-      border:1px solid rgba(148,163,184,.35);
-      background:rgba(15,23,42,.88);
-      color:var(--text);
+      font-size:11px;
+      font-weight:950;
+      padding:5px 10px;
       border-radius:999px;
-      padding:6px 10px;
-      font-size:12px;
-      font-weight:800;
-      cursor:pointer;
-      transition:.18s ease;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
+      border:1px solid rgba(148,163,184,.18);
+      background: rgba(2,6,23,.55);
+      flex:0 0 auto;
     }
-    .mini:hover{border-color:rgba(56,189,248,.6); background:rgba(56,189,248,.10)}
-    .mini.danger{
-      border-color:rgba(239,68,68,.55);
-      background:rgba(239,68,68,.10);
-      color:#fecaca;
-    }
-    .mini.danger:hover{background:rgba(239,68,68,.16)}
-    .mini:disabled{opacity:.55; cursor:not-allowed}
-
-    #map{height:300px; border-radius:var(--r18); overflow:hidden}
-    .loading{
-      display:flex; gap:10px; align-items:center; color:var(--muted); font-size:13px; font-weight:700;
-    }
-    .dot{width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 20px rgba(56,189,248,.7)}
-    .small{font-size:11px; color:var(--muted); font-weight:600}
+    .tag.walk{border-color:rgba(34,197,94,.35); color:#bbf7d0; background:rgba(34,197,94,.10)}
+    .tag.drive{border-color:rgba(56,189,248,.35); color:#e0f2fe; background:rgba(56,189,248,.10)}
+    .tag.fly{border-color:rgba(168,85,247,.35); color:#f3e8ff; background:rgba(168,85,247,.10)}
+    .tag.sit{border-color:rgba(249,115,22,.40); color:#ffedd5; background:rgba(249,115,22,.10)}
 
     .toolbar{
       display:flex;
@@ -220,108 +357,150 @@
       margin-bottom:10px;
     }
     .search{
-      flex:1;
-      min-width:220px;
+      flex:1 1 240px;
+      min-width:0;
       display:flex;
       align-items:center;
       gap:10px;
-      border:1px solid rgba(148,163,184,.30);
-      background:rgba(15,23,42,.82);
-      padding:8px 12px;
+      border:1px solid rgba(148,163,184,.14);
+      background: rgba(2,6,23,.44);
+      padding:10px 12px;
       border-radius:999px;
     }
-    .search i{color:rgba(148,163,184,.8)}
     .search input{
       width:100%;
       border:0;
       outline:0;
       background:transparent;
       color:var(--text);
-      font-weight:700;
+      font-weight:850;
       font-size:12px;
+      min-width:0;
+    }
+
+    #map{
+      height:320px;
+      width:100%;
+      border-radius: var(--r24);
+      overflow:hidden;
+      border:1px solid rgba(148,163,184,.14);
+      background: rgba(2,6,23,.35);
+    }
+
+    .loading{
+      display:flex; gap:10px; align-items:center;
+      color:var(--muted); font-size:13px; font-weight:850;
+    }
+    .loading .ldot{
+      width:8px;height:8px;border-radius:50%;
+      background:var(--a1);
+      box-shadow:0 0 18px rgba(56,189,248,.55);
     }
 
     @media (max-width:1100px){
       .grid{grid-template-columns:1fr}
-      .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
       .two{grid-template-columns:1fr}
+      .stats{grid-template-columns: repeat(3, minmax(0,1fr))}
+    }
+    @media (max-width:720px){
+      .wrap{padding:12px 10px 90px}
+      .brand{flex:1 1 100%}
+      .top-right{flex:1 1 100%; justify-content:space-between}
+      .pill{flex:1 1 100%}
+      #daysSelect{flex:1 1 100%; width:100%}
+      .btn{flex:1 1 100%}
+      .stats{grid-template-columns: repeat(2, minmax(0,1fr))}
+      .chartWrap{height:240px}
+      #map{height:280px}
+      .search{flex:1 1 100%}
+      #modeFilter{flex:1 1 100%; width:100%}
+    }
+    @media (max-width:420px){
+      .chip{display:none}
+      .stats{grid-template-columns:1fr}
     }
   </style>
 </head>
 
 <body>
-  <div class="shell">
+  <div class="wrap">
 
-    <div class="top">
-      <a class="brand" href="{{ url_for('index') }}">
-        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="ABTO">
-        <div>
-          <h1>ABTO</h1>
-          <div class="sub">Creator Dashboard • Real analytics</div>
-        </div>
-      </a>
+    <div class="topbar-wrap">
+      <header class="topbar" aria-label="Dashboard top bar">
 
-      <div class="actions">
-        <div class="pill" id="userPill">
-          <div class="avatar" id="avatarLetter">U</div>
-          <div class="meta">
-            <div class="name">
-              <span id="userName">Loading…</span>
-              <span class="adminBadge" id="adminBadge">ADMIN</span>
-            </div>
-            <div class="email" id="userEmail"></div>
+        <a class="brand" href="{{ url_for('index') }}">
+          <img src="{{ url_for('static', filename='img/logo.png') }}" alt="ABTO">
+          <div class="t">
+            <strong>ABTO</strong>
+            <span>Creator Dashboard • Real analytics</span>
           </div>
+        </a>
+
+        <div class="top-right">
+          <div class="pill" id="userPill">
+            <div class="avatar" id="avatarLetter">U</div>
+            <div class="meta">
+              <div class="name">
+                <span id="userName">Loading…</span>
+                <span class="adminBadge" id="adminBadge">ADMIN</span>
+              </div>
+              <div class="email" id="userEmail"></div>
+            </div>
+          </div>
+
+          <div class="chip">
+            <span class="dot"></span>
+            <span>Live</span>
+          </div>
+
+          <select id="daysSelect" class="select" aria-label="Time range">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="0">All time</option>
+          </select>
+
+          <a class="btn primary" href="{{ url_for('upload') }}"><i class="fa-solid fa-upload"></i> Upload</a>
+          <a class="btn ghost" href="{{ url_for('index') }}"><i class="fa-solid fa-house"></i> Home</a>
+          <a class="btn ghost" href="{{ url_for('logout') }}"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
         </div>
+      </header>
 
-        <select id="daysSelect" class="select" aria-label="Time range">
-          <option value="7">Last 7 days</option>
-          <option value="30" selected>Last 30 days</option>
-          <option value="90">Last 90 days</option>
-          <option value="0">All time</option>
-        </select>
-
-        <a class="btn primary" href="{{ url_for('upload') }}"><i class="fa-solid fa-upload"></i> Upload</a>
-        <a class="btn ghost" href="{{ url_for('index') }}"><i class="fa-solid fa-house"></i> Home</a>
-        <a class="btn ghost" href="{{ url_for('logout') }}"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
-      </div>
-    </div>
-
-    <!-- STATS -->
-    <div class="stats">
-      <div class="card">
-        <div class="bar b-accent"></div>
-        <div class="num" id="statTotal">0</div>
-        <div class="lbl">Total Streets</div>
-      </div>
-      <div class="card">
-        <div class="bar b-warn"></div>
-        <div class="num" id="statLikes">0</div>
-        <div class="lbl">Total Likes</div>
-      </div>
-      <div class="card">
-        <div class="bar b-succ"></div>
-        <div class="num" id="statWalk">0</div>
-        <div class="lbl">Walk</div>
-      </div>
-      <div class="card">
-        <div class="bar b-accent"></div>
-        <div class="num" id="statDrive">0</div>
-        <div class="lbl">Drive</div>
-      </div>
-      <div class="card">
-        <div class="bar b-purple"></div>
-        <div class="num" id="statFly">0</div>
-        <div class="lbl">Fly</div>
-      </div>
-      <div class="card">
-        <div class="bar b-warn"></div>
-        <div class="num" id="statSit">0</div>
-        <div class="lbl">Sit</div>
-      </div>
+      <section class="stats" aria-label="Summary stats">
+        <div class="statCard">
+          <div class="bar b-accent"></div>
+          <div class="num" id="statTotal">0</div>
+          <div class="lbl">Total Streets</div>
+        </div>
+        <div class="statCard">
+          <div class="bar b-warn"></div>
+          <div class="num" id="statLikes">0</div>
+          <div class="lbl">Total Likes</div>
+        </div>
+        <div class="statCard">
+          <div class="bar b-succ"></div>
+          <div class="num" id="statWalk">0</div>
+          <div class="lbl">Walk</div>
+        </div>
+        <div class="statCard">
+          <div class="bar b-accent"></div>
+          <div class="num" id="statDrive">0</div>
+          <div class="lbl">Drive</div>
+        </div>
+        <div class="statCard">
+          <div class="bar b-purple"></div>
+          <div class="num" id="statFly">0</div>
+          <div class="lbl">Fly</div>
+        </div>
+        <div class="statCard">
+          <div class="bar b-warn"></div>
+          <div class="num" id="statSit">0</div>
+          <div class="lbl">Sit</div>
+        </div>
+      </section>
     </div>
 
     <div class="grid">
-      <!-- LEFT -->
       <div>
         <div class="card">
           <div class="section-title">
@@ -341,11 +520,11 @@
             <div class="section-title">
               <div>
                 <h2>Top Streets (Views)</h2>
-                <p>Most opened streets (real)</p>
+                <p>Most opened streets</p>
               </div>
             </div>
             <div class="list" id="topViewsList">
-              <div class="loading"><span class="dot"></span> Loading…</div>
+              <div class="loading"><span class="ldot"></span> Loading…</div>
             </div>
           </div>
 
@@ -353,16 +532,16 @@
             <div class="section-title">
               <div>
                 <h2>Top Streets (Likes)</h2>
-                <p>Most liked streets (real)</p>
+                <p>Most liked streets</p>
               </div>
             </div>
             <div class="list" id="topLikesList">
-              <div class="loading"><span class="dot"></span> Loading…</div>
+              <div class="loading"><span class="ldot"></span> Loading…</div>
             </div>
           </div>
         </div>
 
-        <div class="card" style="margin-top:14px;">
+        <div class="card" style="margin-top:12px;">
           <div class="section-title">
             <div>
               <h2>My Streets (quick)</h2>
@@ -386,42 +565,40 @@
           </div>
 
           <div class="list" id="streetsList">
-            <div class="loading"><span class="dot"></span> Loading…</div>
+            <div class="loading"><span class="ldot"></span> Loading…</div>
           </div>
         </div>
       </div>
 
-      <!-- RIGHT -->
-      <div class="side">
+      <div>
         <div class="card">
           <div class="section-title">
             <div>
               <h2>Recent Activity</h2>
-              <p>Last events (real)</p>
+              <p>Last events</p>
             </div>
           </div>
           <div class="list" id="activityList">
-            <div class="loading"><span class="dot"></span> Loading…</div>
+            <div class="loading"><span class="ldot"></span> Loading…</div>
           </div>
         </div>
 
-        <div class="card" style="margin-top:14px; padding:0;">
-          <div style="padding:14px 16px 10px 16px; border-bottom:1px solid rgba(148,163,184,.18);">
-            <div class="section-title" style="margin:0;">
-              <div>
-                <h2>Map</h2>
-                <p>All your streets</p>
-              </div>
+        <div class="card" style="margin-top:12px; padding:14px;">
+          <div class="section-title" style="margin-bottom:10px;">
+            <div>
+              <h2>Map</h2>
+              <p>All your streets</p>
             </div>
           </div>
           <div id="map"></div>
+          <div class="small" style="margin-top:10px;">Tip: Click markers to open a street.</div>
         </div>
 
-        <div class="card" style="margin-top:14px;">
+        <div class="card" style="margin-top:12px;">
           <div class="section-title">
             <div>
-              <h2>Tips</h2>
-              <p>What improves ABTO growth</p>
+              <h2>Creator Tips</h2>
+              <p>Boost retention & discovery</p>
             </div>
           </div>
           <div class="small">
