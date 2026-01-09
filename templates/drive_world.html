@@ -105,6 +105,21 @@
       z-index:2;
     }
 
+    /* Rain glass overlay for cinematic mode */
+    #rainOverlay{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index:2;
+      opacity:0;
+      mix-blend-mode:screen;
+      background-image:
+        linear-gradient(120deg, rgba(148,163,184,.26) 1px, transparent 1px),
+        linear-gradient(-120deg, rgba(148,163,184,.20) 1px, transparent 1px);
+      background-size:2px 34px, 2px 28px;
+      transition:opacity .35s ease-out;
+    }
+
     /* ===== MINI MAP ===== */
     .mini-map{
       position:absolute;
@@ -142,14 +157,14 @@
       backdrop-filter: blur(10px);
       transition: transform .15s ease;
     }
-    .icon-btn:hover{ transformtransform: translateY(-1px); }
+    .icon-btn:hover{ transform: translateY(-1px); }
     .icon-btn:active{ transform: translateY(0) scale(.98); }
 
     /* ===== STREET INFO (top center) ===== */
     .street-hud{
       position:absolute;
       top:16px;
-      left:50%;
+      left:300px;
       transform: translateX(-50%);
       background: rgba(15,23,42,.78);
       border:1px solid rgba(148,163,184,.40);
@@ -191,6 +206,15 @@
       overflow:hidden;
       text-overflow:ellipsis;
       opacity:.95;
+    }
+
+    /* 👉 Mobile: move street name to the left so it doesn't collide with buttons */
+    @media (max-width: 768px){
+      .street-hud{
+        left:16px;
+        transform:none;
+        max-width: calc(100vw - 32px - 150px); /* left padding + space for top-right dock */
+      }
     }
 
     /* ===== BRAND PILL ===== */
@@ -252,7 +276,8 @@
     .dock-btn:hover{ transform: translateY(-1px); }
     .dock-btn:active{ transform: translateY(0) scale(.98); }
 
-    .dock-icon{ width:18px; height:18px; display:inline-block; }
+    .dock-icon{ width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; }
+    .dock-icon svg{ width:18px; height:18px; display:block; }
     .dock-label{ font-size:11px; color: rgba(226,232,240,.92); }
 
     /* Auto drive */
@@ -317,13 +342,11 @@
 
     /* =========================================================
        ✅ SPEED (HIDDEN PANEL + SMALL ICON)
-       - Small pill near joystick
-       - Tap to open options, tap outside to close
     ========================================================= */
     #speedBtn{
       position:absolute;
       right:18px;
-      bottom:140px; /* sits above joystick */
+      bottom:140px;
       height:40px;
       padding:0 12px;
       border-radius:999px;
@@ -395,7 +418,6 @@
       color:#e0f2fe;
     }
 
-    /* click-outside catcher */
     #speedBackdrop{
       position:absolute;
       inset:0;
@@ -434,7 +456,6 @@
       #joystickBase{ right:16px; bottom: 14px; }
       body.is-fs #joystickBase{ bottom: max(14px, env(safe-area-inset-bottom)); }
 
-      /* keep speed near joystick on mobile */
       #speedBtn{ right:16px; bottom: 124px; }
       #speedPop{ right:16px; bottom: 176px; }
     }
@@ -521,8 +542,109 @@
     .settings-row input[type="range"]{ padding:0; }
 
     /* =========================================================
-       ✅ STREETS DRAWER
+       STREET STORY BUBBLE
     ========================================================= */
+    #streetStory{
+      position:absolute;
+      left:16px;
+      bottom:96px;
+      z-index:170;
+      display:none;
+      opacity:0;
+      transition:opacity .22s ease-out;
+      pointer-events:none;
+    }
+    .street-story-pill{
+      display:inline-flex;
+      align-items:flex-start;
+      gap:8px;
+      max-width:min(360px, 70vw);
+      padding:8px 12px;
+      border-radius:14px;
+      background:rgba(15,23,42,.96);
+      border:1px solid rgba(56,189,248,.55);
+      box-shadow:0 18px 45px rgba(0,0,0,.9);
+      font-size:11px;
+      color:#e5e7eb;
+      backdrop-filter:blur(12px);
+    }
+    .street-story-dot{
+      width:8px; height:8px;
+      border-radius:999px;
+      background:rgba(56,189,248,.96);
+      box-shadow:0 0 12px rgba(56,189,248,.7);
+      margin-top:4px;
+      flex:0 0 auto;
+    }
+    #streetStoryText{
+      line-height:1.35;
+    }
+
+    /* =========================================================
+       NEXT DRIVE PREVIEW
+    ========================================================= */
+    #nextPreview{
+      position:absolute;
+      right:18px;
+      bottom:18px;
+      z-index:200;
+      display:none;
+    }
+    #nextPreviewCard{
+      min-width:220px;
+      max-width:320px;
+      background:rgba(15,23,42,.96);
+      border-radius:16px;
+      border:1px solid rgba(56,189,248,.55);
+      box-shadow:0 24px 60px rgba(0,0,0,.9);
+      padding:10px 12px 12px;
+      font-size:12px;
+      color:#e5e7eb;
+      backdrop-filter:blur(12px);
+    }
+    #nextPreviewTitle{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      color:rgba(148,163,184,.98);
+      margin-bottom:4px;
+    }
+    #nextPreviewStreet{
+      font-size:13px;
+      font-weight:800;
+      margin-bottom:2px;
+    }
+    #nextPreviewLoc{
+      font-size:11px;
+      color:rgba(148,163,184,.95);
+      margin-bottom:6px;
+    }
+    #nextPreviewCountdown{
+      font-size:11px;
+      color:#e5e7eb;
+      margin-bottom:8px;
+    }
+    #nextPreviewActions{
+      display:flex;
+      gap:8px;
+      justify-content:flex-end;
+    }
+    .next-prev-btn{
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.4);
+      background:rgba(15,23,42,1);
+      padding:6px 10px;
+      font-size:11px;
+      cursor:pointer;
+      color:#e5e7eb;
+    }
+    .next-prev-btn.primary{
+      background:linear-gradient(135deg,rgba(56,189,248,.9),rgba(34,197,94,.75));
+      border-color:transparent;
+      color:#001018;
+    }
+
+    /* ===== STREETS DRAWER ===== */
     #streetsDrawerOverlay{
       position:fixed;
       inset:0;
@@ -769,6 +891,26 @@
       cursor:pointer;
     }
 
+    /* Share toast */
+    #shareToast{
+      position:fixed;
+      left:50%;
+      bottom:70px;
+      transform:translateX(-50%);
+      background:rgba(15,23,42,.96);
+      border-radius:999px;
+      border:1px solid rgba(56,189,248,.75);
+      padding:6px 12px;
+      font-size:11px;
+      color:#e0f2fe;
+      box-shadow:0 18px 45px rgba(0,0,0,.9);
+      display:none;
+      opacity:0;
+      z-index:810;
+      backdrop-filter:blur(12px);
+      transition:opacity .2s ease-out;
+    }
+
     @media (max-width:520px){
       .dock-label{ display:none; }
       .dock-btn{ padding: 0 10px; }
@@ -776,7 +918,7 @@
     }
 
     /* =========================================================
-       ✅ MOBILE PORTRAIT LOCK OVERLAY (ROTATE PROMPT)
+       ✅ MOBILE PORTRAIT LOCK OVERLAY
     ========================================================= */
     #rotateOverlay{
       position:fixed;
@@ -867,7 +1009,6 @@
       border:1px solid rgba(148,163,184,.25);
     }
 
-    /* Only apply rotate overlay logic on small devices */
     @media (max-width: 980px){
       body.is-portrait #rotateOverlay{ display:flex; }
       body.is-portrait .viewer-panel{ filter: blur(10px) saturate(.8); }
@@ -970,6 +1111,12 @@
           <span class="dot"></span>
           <span class="dock-label" id="autoDriveLabel">Auto Drive</span>
         </button>
+
+        <!-- Instant share clip -->
+        <button id="shareClipBtn" class="dock-btn" aria-label="Share this moment" title="Share this moment" type="button">
+          <span class="dock-icon">🔗</span>
+          <span class="dock-label">Share</span>
+        </button>
       </div>
 
       <!-- Brand -->
@@ -985,6 +1132,7 @@
 
       <div id="driveVignette"></div>
       <div id="nightOverlay"></div>
+      <div id="rainOverlay"></div>
 
       <!-- Dashboard overlay -->
       <img id="dashOverlay"
@@ -996,12 +1144,20 @@
         <div id="videoLoadingSpinner"></div>
       </div>
 
+      <!-- Street Story bubble -->
+      <div id="streetStory">
+        <div class="street-story-pill">
+          <span class="street-story-dot"></span>
+          <span id="streetStoryText"></span>
+        </div>
+      </div>
+
       <!-- Joystick -->
       <div id="joystickBase" aria-label="Drive joystick">
         <div id="joystickKnob"></div>
       </div>
 
-      <!-- ✅ SPEED (small icon + popup) -->
+      <!-- ✅ SPEED -->
       <div id="speedBackdrop" aria-hidden="true"></div>
 
       <button id="speedBtn" type="button" aria-label="Speed" title="Speed">
@@ -1035,10 +1191,24 @@
 
           <div class="settings-row">
             <div style="display:flex;flex-direction:column;gap:2px;">
-              <label for="setVideoSharp">Cinematic filter</label>
-              <small>slight contrast + crisp</small>
+              <label for="setVideoSharp">Cinematic boost</label>
+              <small>extra contrast + crisp</small>
             </div>
             <input type="checkbox" id="setVideoSharp" checked>
+          </div>
+
+          <div class="settings-row">
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <label for="cinematicMode">Cinematic mode</label>
+              <small>Neo Night · Sunset · Rain · Vintage</small>
+            </div>
+            <select id="cinematicMode">
+              <option value="off">Off</option>
+              <option value="neo">Neo Night</option>
+              <option value="warm">Warm Sunset</option>
+              <option value="rain">Rain Glass</option>
+              <option value="vintage">Vintage</option>
+            </select>
           </div>
         </div>
 
@@ -1120,11 +1290,27 @@
         </div>
       </div>
 
+      <!-- Next drive preview -->
+      <div id="nextPreview">
+        <div id="nextPreviewCard">
+          <div id="nextPreviewTitle">
+            Next drive in <span id="nextPreviewCountdown">10</span>s
+          </div>
+          <div id="nextPreviewStreet">Next street</div>
+          <div id="nextPreviewLoc">City, Country</div>
+          <div id="nextPreviewCountdownText"></div>
+          <div id="nextPreviewActions">
+            <button id="nextPreviewSkip" class="next-prev-btn" type="button">Stay here</button>
+            <button id="nextPreviewNow" class="next-prev-btn primary" type="button">Next drive</button>
+          </div>
+        </div>
+      </div>
+
       <div id="fadeLayer"></div>
     </div>
   </div>
 
-  <!-- device toast (kept; used for "desktop suggestion") -->
+  <!-- device toast -->
   <div id="deviceToast" role="status" aria-live="polite">
     <div>
       <div class="t-title">Better on Laptop/Desktop</div>
@@ -1133,8 +1319,12 @@
     <button id="toastClose" aria-label="Dismiss" type="button">✕</button>
   </div>
 
+  <!-- share toast -->
+  <div id="shareToast">Link copied</div>
+
   <!-- Audio -->
   <audio id="engineAudio" src="/static/audio/engine.mp3" loop preload="auto"></audio>
+  <audio id="gearAudio" src="/static/audio/gear-tick.mp3" preload="auto"></audio>
 
   <!-- Data -->
   <script id="streets-data" type="application/json">{{ streets | tojson | safe }}</script>
@@ -1142,9 +1332,7 @@
 
   <script>
     /* =========================================================
-       ✅ DRIVE MODE
-       + Speed button (small) instead of big HUD
-       + Mobile portrait lock: show rotate overlay, block controls
+       ✅ DRIVE MODE – FULL
     ========================================================= */
 
     const DEBUG = false;
@@ -1156,9 +1344,7 @@
     }
 
     function escapeHtml(str){
-      return String(str).replace(/[&<>"']/g, (m) => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-      }[m]));
+      return String(str).replace(/[&<>"']/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
     }
 
     function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
@@ -1209,6 +1395,71 @@
       SELECTED = null;
     }
 
+    /* ===== SHARED LINK (i, t) ===== */
+    let sharedIndexFromUrl = -1;
+    let sharedTimeSeconds = null;
+    let sharedJumpApplied = false;
+
+    try{
+      const urlParams = new URLSearchParams(window.location.search || "");
+      const iParam = urlParams.get("i");
+      const tParam = urlParams.get("t");
+
+      if (iParam !== null){
+        const idxById = STREETS.findIndex(s => String(s?._id) === iParam);
+        if (idxById !== -1){
+          sharedIndexFromUrl = idxById;
+        } else {
+          const asIndex = parseInt(iParam,10);
+          if (!Number.isNaN(asIndex) && asIndex >= 0 && asIndex < STREETS.length){
+            sharedIndexFromUrl = asIndex;
+          }
+        }
+      }
+      if (tParam !== null){
+        const t = parseFloat(tParam);
+        if (Number.isFinite(t) && t >= 0) sharedTimeSeconds = t;
+      }
+    }catch(_){}
+
+    /* ===== ROUTE MEMORY (per street) ===== */
+    const ROUTE_STORAGE_KEY = "abto_drive_route_memory_v1";
+
+    function loadRouteMemory(){
+      try{
+        const raw = localStorage.getItem(ROUTE_STORAGE_KEY);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return (parsed && typeof parsed === "object") ? parsed : {};
+      }catch(_){ return {}; }
+    }
+
+    let routeMemory = (typeof localStorage !== "undefined") ? loadRouteMemory() : {};
+
+    function persistRouteMemory(){
+      try{ localStorage.setItem(ROUTE_STORAGE_KEY, JSON.stringify(routeMemory)); }catch(_){}
+    }
+
+    function streetKeyFor(st){
+      if (!st) return null;
+      if (st._id != null) return String(st._id);
+      return `${st.name || ""}_${st.lat || ""}_${st.lng || ""}`;
+    }
+
+    function getRouteForStreet(st){
+      const key = streetKeyFor(st);
+      if (!key) return null;
+      return routeMemory[key] || null;
+    }
+
+    function updateRouteForStreet(st, patch){
+      const key = streetKeyFor(st);
+      if (!key) return;
+      const prev = routeMemory[key] || {};
+      routeMemory[key] = Object.assign({ streetKey:key }, prev, patch || {});
+      persistRouteMemory();
+    }
+
     /* ===== DOM ===== */
     const viewerPanel = $("viewerPanel");
     const viewerCanvas = $("viewerCanvas");
@@ -1218,6 +1469,7 @@
     const videoLoading = $("videoLoading");
     const driveVignette = $("driveVignette");
     const nightOverlay = $("nightOverlay");
+    const rainOverlay = $("rainOverlay");
     const fadeLayer = $("fadeLayer");
 
     const streetHud = $("streetHud");
@@ -1232,6 +1484,7 @@
     const setVideoMuted = $("setVideoMuted");
     const setNightMode = $("setNightMode");
     const setVideoSharp = $("setVideoSharp");
+    const cinematicMode = $("cinematicMode");
     const setHideDash = $("setHideDash");
     const setDashOpacity = $("setDashOpacity");
     const setEngineVol = $("setEngineVol");
@@ -1255,6 +1508,9 @@
     const autoDriveBtn = $("autoDriveBtn");
     const autoDriveLabel = $("autoDriveLabel");
 
+    const shareClipBtn = $("shareClipBtn");
+    const shareToast = $("shareToast");
+
     const joystickBase = $("joystickBase");
     const joystickKnob = $("joystickKnob");
 
@@ -1271,14 +1527,27 @@
     const popupDescription = $("popupDescription");
     const popupClose = $("popupClose");
 
-    const engineAudio = $("engineAudio");
+    const streetStory = $("streetStory");
+    const streetStoryText = $("streetStoryText");
 
-    /* ===== SPEED (NEW UI) ===== */
+    const engineAudio = $("engineAudio");
+    const gearAudio = $("gearAudio");
+
+    /* ===== SPEED ===== */
     const speedBtn = $("speedBtn");
     const speedBtnLabel = $("speedBtnLabel");
     const speedPop = $("speedPop");
     const speedBackdrop = $("speedBackdrop");
 
+    /* ===== NEXT PREVIEW DOM ===== */
+    const nextPreview = $("nextPreview");
+    const nextPreviewCountdown = $("nextPreviewCountdown");
+    const nextPreviewStreet = $("nextPreviewStreet");
+    const nextPreviewLoc = $("nextPreviewLoc");
+    const nextPreviewSkip = $("nextPreviewSkip");
+    const nextPreviewNow = $("nextPreviewNow");
+
+    /* ===== SPEED POPUP ===== */
     function openSpeed(){
       if (!speedPop || !speedBackdrop) return;
       speedPop.style.display = "block";
@@ -1332,7 +1601,7 @@
 
     function closeAllOverlaysHard(){
       settingsPanel.classList.remove("open");
-      closeSpeed(); // ✅ close speed pop too
+      closeSpeed();
 
       if (streetsDrawerOverlay?.style.display === "block"){
         streetsDrawerOverlay.style.display = "none";
@@ -1366,10 +1635,7 @@
       }
     }
 
-    rotateTryAgain?.addEventListener("click", () => {
-      applyPortraitLock();
-    });
-
+    rotateTryAgain?.addEventListener("click", () => applyPortraitLock());
     rotateHideHint?.addEventListener("click", () => {
       rotateDismissed = true;
       localStorage.setItem("abto_drive_rotate_dismissed", "1");
@@ -1407,7 +1673,29 @@
     /* HLS */
     let hlsInstance = null;
 
-    /* ===== HELPERS ===== */
+    /* Route resume */
+    let pendingSeekTime = null;
+    let lastRouteSaveTime = 0;
+
+    /* Next preview */
+    let nextPreviewActive = false;
+    let nextPreviewTimerId = null;
+    let nextPreviewSeconds = 0;
+    let nextPreviewTargetIndex = -1;
+    let previewArmedForVideo = false;
+
+    /* Street story */
+    let storyTimer = null;
+
+    /* Map route lines */
+    let routeLineSource = null;
+
+    /* Gear tick speed memory + preview cooldown */
+    let lastSpeedForGear = walkSpeed;
+    let streetLoadedAt = 0;
+    let previewCooldownMs = 6000; // wait 6s after load before allowing preview
+
+    /* ===== AUDIO UNLOCK ===== */
     function unlockAudio(){
       if (audioUnlocked) return;
 
@@ -1425,6 +1713,7 @@
     window.addEventListener("pointerdown", unlockAudio, { once:true });
     window.addEventListener("keydown", unlockAudio, { once:true });
 
+    /* ===== START HINT ===== */
     function hideStartHint(){
       if (!startHint) return;
       startHint.style.opacity = "0";
@@ -1433,27 +1722,94 @@
     }
     startHintSkip?.addEventListener("click", hideStartHint);
 
+    /* ===== STREET STORY ===== */
+    function hideStreetStory(){
+      if (!streetStory) return;
+      streetStory.style.opacity = "0";
+      setTimeout(() => { streetStory.style.display = "none"; }, 220);
+    }
+
+    function showStreetStoryFor(st){
+      if (!streetStory || !streetStoryText){
+        return;
+      }
+      if (!st || !st.description){
+        hideStreetStory();
+        return;
+      }
+      if (storyTimer) clearTimeout(storyTimer);
+
+      streetStoryText.textContent = st.description;
+      streetStory.style.display = "block";
+      streetStory.style.opacity = "0";
+      setTimeout(() => { streetStory.style.opacity = "1"; }, 16);
+
+      storyTimer = setTimeout(() => {
+        hideStreetStory();
+      }, 3000);
+    }
+
+    /* ===== ROUTE SNAPSHOT SAVE ===== */
+    function saveCurrentRouteSnapshot(extra){
+      const st = STREETS[currentIndex];
+      if (!st) return;
+
+      const snap = {
+        speed: walkSpeed,
+        night: !!setNightMode.checked,
+        dashOpacity: parseFloat(setDashOpacity.value || "1") || 1,
+        hideDash: !!setHideDash.checked
+      };
+      if (Number.isFinite(video.currentTime || 0)) snap.time = video.currentTime;
+      if (extra && typeof extra === "object") Object.assign(snap, extra);
+      updateRouteForStreet(st, snap);
+    }
+
+    /* ===== SETTINGS APPLY ===== */
     function applySettings(){
       video.muted = !!setVideoMuted.checked;
 
-      nightOverlay.style.opacity = setNightMode.checked ? "1" : "0";
+      const mode = cinematicMode?.value || "off";
+      const sharpBoost = setVideoSharp.checked ? 1.08 : 1.0;
 
-      if (setVideoSharp.checked){
-        video.style.filter = setNightMode.checked
-          ? "brightness(0.62) contrast(1.18) saturate(1.05)"
-          : "contrast(1.12) saturate(1.05)";
+      let nightOn = !!setNightMode.checked;
+      let filter = "none";
+
+      if (mode === "neo"){
+        nightOn = true;
+        filter = `brightness(0.55) contrast(${(1.18*sharpBoost).toFixed(2)}) saturate(${(1.20*sharpBoost).toFixed(2)}) hue-rotate(-6deg)`;
+      } else if (mode === "warm"){
+        filter = `brightness(0.92) contrast(${(1.12*sharpBoost).toFixed(2)}) saturate(${(1.15*sharpBoost).toFixed(2)}) sepia(0.12) hue-rotate(8deg)`;
+      } else if (mode === "rain"){
+        nightOn = true;
+        filter = `brightness(0.78) contrast(${(1.10*sharpBoost).toFixed(2)}) saturate(${(1.05*sharpBoost).toFixed(2)})`;
+      } else if (mode === "vintage"){
+        filter = `brightness(0.95) contrast(${(1.05*sharpBoost).toFixed(2)}) saturate(${(0.90*sharpBoost).toFixed(2)}) sepia(0.25)`;
       } else {
-        video.style.filter = setNightMode.checked ? "brightness(0.62) contrast(1.18)" : "none";
+        filter = setNightMode.checked
+          ? `brightness(0.62) contrast(${(1.12*sharpBoost).toFixed(2)})`
+          : (setVideoSharp.checked ? `contrast(${(1.08*sharpBoost).toFixed(2)}) saturate(${(1.04*sharpBoost).toFixed(2)})` : "none");
+      }
+
+      video.style.filter = filter;
+
+      nightOverlay.style.opacity = nightOn ? "1" : "0";
+      if (rainOverlay){
+        rainOverlay.style.opacity = (mode === "rain") ? "0.85" : "0";
       }
 
       const hideDash = !!setHideDash.checked;
       dashOverlay.style.opacity = hideDash ? "0" : String(parseFloat(setDashOpacity.value || "1") || 1);
       dashOverlay.style.pointerEvents = "none";
 
-      engineAudio.volume = currentDir ? (parseFloat(setEngineVol.value || "0.55") || 0.55) : 0.18;
+      updateEngineSound();
+
+      if (currentIndex !== -1){
+        saveCurrentRouteSnapshot();
+      }
     }
 
-    [setVideoMuted, setNightMode, setVideoSharp, setHideDash, setDashOpacity, setEngineVol]
+    [setVideoMuted, setNightMode, setVideoSharp, setHideDash, setDashOpacity, setEngineVol, cinematicMode]
       .forEach(el => el?.addEventListener("change", applySettings));
     setDashOpacity?.addEventListener("input", applySettings);
     setEngineVol?.addEventListener("input", applySettings);
@@ -1486,7 +1842,7 @@
       setTimeout(() => { if (fullMap) fullMap.resize(); }, 160);
     });
 
-    /* ===== FULLSCREEN ===== */
+    /* ===== FULLSCREEN BUTTON ===== */
     const ICON_ENTER = `
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1544,10 +1900,11 @@
       applyPortraitLock();
       if (document.body.classList.contains("is-portrait")) return;
 
-      closeSpeed(); // ✅
+      closeSpeed();
       settingsPanel.classList.remove("open");
 
       if (streetsDrawerOverlay.style.display === "block") closeStreetsDrawer();
+
       if (popupCard.style.display === "flex"){
         popupCard.style.display = "none";
         restoreOverlayToBody(popupCard);
@@ -1577,7 +1934,7 @@
       applyPortraitLock();
       if (document.body.classList.contains("is-portrait")) return;
 
-      closeSpeed(); // ✅
+      closeSpeed();
 
       lastFocusBeforeDrawer = document.activeElement;
       document.activeElement?.blur?.();
@@ -1662,7 +2019,7 @@
       applyPortraitLock();
       if (document.body.classList.contains("is-portrait")) return;
 
-      closeSpeed(); // ✅
+      closeSpeed();
 
       if (streetsDrawerOverlay.style.display === "block") closeStreetsDrawer();
       if (fullMapOverlay.style.display === "flex"){
@@ -1690,22 +2047,38 @@
     function normalizeRateLabel(v){
       const n = parseFloat(v);
       if (!Number.isFinite(n)) return "1×";
-      return (n % 1 === 0) ? `${n}×` : `${n}×`;
+      return `${n}×`;
+    }
+
+    function playGearTick(){
+      if (!gearAudio || !audioUnlocked) return;
+      try{
+        gearAudio.currentTime = 0;
+        gearAudio.play().catch(()=>{});
+      }catch(_){}
     }
 
     function setSpeed(v){
+      const prev = walkSpeed;
       walkSpeed = clamp(parseFloat(v) || 1, 0.25, 3);
 
-      // update UI
       if (speedBtnLabel) speedBtnLabel.textContent = normalizeRateLabel(walkSpeed);
       speedPop?.querySelectorAll(".speed-opt").forEach(btn => {
         const rate = parseFloat(btn.dataset.speed || "1");
         btn.classList.toggle("active", rate === walkSpeed);
       });
 
-      // apply
       if (!video.paused && currentDir === 1) video.playbackRate = walkSpeed;
       updateEngineSound();
+
+      if (Math.abs(walkSpeed - prev) >= 0.25){
+        playGearTick();
+      }
+      lastSpeedForGear = walkSpeed;
+
+      if (currentIndex !== -1){
+        saveCurrentRouteSnapshot();
+      }
     }
 
     speedPop?.querySelectorAll(".speed-opt").forEach(btn => {
@@ -1780,11 +2153,19 @@
       return vids;
     }
 
-    /* ===== DRIVE LOGIC ===== */
+    /* ===== AUDIO ENGINE ===== */
     function updateEngineSound(){
       if (!audioUnlocked) return;
       const sp = walkSpeed * Math.abs(currentDir);
-      engineAudio.playbackRate = 1 + sp * 0.35;
+
+      if (currentDir === 1){
+        engineAudio.playbackRate = 1 + sp * 0.35;
+      } else if (currentDir === -1){
+        engineAudio.playbackRate = 0.9 - sp * 0.25;
+      } else {
+        engineAudio.playbackRate = 1;
+      }
+
       engineAudio.volume = currentDir ? (parseFloat(setEngineVol.value || "0.55") || 0.55) : 0.18;
     }
 
@@ -1833,17 +2214,90 @@
 
     function setDir(nextDir){
       if (nextDir === currentDir) return;
+      const prevDir = currentDir;
       currentDir = nextDir;
 
       if (currentDir === 1) playForward();
       else if (currentDir === -1) playReverse();
       else { cancelReverseLoop(); video.pause(); }
 
+      if (prevDir !== currentDir && currentDir !== 0){
+        playGearTick();
+      }
+
       updateEngineSound();
       applySettings();
 
       if (currentDir !== 0) hideStartHint();
     }
+
+    /* ===== NEXT DRIVE PREVIEW ===== */
+    function getNextIndex(){
+      if (!STREETS.length) return -1;
+      let next = currentIndex + 1;
+      if (next >= STREETS.length) next = 0;
+      return next;
+    }
+
+    function hideNextPreview(){
+      nextPreviewActive = false;
+      if (nextPreviewTimerId){
+        clearInterval(nextPreviewTimerId);
+        nextPreviewTimerId = null;
+      }
+      if (nextPreview) nextPreview.style.display = "none";
+    }
+
+    function showNextPreview(){
+      if (!nextPreview) return;
+      nextPreviewTargetIndex = getNextIndex();
+      const st = STREETS[nextPreviewTargetIndex];
+      if (!st) return;
+
+      nextPreviewStreet.textContent = st.name || "Next drive";
+      nextPreviewLoc.textContent =
+        ((st.city || "") + (st.country ? ", " + st.country : "")) || "Unknown location";
+
+      // Countdown matches remaining time (max 10s)
+      const dur = Number.isFinite(video.duration) ? video.duration : 0;
+      const ct  = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+      const remaining = Math.max(0, Math.ceil(dur - ct));
+      nextPreviewSeconds = Math.min(10, remaining || 10);
+
+      nextPreviewCountdown.textContent = String(nextPreviewSeconds);
+      nextPreview.style.display = "block";
+      nextPreviewActive = true;
+
+      if (nextPreviewTimerId) clearInterval(nextPreviewTimerId);
+      nextPreviewTimerId = setInterval(() => {
+        if (!nextPreviewActive) return;
+
+        nextPreviewSeconds -= 1;
+
+        if (nextPreviewSeconds <= 0){
+          hideNextPreview();
+
+          // ✅ Only teleport if we are STILL near the end
+          const d = Number.isFinite(video.duration) ? video.duration : 0;
+          const c = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+          if (d > 0 && (d - c) <= 1.0){
+            teleportNext();
+          }
+          return;
+        }
+
+        nextPreviewCountdown.textContent = String(nextPreviewSeconds);
+      }, 1000);
+    }
+
+    nextPreviewSkip?.addEventListener("click", () => {
+      hideNextPreview();
+    });
+
+    nextPreviewNow?.addEventListener("click", () => {
+      hideNextPreview();
+      teleportNext();
+    });
 
     /* ===== STREET LOAD ===== */
     async function loadStreet(street){
@@ -1858,6 +2312,30 @@
 
       currentVideos = buildVideoList(street);
       currentVideoIndex = 0;
+
+      hideNextPreview();
+      previewArmedForVideo = false;
+      pendingSeekTime = null;
+
+      // Apply route memory or shared link time
+      const mem = getRouteForStreet(street) || {};
+      const hasMem = !!mem;
+
+      if (typeof mem.speed === "number") setSpeed(mem.speed);
+      if (typeof mem.dashOpacity === "number") setDashOpacity.value = String(mem.dashOpacity);
+      if (typeof mem.hideDash === "boolean") setHideDash.checked = !!mem.hideDash;
+      if (typeof mem.night === "boolean") setNightMode.checked = !!mem.night;
+
+      // If shared link matches this street, override time once
+      if (!sharedJumpApplied && sharedIndexFromUrl !== -1 && STREETS[currentIndex] === street && sharedTimeSeconds != null){
+        pendingSeekTime = sharedTimeSeconds;
+        sharedJumpApplied = true;
+      } else if (typeof mem.time === "number"){
+        pendingSeekTime = mem.time;
+      }
+
+      applySettings();
+      showStreetStoryFor(street);
 
       if (!currentVideos.length){
         await teleportNext();
@@ -1879,6 +2357,17 @@
       const onReady = () => {
         isVideoLoading = false;
         video.style.opacity = "1";
+
+        // mark when this video actually became ready
+        streetLoadedAt = Date.now();
+        previewArmedForVideo = false;
+        hideNextPreview();
+
+        if (Number.isFinite(pendingSeekTime) && pendingSeekTime >= 0 && Number.isFinite(video.duration) && video.duration > 0){
+          const maxT = Math.max(0, video.duration - 0.25);
+          video.currentTime = clamp(pendingSeekTime, 0, maxT);
+        }
+
         if (isFirstStreetLoad){
           videoLoading.style.display = "none";
           isFirstStreetLoad = false;
@@ -1897,6 +2386,12 @@
       video.addEventListener("error", onErr, { once:true });
     }
 
+    function updateMapMarkerHighlight(){
+      markerEls.forEach(({ el, index }) => {
+        el.classList.toggle("map-marker-selected", index === currentIndex);
+      });
+    }
+
     function loadStreetByIndex(i, userInitiated=false){
       if (!Number.isFinite(i) || i < 0 || i >= STREETS.length) return;
       currentIndex = i;
@@ -1908,6 +2403,7 @@
       loadStreet(STREETS[i]);
       updateMapMarkerHighlight();
       renderStreetsList(streetsSearch.value || "");
+      updateRouteLines();
 
       if (fullMap && STREETS[i]){
         const s = STREETS[i];
@@ -1940,12 +2436,17 @@
         return;
       }
 
+      if (nextPreviewActive){
+        // Countdown will trigger teleportNext (with end-check)
+        return;
+      }
+
       cancelReverseLoop();
       setDir(0);
       await teleportNext();
     });
 
-    /* ===== DRIVE ANIMATION TICK ===== */
+    /* ===== DRIVE ANIMATION TICK (premium micro shake) ===== */
     let lastFrameTime = 0;
     let headBob = 0;
     let bobDir = 1;
@@ -1991,10 +2492,16 @@
       const time = Date.now();
       const swayX = Math.sin(time * 0.002) * 2;
       const swayY = Math.cos(time * 0.0015) * 1.2;
-      const intensity = (Math.abs(currentDir) > 0) ? motionMomentum : 0.22;
+
+      // Premium feel: scale intensity with motion and speed
+      let intensity = (Math.abs(currentDir) > 0)
+        ? clamp(motionMomentum * 0.7 + (walkSpeed - 1) * 0.35, 0.12, 1.15)
+        : 0.12;
+
+      const scale = 1 + 0.015 * intensity;
 
       video.style.transform =
-        `translate(${strafeOffset*0.18 + swayX*intensity}px, ${headBob*1.35 + swayY*intensity}px) scale(1.02)`;
+        `translate(${strafeOffset*0.18 + swayX*intensity}px, ${headBob*1.35 + swayY*intensity}px) scale(${scale.toFixed(3)})`;
 
       const tilt = clamp(tiltAngle + (strafeOffset/STRAFE_MAX)*3, -MAX_TILT, MAX_TILT);
       dashOverlay.style.transform = `translateX(-50%) rotate(${tilt}deg) translateY(${Math.abs(headBob)*0.4}px)`;
@@ -2064,9 +2571,9 @@
       strafe = 0;
       tiltAngle = 0;
 
-      setDir(0);
-      motionMomentum = 0.65;
+      if (!autoDriveEnabled) setDir(0);
 
+      motionMomentum = 0.65;
       applySettings();
     }
 
@@ -2074,7 +2581,7 @@
       applyPortraitLock();
       if (document.body.classList.contains("is-portrait")) return;
 
-      closeSpeed(); // ✅ don’t overlap with joystick
+      closeSpeed();
 
       e.preventDefault();
       unlockAudio();
@@ -2154,10 +2661,11 @@
       strafe = lean;
 
       if (lean === -1) tiltAngle = clamp(tiltAngle - TILT_STEP, -MAX_TILT, MAX_TILT);
-      else if (lean === 1) tiltAngle = clamp(tiltAngle + TILT_STEP, MAX_TILT, MAX_TILT);
+      else if (lean === 1) tiltAngle = clamp(tiltAngle + TILT_STEP, -MAX_TILT, MAX_TILT);
       else tiltAngle *= 0.85;
 
       setDir(dir);
+
       if (dir !== 0 || lean !== 0){
         motionMomentum = Math.min(motionMomentum + 0.12, 1);
         hideStartHint();
@@ -2250,11 +2758,56 @@
       }
     });
 
-    /* ===== MAP ===== */
-    function updateMapMarkerHighlight(){
-      markerEls.forEach(({ el, index }) => {
-        el.classList.toggle("map-marker-selected", index === currentIndex);
+    /* ===== MAP & ROUTE LINES ===== */
+    function updateRouteLines(){
+      if (!fullMap || !fullMapReady || currentIndex < 0 || currentIndex >= STREETS.length) return;
+      const base = STREETS[currentIndex];
+      const lat0 = parseFloat(base?.lat);
+      const lng0 = parseFloat(base?.lng);
+      if (!Number.isFinite(lat0) || !Number.isFinite(lng0)) return;
+
+      const neighbors = [];
+      STREETS.forEach((s, idx) => {
+        if (idx === currentIndex) return;
+        const lat = parseFloat(s?.lat);
+        const lng = parseFloat(s?.lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+        const dLat = lat - lat0;
+        const dLng = lng - lng0;
+        const dist2 = dLat*dLat + dLng*dLng;
+        neighbors.push({ idx, lat, lng, dist2 });
       });
+
+      neighbors.sort((a,b) => a.dist2 - b.dist2);
+      const top = neighbors.slice(0, 3);
+
+      const features = top.map(n => ({
+        type:"Feature",
+        geometry:{
+          type:"LineString",
+          coordinates:[[lng0, lat0],[n.lng, n.lat]]
+        },
+        properties:{}
+      }));
+
+      const data = { type:"FeatureCollection", features };
+
+      if (!fullMap.getSource("abto-routes")){
+        fullMap.addSource("abto-routes", { type:"geojson", data });
+        fullMap.addLayer({
+          id:"abto-routes-line",
+          type:"line",
+          source:"abto-routes",
+          paint:{
+            "line-color":"#38bdf8",
+            "line-width":2,
+            "line-opacity":0.7,
+            "line-dasharray":[1.5,1.5]
+          }
+        });
+      } else {
+        fullMap.getSource("abto-routes").setData(data);
+      }
     }
 
     function loadMap(){
@@ -2304,12 +2857,9 @@
         el.addEventListener("click", () => {
           loadStreetByIndex(i, true);
           updateMapMarkerHighlight();
-
           const coords = marker.getLngLat();
           fullMap.flyTo({ center:[coords.lng, coords.lat], zoom:13, speed:0.9 });
-
           popup.addTo(fullMap);
-
           fullMapOverlay.style.display = "none";
           restoreOverlayToBody(fullMapOverlay);
           setCanvasTouchForOverlay(false);
@@ -2323,6 +2873,10 @@
           fullMap.flyTo({ center:[lng,lat], zoom:8, speed:0.9 });
         }
       }
+
+      fullMap.on("load", () => {
+        updateRouteLines();
+      });
 
       fullMapReady = true;
     }
@@ -2370,11 +2924,86 @@
       localStorage.setItem("abto_drive_device_toast_dismissed", "1");
     });
 
+    /* ===== SHARE CLIP ===== */
+    function showShareToast(){
+      if (!shareToast) return;
+      shareToast.style.display = "block";
+      requestAnimationFrame(() => {
+        shareToast.style.opacity = "1";
+      });
+      setTimeout(() => {
+        shareToast.style.opacity = "0";
+        setTimeout(() => { shareToast.style.display = "none"; }, 220);
+      }, 1800);
+    }
+
+    shareClipBtn?.addEventListener("click", async () => {
+      const st = STREETS[currentIndex];
+      if (!st) return;
+
+      const streetKey = streetKeyFor(st);
+      const t = Math.floor(video.currentTime || 0);
+
+      try{
+        const url = new URL(window.location.href);
+        const params = url.searchParams;
+        if (streetKey && st._id != null){
+          params.set("i", String(st._id));
+        } else {
+          params.set("i", String(currentIndex));
+        }
+        params.set("t", String(t));
+        url.search = params.toString();
+
+        const shareUrl = url.toString();
+        if (navigator.clipboard && navigator.clipboard.writeText){
+          await navigator.clipboard.writeText(shareUrl);
+        }
+        showShareToast();
+      }catch(_){}
+    });
+
+    /* ===== VIDEO TIMEUPDATE: ROUTE MEMORY + PREVIEW ARM (FIXED) ===== */
+    video.addEventListener("timeupdate", () => {
+      const dur = video.duration;
+      const ct = video.currentTime;
+
+      // safety checks
+      if (!Number.isFinite(dur) || !Number.isFinite(ct) || dur <= 0) return;
+
+      const now = Date.now();
+
+      /* ---- ROUTE MEMORY (throttled) ---- */
+      if (
+        currentIndex !== -1 &&
+        !video.paused &&
+        now - lastRouteSaveTime > 1500
+      ){
+        saveCurrentRouteSnapshot();
+        lastRouteSaveTime = now;
+      }
+
+      /* ---- NEXT DRIVE PREVIEW (Netflix-style) ---- */
+      if (
+        !previewArmedForVideo &&
+        !video.paused &&
+        currentDir === 1 &&                 // forward only
+        dur > 12 &&
+        (dur - ct) <= 10 &&
+        (Date.now() - streetLoadedAt) > previewCooldownMs &&  // cooldown after load
+        ct > 5                                // user actually watched a bit
+      ){
+        previewArmedForVideo = true;
+        showNextPreview();
+      }
+    });
+
     /* ===== INIT ===== */
     applySettings();
     renderStreetsList("");
 
     function pickInitial(){
+      if (sharedIndexFromUrl !== -1) return sharedIndexFromUrl;
       if (SELECTED){
         const idx = STREETS.findIndex(s => s?._id === SELECTED?._id);
         return (idx !== -1 ? idx : 0);
@@ -2426,7 +3055,6 @@
       teleportNext();
     });
 
-    // ✅ run once at start after DOM is ready
     applyPortraitLock();
   </script>
 </body>
