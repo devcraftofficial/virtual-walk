@@ -14,6 +14,9 @@
   <!-- HLS (optional for .m3u8) -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
+  <!-- Postcard capture -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
   <style>
     :root{
       --bg-page:#020617;
@@ -50,7 +53,6 @@
     }
     body.no-scroll{ overflow:hidden !important; }
 
-    /* ===== ROOT ===== */
     .viewer-panel{
       position:fixed;
       inset:0;
@@ -81,7 +83,6 @@
       transition: transform .12s ease-out, opacity .22s ease-out, filter .22s ease-out;
     }
 
-    /* soft HUD depth */
     #driveVignette{
       position:absolute;
       inset:0;
@@ -105,7 +106,6 @@
       z-index:2;
     }
 
-    /* Rain glass overlay for cinematic mode */
     #rainOverlay{
       position:absolute;
       inset:0;
@@ -207,13 +207,32 @@
       text-overflow:ellipsis;
       opacity:.95;
     }
+    .street-hud .tags{
+      display:flex;
+      flex-wrap:wrap;
+      gap:4px;
+      margin-top:2px;
+    }
+    .street-tag-pill{
+      padding:2px 6px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.35);
+      background:rgba(15,23,42,.9);
+      font-size:9px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:rgba(226,232,240,.9);
+      white-space:nowrap;
+    }
 
-    /* 👉 Mobile: move street name to the left so it doesn't collide with buttons */
     @media (max-width: 768px){
       .street-hud{
         left:16px;
         transform:none;
-        max-width: calc(100vw - 32px - 150px); /* left padding + space for top-right dock */
+        max-width: calc(100vw - 32px - 150px);
+      }
+      .street-hud .tags{
+        display:none;
       }
     }
 
@@ -244,6 +263,57 @@
       text-transform:uppercase;
       font-size:10px;
       color:#7dd3fc;
+    }
+
+    /* JOURNEY PILL */
+    #journeyPill{
+      position:absolute;
+      left:16px;
+      bottom:56px;
+      padding:7px 14px;
+      border-radius:999px;
+      background:rgba(15,23,42,.96);
+      border:1px solid rgba(56,189,248,.55);
+      box-shadow:0 14px 30px rgba(0,0,0,.9);
+      font-size:11px;
+      color:#e5e7eb;
+      display:none;
+      align-items:flex-start;
+      gap:8px;
+      z-index:151;
+      backdrop-filter:blur(12px);
+      max-width:min(420px, 60vw);
+    }
+    .journey-label{
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      font-size:10px;
+      color:rgba(148,163,184,.98);
+      white-space:nowrap;
+    }
+    .journey-main{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:0;
+    }
+    #journeyRoute{
+      font-size:12px;
+      font-weight:700;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    #journeyMeta{
+      font-size:11px;
+      color:rgba(148,163,184,.98);
+    }
+    @media (max-width:768px){
+      #journeyPill{
+        left:16px;
+        bottom:60px;
+        max-width:calc(100vw - 32px);
+      }
     }
 
     /* ===== TOP-RIGHT DOCK ===== */
@@ -280,7 +350,6 @@
     .dock-icon svg{ width:18px; height:18px; display:block; }
     .dock-label{ font-size:11px; color: rgba(226,232,240,.92); }
 
-    /* Auto drive */
     .autodrive-btn{
       border:1px solid rgba(56,189,248,.55);
       background: linear-gradient(135deg, rgba(56,189,248,.18), rgba(15,23,42,.92));
@@ -314,7 +383,7 @@
       animation: dotPulse 1.2s infinite ease-in-out;
     }
     @keyframes dotPulse{
-      0%,100%{ transform: scale(1.0); opacity:1; }
+      0%,100{ transform: scale(1.0); opacity:1; }
       50%{ transform: scale(1.35); opacity:.75; }
     }
 
@@ -340,9 +409,7 @@
       }
     }
 
-    /* =========================================================
-       ✅ SPEED (HIDDEN PANEL + SMALL ICON)
-    ========================================================= */
+    /* SPEED */
     #speedBtn{
       position:absolute;
       right:18px;
@@ -374,21 +441,23 @@
       border-radius:999px;
       background: rgba(56,189,248,.14);
       border:1px solid rgba(56,189,248,.55);
-      font-size:12px;
+      font-size:11px;
       color:#7dd3fc;
+      font-weight:800;
     }
     #speedBtnLabel{
       font-size:11px;
       font-weight:850;
       letter-spacing:.06em;
       opacity:.95;
+      text-transform:uppercase;
     }
 
     #speedPop{
       position:absolute;
       right:18px;
       bottom:190px;
-      width:132px;
+      width:150px;
       border-radius:16px;
       border:1px solid rgba(148,163,184,.35);
       background: rgba(15,23,42,.92);
@@ -400,18 +469,22 @@
     }
     .speed-opt{
       width:100%;
-      padding:10px 10px;
+      padding:9px 10px;
       margin:6px 0;
       border-radius:999px;
       border:1px solid rgba(148,163,184,.22);
       background: rgba(0,0,0,.18);
       color:#e5e7eb;
-      font-size:12px;
+      font-size:11px;
       cursor:pointer;
-      transition: transform .12s ease, border-color .12s ease;
-      text-align:center;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      text-align:left;
     }
-    .speed-opt:hover{ transform: translateY(-1px); border-color: rgba(56,189,248,.38); }
+    .speed-opt:hover{
+      transform: translateY(-1px);
+      border-color: rgba(56,189,248,.38);
+      background: rgba(15,23,42,.62);
+    }
     .speed-opt.active{
       border-color: rgba(56,189,248,.75);
       background: rgba(56,189,248,.14);
@@ -426,7 +499,7 @@
       background: transparent;
     }
 
-    /* ===== JOYSTICK ===== */
+    /* JOYSTICK */
     #joystickBase{
       position:absolute;
       bottom:20px; right:20px;
@@ -460,7 +533,7 @@
       #speedPop{ right:16px; bottom: 176px; }
     }
 
-    /* ===== LOADING ===== */
+    /* LOADING */
     #videoLoading{
       position:absolute;
       inset:0;
@@ -480,7 +553,7 @@
     }
     @keyframes spin{ to{ transform: rotate(360deg); } }
 
-    /* ===== START HINT ===== */
+    /* START HINT */
     #startHint{
       position:absolute;
       inset:auto 0 84px 0;
@@ -490,7 +563,7 @@
       transition: opacity .25s ease-out;
     }
 
-    /* ===== SETTINGS PANEL ===== */
+    /* SETTINGS PANEL */
     #settingsPanel{
       position:absolute;
       right:16px;
@@ -541,9 +614,7 @@
     }
     .settings-row input[type="range"]{ padding:0; }
 
-    /* =========================================================
-       STREET STORY BUBBLE
-    ========================================================= */
+    /* STREET STORY */
     #streetStory{
       position:absolute;
       left:16px;
@@ -576,13 +647,87 @@
       margin-top:4px;
       flex:0 0 auto;
     }
-    #streetStoryText{
-      line-height:1.35;
+    #streetStoryText{ line-height:1.35; }
+
+    /* STREET MEMORY */
+    #streetMemory{
+      position:absolute;
+      left:16px;
+      bottom:140px;
+      z-index:171;
+      display:none;
+      opacity:0;
+      transition:opacity .22s ease-out;
+      pointer-events:none;
+    }
+    .street-memory-pill{
+      display:inline-flex;
+      align-items:flex-start;
+      gap:8px;
+      max-width:min(360px, 70vw);
+      padding:6px 11px;
+      border-radius:14px;
+      background:rgba(15,23,42,.96);
+      border:1px solid rgba(94,234,212,.7);
+      box-shadow:0 18px 45px rgba(0,0,0,.9);
+      font-size:11px;
+      color:#e5e7eb;
+      backdrop-filter:blur(12px);
+    }
+    .street-memory-dot{
+      width:8px; height:8px;
+      border-radius:999px;
+      background:rgba(94,234,212,.96);
+      box-shadow:0 0 12px rgba(94,234,212,.7);
+      margin-top:4px;
+      flex:0 0 auto;
+    }
+    @media (max-width:768px){
+      #streetMemory{
+        max-width:calc(100vw - 32px);
+        bottom:150px;
+      }
     }
 
-    /* =========================================================
-       NEXT DRIVE PREVIEW
-    ========================================================= */
+    /* LIVE EVENTS */
+    #liveEvent{
+      position:absolute;
+      left:16px;
+      top:72px;
+      z-index:175;
+      display:none;
+      opacity:0;
+      transition:opacity .20s ease-out;
+      pointer-events:none;
+    }
+    .live-event-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(15,23,42,.96);
+      border:1px solid rgba(250,204,21,.7);
+      box-shadow:0 18px 45px rgba(0,0,0,.9);
+      font-size:11px;
+      color:#fef9c3;
+      backdrop-filter:blur(12px);
+    }
+    .live-event-dot{
+      width:7px;
+      height:7px;
+      border-radius:999px;
+      background:#facc15;
+      box-shadow:0 0 10px rgba(250,204,21,.9);
+    }
+    @media (max-width:768px){
+      #liveEvent{
+        top:60px;
+        max-width:calc(100vw - 32px);
+      }
+    }
+
+    /* NEXT DRIVE PREVIEW */
     #nextPreview{
       position:absolute;
       right:18px;
@@ -620,9 +765,12 @@
       margin-bottom:6px;
     }
     #nextPreviewCountdown{
+      font-weight:700;
+    }
+    #nextPreviewCountdownText{
       font-size:11px;
       color:#e5e7eb;
-      margin-bottom:8px;
+      margin-bottom:6px;
     }
     #nextPreviewActions{
       display:flex;
@@ -644,7 +792,7 @@
       color:#001018;
     }
 
-    /* ===== STREETS DRAWER ===== */
+    /* STREETS DRAWER */
     #streetsDrawerOverlay{
       position:fixed;
       inset:0;
@@ -738,7 +886,7 @@
       background: rgba(56,189,248,.10);
     }
 
-    /* ===== FULL MAP OVERLAY ===== */
+    /* FULL MAP */
     #fullMapOverlay{
       position:fixed;
       inset:0;
@@ -781,7 +929,7 @@
       box-shadow:0 10px 30px rgba(0,0,0,.8);
     }
 
-    /* ===== POPUP CARD ===== */
+    /* POPUP */
     #streetPopup{
       position:fixed;
       inset:0;
@@ -833,7 +981,6 @@
       to{ opacity:1; transform: translateY(0); }
     }
 
-    /* ===== FADE LAYER ===== */
     #fadeLayer{
       position:absolute;
       inset:0;
@@ -844,7 +991,6 @@
       z-index:360;
     }
 
-    /* ===== MAP MARKER ===== */
     .map-marker-selected{
       width:26px !important;
       height:26px !important;
@@ -860,7 +1006,7 @@
       100%{ transform: scale(1); opacity:1; }
     }
 
-    /* ===== MOBILE “BETTER ON DESKTOP” TOAST ===== */
+    /* DEVICE TOAST */
     #deviceToast{
       position:fixed;
       left:50%;
@@ -891,7 +1037,6 @@
       cursor:pointer;
     }
 
-    /* Share toast */
     #shareToast{
       position:fixed;
       left:50%;
@@ -911,15 +1056,113 @@
       transition:opacity .2s ease-out;
     }
 
+    /* Soft objective – bottom-right */
+    #softObjective{
+      position:fixed;
+      right:16px;
+      bottom:120px;
+      transform:none;
+      z-index:190;
+      display:none;
+      opacity:0;
+      transition:opacity .2s ease-out;
+      pointer-events:none;
+    }
+    #softObjectiveInner{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 12px;
+      border-radius:999px;
+      background:rgba(15,23,42,.96);
+      border:1px solid rgba(56,189,248,.65);
+      box-shadow:0 18px 45px rgba(0,0,0,.85);
+      font-size:11px;
+      color:#e5e7eb;
+      backdrop-filter:blur(12px);
+    }
+    #softObjectiveInner span:first-child{
+      font-size:12px;
+    }
+    @media (max-width:768px){
+      #softObjective{
+        right:16px;
+        bottom:130px;
+        max-width:min(260px, calc(100vw - 32px));
+      }
+    }
+
+    /* Session summary */
+    #sessionSummary{
+      position:fixed;
+      left:50%;
+      bottom:24px;
+      transform:translateX(-50%) translateY(10px);
+      z-index:195;
+      display:none;
+      opacity:0;
+      transition:opacity .22s ease-out, transform .22s ease-out;
+      pointer-events:none;
+    }
+    #sessionSummary.open{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+      pointer-events:auto;
+    }
+    .session-card{
+      min-width:230px;
+      max-width:320px;
+      padding:10px 14px 12px;
+      border-radius:16px;
+      background:rgba(15,23,42,.96);
+      border:1px solid rgba(148,163,184,.6);
+      box-shadow:0 26px 70px rgba(0,0,0,.9);
+      font-size:12px;
+      color:#e5e7eb;
+      backdrop-filter:blur(12px);
+    }
+    .session-card-title{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.16em;
+      color:rgba(148,163,184,.98);
+      margin-bottom:4px;
+    }
+    .session-card-main{
+      font-size:13px;
+      font-weight:700;
+      margin-bottom:4px;
+    }
+    .session-card-sub{
+      font-size:11px;
+      color:rgba(148,163,184,.95);
+      margin-bottom:8px;
+    }
+    #sessionResumeLater{
+      width:100%;
+      border:none;
+      border-radius:999px;
+      padding:7px 10px;
+      font-size:11px;
+      font-weight:800;
+      cursor:pointer;
+      background:linear-gradient(135deg,rgba(56,189,248,.9),rgba(34,197,94,.75));
+      color:#001018;
+    }
+    @media (max-width:768px){
+      #sessionSummary{
+        bottom:76px;
+        max-width:calc(100vw - 32px);
+      }
+    }
+
     @media (max-width:520px){
       .dock-label{ display:none; }
       .dock-btn{ padding: 0 10px; }
       #settingsPanel{ top:58px; }
     }
 
-    /* =========================================================
-       ✅ MOBILE PORTRAIT LOCK OVERLAY
-    ========================================================= */
+    /* ROTATE OVERLAY */
     #rotateOverlay{
       position:fixed;
       inset:0;
@@ -1013,11 +1256,93 @@
       body.is-portrait #rotateOverlay{ display:flex; }
       body.is-portrait .viewer-panel{ filter: blur(10px) saturate(.8); }
     }
+
+    /* COMPACT HUD FOR MOBILE */
+    @media (max-width: 900px) {
+      .street-hud{
+        top: 8px;
+        max-width: calc(100vw - 130px);
+        padding: 8px 14px;
+      }
+
+      .brand-pill{
+        padding: 6px 10px;
+        gap: 6px;
+        font-size: 10px;
+      }
+      .brand-pill span:nth-child(2){
+        display: none;
+      }
+
+      #journeyPill{
+        font-size: 10px;
+        padding: 6px 10px;
+        max-width: 82vw;
+      }
+    }
+
+    @media (max-width: 900px) and (max-height: 500px) {
+      .brand-pill,
+      #journeyPill,
+      #softObjective{
+        display: none !important;
+      }
+      #streetStory{
+        display: none !important;
+      }
+      .top-right-dock{
+        top: 8px;
+      }
+    }
+
+    /* HUD AUTO-HIDE */
+    body.hud-hidden .top-right-dock,
+    body.hud-hidden .street-hud,
+    body.hud-hidden .brand-pill,
+    body.hud-hidden #journeyPill,
+    body.hud-hidden #liveEvent,
+    body.hud-hidden #streetStory,
+    body.hud-hidden #streetMemory,
+    body.hud-hidden #softObjective,
+    body.hud-hidden #speedBtn,
+    body.hud-hidden #speedPop,
+    body.hud-hidden #sessionSummary,
+    body.hud-hidden #deviceToast {
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .25s ease-out;
+    }
+
+    #hudHint{
+      position:absolute;
+      left:50%;
+      bottom:24px;
+      transform:translateX(-50%);
+      font-size:10px;
+      color:rgba(148,163,184,.9);
+      padding:4px 10px;
+      border-radius:999px;
+      background:rgba(15,23,42,.8);
+      border:1px solid rgba(148,163,184,.35);
+      box-shadow:0 18px 45px rgba(0,0,0,.85);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .25s ease-out;
+      z-index:300;
+    }
+    body.hud-hidden #hudHint{
+      opacity:1;
+    }
+    @media (max-width:768px){
+      #hudHint{
+        bottom:max(18px, env(safe-area-inset-bottom));
+      }
+    }
   </style>
 </head>
 
 <body>
-  <!-- ✅ Rotate overlay (mobile portrait only) -->
+  <!-- Rotate overlay -->
   <div id="rotateOverlay" role="dialog" aria-modal="true" aria-label="Rotate device to landscape">
     <div id="rotateCard">
       <div class="rot-icon" aria-hidden="true">
@@ -1085,12 +1410,21 @@
         <img src="{{ url_for('static', filename='img/minimap_placeholder.png') }}" alt="">
       </div>
 
-      <!-- Top center HUD (click for popup) -->
+      <!-- Top center HUD -->
       <div id="streetHud" class="street-hud" title="Street details">
         <span class="mode">ABTO • DRIVE</span>
         <div style="min-width:0;display:flex;flex-direction:column;gap:2px;">
           <div id="streetName" class="name">Select a Drive</div>
           <div id="streetLocation" class="loc">Waiting…</div>
+          <div id="streetTags" class="tags"></div>
+        </div>
+      </div>
+
+      <!-- Live drive event bubble -->
+      <div id="liveEvent">
+        <div class="live-event-pill">
+          <span class="live-event-dot"></span>
+          <span id="liveEventText"></span>
         </div>
       </div>
 
@@ -1112,10 +1446,14 @@
           <span class="dock-label" id="autoDriveLabel">Auto Drive</span>
         </button>
 
-        <!-- Instant share clip -->
         <button id="shareClipBtn" class="dock-btn" aria-label="Share this moment" title="Share this moment" type="button">
           <span class="dock-icon">🔗</span>
           <span class="dock-label">Share</span>
+        </button>
+
+        <button id="postcardBtn" class="dock-btn" aria-label="Create postcard" title="Create postcard" type="button">
+          <span class="dock-icon">📸</span>
+          <span class="dock-label">Postcard</span>
         </button>
       </div>
 
@@ -1123,6 +1461,15 @@
       <div class="brand-pill">
         <span class="abto-tag">ABTO</span>
         <span>A Better Travel Observer</span>
+      </div>
+
+      <!-- Journey pill -->
+      <div id="journeyPill">
+        <div class="journey-label">Journey</div>
+        <div class="journey-main">
+          <div id="journeyRoute">Not started</div>
+          <div id="journeyMeta">0.0 km · 0m 00s</div>
+        </div>
       </div>
 
       <!-- Video -->
@@ -1152,24 +1499,32 @@
         </div>
       </div>
 
+      <!-- Street Memory bubble -->
+      <div id="streetMemory">
+        <div class="street-memory-pill">
+          <span class="street-memory-dot"></span>
+          <span id="streetMemoryText"></span>
+        </div>
+      </div>
+
       <!-- Joystick -->
       <div id="joystickBase" aria-label="Drive joystick">
         <div id="joystickKnob"></div>
       </div>
 
-      <!-- ✅ SPEED -->
+      <!-- SPEED -->
       <div id="speedBackdrop" aria-hidden="true"></div>
 
-      <button id="speedBtn" type="button" aria-label="Speed" title="Speed">
-        <span class="speed-ico">⏩</span>
-        <span id="speedBtnLabel">1×</span>
+      <button id="speedBtn" type="button" aria-label="Gear" title="Gear">
+        <span class="speed-ico">G</span>
+        <span id="speedBtnLabel">G2</span>
       </button>
 
       <div id="speedPop" aria-hidden="true">
-        <button class="speed-opt" data-speed="0.75" type="button">0.75×</button>
-        <button class="speed-opt active" data-speed="1" type="button">1×</button>
-        <button class="speed-opt" data-speed="1.5" type="button">1.5×</button>
-        <button class="speed-opt" data-speed="2" type="button">2×</button>
+        <button class="speed-opt" data-gear="1" data-speed="0.7" type="button">Gear 1 · City</button>
+        <button class="speed-opt active" data-gear="2" data-speed="1" type="button">Gear 2 · Cruise</button>
+        <button class="speed-opt" data-gear="3" data-speed="1.35" type="button">Gear 3 · Fast</button>
+        <button class="speed-opt" data-gear="4" data-speed="1.7" type="button">Gear 4 · Turbo</button>
       </div>
 
       <!-- Settings panel -->
@@ -1246,6 +1601,18 @@
             </div>
             <span style="opacity:.8;font-size:11px;">OK</span>
           </div>
+
+          <div class="settings-row">
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <label for="driveMood">Drive mood</label>
+              <small>Chill · Explore · Fast</small>
+            </div>
+            <select id="driveMood">
+              <option value="explore">Explore</option>
+              <option value="chill">Chill</option>
+              <option value="fast">Fast</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -1307,6 +1674,9 @@
       </div>
 
       <div id="fadeLayer"></div>
+
+      <!-- HUD hint for auto-hide -->
+      <div id="hudHint">Tap or press any key to show controls</div>
     </div>
   </div>
 
@@ -1322,6 +1692,27 @@
   <!-- share toast -->
   <div id="shareToast">Link copied</div>
 
+  <!-- Soft objective -->
+  <div id="softObjective">
+    <div id="softObjectiveInner">
+      <span>⭐</span>
+      <span id="softObjectiveText"></span>
+    </div>
+  </div>
+
+  <!-- End-of-session reflection -->
+  <div id="sessionSummary">
+    <div class="session-card">
+      <div class="session-card-title">Today’s drive</div>
+      <div class="session-card-main">
+        <span id="sessionStatsStreets">0 streets</span> •
+        <span id="sessionStatsTime">0 min</span>
+      </div>
+      <div class="session-card-sub" id="sessionStatsLocation">Exploring the world</div>
+      <button id="sessionResumeLater" type="button">Resume later</button>
+    </div>
+  </div>
+
   <!-- Audio -->
   <audio id="engineAudio" src="/static/audio/engine.mp3" loop preload="auto"></audio>
   <audio id="gearAudio" src="/static/audio/gear-tick.mp3" preload="auto"></audio>
@@ -1331,10 +1722,6 @@
   <script id="selected-street-data" type="application/json">{{ selected_street | tojson | safe if selected_street else 'null' }}</script>
 
   <script>
-    /* =========================================================
-       ✅ DRIVE MODE – FULL
-    ========================================================= */
-
     const DEBUG = false;
     const $ = (id) => document.getElementById(id);
 
@@ -1349,6 +1736,19 @@
 
     function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
     function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+    const R_EARTH_KM = 6371;
+    function haversineKm(lat1, lon1, lat2, lon2){
+      if (!Number.isFinite(lat1) || !Number.isFinite(lon1) || !Number.isFinite(lat2) || !Number.isFinite(lon2)) return NaN;
+      const toRad = (d) => d * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R_EARTH_KM * c;
+    }
 
     function isFullscreenActive(){
       return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
@@ -1383,7 +1783,7 @@
       }
     }
 
-    /* ===== DATA ===== */
+    /* DATA */
     let STREETS = [];
     let SELECTED = null;
     try{
@@ -1395,7 +1795,7 @@
       SELECTED = null;
     }
 
-    /* ===== SHARED LINK (i, t) ===== */
+    /* SHARED LINK */
     let sharedIndexFromUrl = -1;
     let sharedTimeSeconds = null;
     let sharedJumpApplied = false;
@@ -1422,7 +1822,7 @@
       }
     }catch(_){}
 
-    /* ===== ROUTE MEMORY (per street) ===== */
+    /* ROUTE MEMORY */
     const ROUTE_STORAGE_KEY = "abto_drive_route_memory_v1";
 
     function loadRouteMemory(){
@@ -1460,7 +1860,7 @@
       persistRouteMemory();
     }
 
-    /* ===== DOM ===== */
+    /* DOM */
     const viewerPanel = $("viewerPanel");
     const viewerCanvas = $("viewerCanvas");
 
@@ -1475,6 +1875,7 @@
     const streetHud = $("streetHud");
     const streetNameEl = $("streetName");
     const streetLocationEl = $("streetLocation");
+    const streetTagsEl = $("streetTags");
 
     const miniMap = $("miniMap");
 
@@ -1488,6 +1889,7 @@
     const setHideDash = $("setHideDash");
     const setDashOpacity = $("setDashOpacity");
     const setEngineVol = $("setEngineVol");
+    const driveMood = $("driveMood");
 
     const dashOverlay = $("dashOverlay");
 
@@ -1510,6 +1912,7 @@
 
     const shareClipBtn = $("shareClipBtn");
     const shareToast = $("shareToast");
+    const postcardBtn = $("postcardBtn");
 
     const joystickBase = $("joystickBase");
     const joystickKnob = $("joystickKnob");
@@ -1530,24 +1933,43 @@
     const streetStory = $("streetStory");
     const streetStoryText = $("streetStoryText");
 
+    const streetMemory = $("streetMemory");
+    const streetMemoryText = $("streetMemoryText");
+
     const engineAudio = $("engineAudio");
     const gearAudio = $("gearAudio");
 
-    /* ===== SPEED ===== */
+    const liveEvent = $("liveEvent");
+    const liveEventText = $("liveEventText");
+
     const speedBtn = $("speedBtn");
     const speedBtnLabel = $("speedBtnLabel");
     const speedPop = $("speedPop");
     const speedBackdrop = $("speedBackdrop");
 
-    /* ===== NEXT PREVIEW DOM ===== */
     const nextPreview = $("nextPreview");
     const nextPreviewCountdown = $("nextPreviewCountdown");
     const nextPreviewStreet = $("nextPreviewStreet");
     const nextPreviewLoc = $("nextPreviewLoc");
     const nextPreviewSkip = $("nextPreviewSkip");
     const nextPreviewNow = $("nextPreviewNow");
+    const nextPreviewCountdownText = $("nextPreviewCountdownText");
+    const nextPreviewTitleEl = $("nextPreviewTitle");
 
-    /* ===== SPEED POPUP ===== */
+    const journeyPill = $("journeyPill");
+    const journeyRouteEl = $("journeyRoute");
+    const journeyMetaEl = $("journeyMeta");
+
+    const softObjective = $("softObjective");
+    const softObjectiveText = $("softObjectiveText");
+
+    const sessionSummary = $("sessionSummary");
+    const sessionStatsStreets = $("sessionStatsStreets");
+    const sessionStatsTime = $("sessionStatsTime");
+    const sessionStatsLocation = $("sessionStatsLocation");
+    const sessionResumeLater = $("sessionResumeLater");
+
+    /* SPEED POPUP */
     function openSpeed(){
       if (!speedPop || !speedBackdrop) return;
       speedPop.style.display = "block";
@@ -1578,7 +2000,7 @@
 
     speedBackdrop?.addEventListener("pointerdown", () => closeSpeed(), { passive:true });
 
-    /* ===== ROTATE OVERLAY ===== */
+    /* ROTATE OVERLAY */
     const rotateOverlay = $("rotateOverlay");
     const rotateTryAgain = $("rotateTryAgain");
     const rotateHideHint = $("rotateHideHint");
@@ -1642,7 +2064,7 @@
       applyPortraitLock();
     });
 
-    /* ===== STATE ===== */
+    /* STATE */
     let audioUnlocked = false;
 
     let currentIndex = -1;
@@ -1651,8 +2073,8 @@
     let isFirstStreetLoad = true;
     let isVideoLoading = false;
 
-    let currentDir = 0; // -1 reverse, 0 idle, 1 forward
-    let strafe = 0;     // -1..1 (lean)
+    let currentDir = 0;
+    let strafe = 0;
     let joyActive = false;
     let joyPointerId = null;
 
@@ -1665,37 +2087,78 @@
     let fullMap = null;
     let markerEls = [];
 
-    let walkSpeed = 1.0; // playbackRate
+    let walkSpeed = 1.0;
+    let currentGear = 2;
+    const GEAR_SPEEDS = { 1:0.7, 2:1.0, 3:1.35, 4:1.7 };
+
     let tiltAngle = 0;
     const MAX_TILT = 7;
     const TILT_STEP = 2.4;
 
-    /* HLS */
     let hlsInstance = null;
 
-    /* Route resume */
     let pendingSeekTime = null;
     let lastRouteSaveTime = 0;
 
-    /* Next preview */
     let nextPreviewActive = false;
     let nextPreviewTimerId = null;
     let nextPreviewSeconds = 0;
     let nextPreviewTargetIndex = -1;
     let previewArmedForVideo = false;
 
-    /* Street story */
     let storyTimer = null;
 
-    /* Map route lines */
     let routeLineSource = null;
 
-    /* Gear tick speed memory + preview cooldown */
     let lastSpeedForGear = walkSpeed;
     let streetLoadedAt = 0;
-    let previewCooldownMs = 6000; // wait 6s after load before allowing preview
+    let previewCooldownMs = 6000;
 
-    /* ===== AUDIO UNLOCK ===== */
+    let journeyActive = false;
+    let journeyDistanceKm = 0;
+    let journeyTimeSec = 0;
+    let journeyStartLabel = "";
+    let journeyLastLabel = "";
+    let sessionStreetCount = 0;
+    let sessionDriveSeconds = 0;
+    let sessionLastCity = "";
+    let sessionLastCountry = "";
+    let sessionSummaryShown = false;
+    let sessionIdleTimer = null;
+
+    let liveEventCurrent = null;
+    let liveEventIntensity = 0;
+    let liveEventTimeout = null;
+
+    let engineFadeTimer = null;
+    let engineIdleVolume = 0.12;
+
+    const LAST_SESSION_KEY = "abto_drive_last_session_v1";
+
+    /* HUD AUTO-HIDE */
+    let lastUserInteraction = Date.now();
+    let hudHidden = false;
+    const HUD_IDLE_MS = 5000;
+
+    function bumpInteraction(){
+      lastUserInteraction = Date.now();
+      if (hudHidden){
+        hudHidden = false;
+        document.body.classList.remove("hud-hidden");
+      }
+    }
+
+    ["pointerdown","keydown","touchstart"].forEach(type=>{
+      window.addEventListener(type,(e)=>{
+        if (type === "keydown"){
+          const k = e.key;
+          if (k === "Shift" || k === "Alt" || k === "Control") return;
+        }
+        bumpInteraction();
+      },{passive:true});
+    });
+
+    /* AUDIO UNLOCK */
     function unlockAudio(){
       if (audioUnlocked) return;
 
@@ -1713,7 +2176,7 @@
     window.addEventListener("pointerdown", unlockAudio, { once:true });
     window.addEventListener("keydown", unlockAudio, { once:true });
 
-    /* ===== START HINT ===== */
+    /* START HINT */
     function hideStartHint(){
       if (!startHint) return;
       startHint.style.opacity = "0";
@@ -1722,7 +2185,7 @@
     }
     startHintSkip?.addEventListener("click", hideStartHint);
 
-    /* ===== STREET STORY ===== */
+    /* STREET STORY */
     function hideStreetStory(){
       if (!streetStory) return;
       streetStory.style.opacity = "0";
@@ -1730,9 +2193,7 @@
     }
 
     function showStreetStoryFor(st){
-      if (!streetStory || !streetStoryText){
-        return;
-      }
+      if (!streetStory || !streetStoryText) return;
       if (!st || !st.description){
         hideStreetStory();
         return;
@@ -1744,12 +2205,36 @@
       streetStory.style.opacity = "0";
       setTimeout(() => { streetStory.style.opacity = "1"; }, 16);
 
-      storyTimer = setTimeout(() => {
-        hideStreetStory();
-      }, 3000);
+      storyTimer = setTimeout(hideStreetStory, 3000);
     }
 
-    /* ===== ROUTE SNAPSHOT SAVE ===== */
+    /* STREET MEMORY */
+    function hideStreetMemory(){
+      if (!streetMemory) return;
+      streetMemory.style.opacity = "0";
+      setTimeout(() => { streetMemory.style.display = "none"; }, 220);
+    }
+
+    function showStreetMemory(mem){
+      if (!streetMemory || !streetMemoryText || !mem) return;
+      let msg = "";
+      if (mem.night){
+        msg = "You drove this street at night last time 🌙";
+      } else if (typeof mem.speed === "number" && mem.speed > 1.15){
+        msg = `You like driving fast here (${mem.speed.toFixed(1)}× last time) 🚀`;
+      } else if (typeof mem.time === "number" && mem.time > 60){
+        msg = "You cruised here for a while last time ⏱";
+      }
+      if (!msg) return;
+
+      streetMemoryText.textContent = msg;
+      streetMemory.style.display = "block";
+      streetMemory.style.opacity = "0";
+      setTimeout(() => { streetMemory.style.opacity = "1"; }, 16);
+      setTimeout(hideStreetMemory, 3500);
+    }
+
+    /* ROUTE SNAPSHOT SAVE */
     function saveCurrentRouteSnapshot(extra){
       const st = STREETS[currentIndex];
       if (!st) return;
@@ -1758,14 +2243,191 @@
         speed: walkSpeed,
         night: !!setNightMode.checked,
         dashOpacity: parseFloat(setDashOpacity.value || "1") || 1,
-        hideDash: !!setHideDash.checked
+        hideDash: !!setHideDash.checked,
+        lastVisitedAt: Date.now()
       };
       if (Number.isFinite(video.currentTime || 0)) snap.time = video.currentTime;
       if (extra && typeof extra === "object") Object.assign(snap, extra);
       updateRouteForStreet(st, snap);
     }
 
-    /* ===== SETTINGS APPLY ===== */
+    /* JOURNEY / SESSION */
+    function deriveJourneyLabel(st){
+      if (!st) return "";
+      if (st.city) return st.city;
+      if (st.name) return st.name;
+      return "Unknown";
+    }
+
+    function formatJourneyMeta(){
+      const km = journeyDistanceKm;
+      const d = km < 0.1 ? `${(km*1000).toFixed(0)} m` : `${km.toFixed(1)} km`;
+      const m = Math.floor(journeyTimeSec / 60);
+      const s = Math.floor(journeyTimeSec % 60);
+      const t = `${m}m ${String(s).padStart(2,"0")}s`;
+      return `${d} · ${t}`;
+    }
+
+    function updateJourneyUi(){
+      if (!journeyPill) return;
+      if (!journeyActive){
+        journeyPill.style.display = "none";
+        return;
+      }
+      journeyPill.style.display = "flex";
+      if (journeyRouteEl){
+        if (journeyStartLabel && journeyLastLabel && journeyStartLabel !== journeyLastLabel){
+          journeyRouteEl.textContent = `${journeyStartLabel} → ${journeyLastLabel}`;
+        } else if (journeyStartLabel){
+          journeyRouteEl.textContent = journeyStartLabel;
+        } else {
+          journeyRouteEl.textContent = "Exploring";
+        }
+      }
+      if (journeyMetaEl){
+        journeyMetaEl.textContent = formatJourneyMeta();
+      }
+    }
+
+    function startJourneyForStreet(st){
+      if (!st) return;
+      journeyActive = true;
+      journeyDistanceKm = 0;
+      journeyTimeSec = 0;
+      journeyStartLabel = deriveJourneyLabel(st);
+      journeyLastLabel = journeyStartLabel;
+      sessionStreetCount = 1;
+      sessionDriveSeconds = 0;
+      sessionLastCity = st.city || "";
+      sessionLastCountry = st.country || "";
+      if (journeyPill) journeyPill.style.display = "flex";
+      updateJourneyUi();
+      updateSoftObjective();
+    }
+
+    function humanizeMinutes(seconds){
+      const m = Math.floor(seconds/60);
+      const s = Math.floor(seconds%60);
+      if (m <= 0) return `${s}s`;
+      if (m < 60) return `${m} min${m>1?"s":""}`;
+      const h = Math.floor(m/60);
+      const rm = m % 60;
+      if (rm === 0) return `${h} hr${h>1?"s":""}`;
+      return `${h}h ${rm}m`;
+    }
+
+    function updateSessionSummaryUi(){
+      if (!sessionSummary) return;
+      sessionStatsStreets.textContent = `${sessionStreetCount} street${sessionStreetCount===1?"":"s"}`;
+      sessionStatsTime.textContent = humanizeMinutes(sessionDriveSeconds);
+      if (sessionLastCity || sessionLastCountry){
+        sessionStatsLocation.textContent = `${sessionLastCity || ""}${sessionLastCity && sessionLastCountry ? ", " : ""}${sessionLastCountry || ""}`;
+      } else {
+        sessionStatsLocation.textContent = "Exploring the world";
+      }
+    }
+
+    function showSessionSummary(){
+      if (!sessionSummary || sessionSummaryShown || sessionStreetCount === 0) return;
+      sessionSummaryShown = true;
+      updateSessionSummaryUi();
+      sessionSummary.style.display = "flex";
+      requestAnimationFrame(() => {
+        sessionSummary.classList.add("open");
+      });
+
+      const payload = {
+        streets: sessionStreetCount,
+        seconds: sessionDriveSeconds,
+        city: sessionLastCity,
+        country: sessionLastCountry,
+        ts: Date.now()
+      };
+      try{ localStorage.setItem(LAST_SESSION_KEY, JSON.stringify(payload)); }catch(_){}
+    }
+
+    function scheduleSessionSummary(){
+      if (sessionSummaryShown) return;
+      if (sessionIdleTimer) clearTimeout(sessionIdleTimer);
+      sessionIdleTimer = setTimeout(() => {
+        if (currentDir === 0) showSessionSummary();
+      }, 8000);
+    }
+
+    sessionResumeLater?.addEventListener("click", () => {
+      sessionSummary.classList.remove("open");
+      setTimeout(() => {
+        sessionSummary.style.display = "none";
+      }, 220);
+    });
+
+    /* SOFT OBJECTIVE */
+    function updateSoftObjective(){
+      if (!softObjective || !softObjectiveText) return;
+      let msg = "";
+      if (sessionStreetCount === 0){
+        softObjective.style.opacity = "0";
+        setTimeout(()=>{ softObjective.style.display="none"; }, 180);
+        return;
+      }
+      if (sessionStreetCount < 3){
+        const left = 3 - sessionStreetCount;
+        msg = `Drive ${left} more street${left>1?"s":""} to unlock Warmup badge`;
+      } else if (sessionStreetCount < 6){
+        const left = 6 - sessionStreetCount;
+        msg = `Drive ${left} more street${left>1?"s":""} to unlock Night Rider badge`;
+      } else if (sessionStreetCount < 10){
+        msg = "Most people stop here — want to continue?";
+      } else {
+        msg = "";
+      }
+
+      if (!msg){
+        softObjective.style.opacity = "0";
+        setTimeout(()=>{ softObjective.style.display="none"; }, 180);
+        return;
+      }
+      softObjectiveText.textContent = msg;
+      softObjective.style.display = "block";
+      requestAnimationFrame(() => { softObjective.style.opacity = "1"; });
+    }
+
+    /* LIVE EVENTS */
+    function hideLiveEvent(){
+      if (!liveEvent) return;
+      liveEvent.style.opacity = "0";
+      setTimeout(() => {
+        liveEvent.style.display = "none";
+      }, 200);
+      liveEventCurrent = null;
+    }
+
+    function triggerLiveEvent(kind){
+      if (!liveEvent || !liveEventText) return;
+      if (liveEventCurrent) return;
+      liveEventCurrent = kind;
+
+      let msg = "";
+      switch(kind){
+        case "traffic": msg = "Traffic slowing ahead"; break;
+        case "golden": msg = "Golden hour is starting"; break;
+        case "rain": msg = "Light rain on the windshield"; break;
+        case "police": msg = "Flashes of police lights nearby"; break;
+        default: msg = "Something is happening on this street"; break;
+      }
+
+      liveEventText.textContent = msg;
+      liveEvent.style.display = "block";
+      liveEvent.style.opacity = "0";
+      setTimeout(() => { liveEvent.style.opacity = "1"; }, 16);
+
+      liveEventIntensity = 0.7;
+
+      if (liveEventTimeout) clearTimeout(liveEventTimeout);
+      liveEventTimeout = setTimeout(hideLiveEvent, 3500);
+    }
+
+    /* SETTINGS APPLY */
     function applySettings(){
       video.muted = !!setVideoMuted.checked;
 
@@ -1842,7 +2504,7 @@
       setTimeout(() => { if (fullMap) fullMap.resize(); }, 160);
     });
 
-    /* ===== FULLSCREEN BUTTON ===== */
+    /* FULLSCREEN BUTTON */
     const ICON_ENTER = `
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1927,7 +2589,7 @@
       setViewport();
     });
 
-    /* ===== STREETS DRAWER ===== */
+    /* STREETS DRAWER */
     let lastFocusBeforeDrawer = null;
 
     function openStreetsDrawer(){
@@ -2008,7 +2670,7 @@
       });
     }
 
-    /* ===== SETTINGS PANEL ===== */
+    /* SETTINGS PANEL */
     function closeSettingsPanel(){ settingsPanel.classList.remove("open"); }
     function toggleSettingsPanel(){ settingsPanel.classList.toggle("open"); }
 
@@ -2043,11 +2705,45 @@
       if (!insidePanel && !insideBtn) closeSettingsPanel();
     }, { passive:true });
 
-    /* ===== SPEED (logic) ===== */
-    function normalizeRateLabel(v){
-      const n = parseFloat(v);
-      if (!Number.isFinite(n)) return "1×";
-      return `${n}×`;
+    /* SPEED LOGIC – GEAR STYLE */
+    function speedFromGear(g){
+      const gearNum = parseInt(g,10);
+      if (!Number.isFinite(gearNum)) return 1.0;
+      return GEAR_SPEEDS[gearNum] ?? 1.0;
+    }
+
+    function nearestGearForSpeed(v){
+      const val = Number.isFinite(v) ? v : 1.0;
+      let bestGear = 2;
+      let bestDiff = Infinity;
+      for (const [gStr, speed] of Object.entries(GEAR_SPEEDS)){
+        const g = parseInt(gStr,10);
+        const diff = Math.abs(speed - val);
+        if (diff < bestDiff){
+          bestDiff = diff;
+          bestGear = g;
+        }
+      }
+      return bestGear;
+    }
+
+    function applyGearVisual(){
+      if (speedBtnLabel){
+        speedBtnLabel.textContent = `G${currentGear}`;
+      }
+      if (!speedPop) return;
+      speedPop.querySelectorAll(".speed-opt").forEach(btn => {
+        const btnGear = parseInt(btn.dataset.gear || "0",10);
+        btn.classList.toggle("active", btnGear === currentGear);
+      });
+    }
+
+    function updateWalkSpeedFromGear(){
+      walkSpeed = speedFromGear(currentGear);
+      if (!video.paused && currentDir === 1){
+        video.playbackRate = walkSpeed;
+      }
+      updateEngineSound();
     }
 
     function playGearTick(){
@@ -2058,37 +2754,60 @@
       }catch(_){}
     }
 
-    function setSpeed(v){
-      const prev = walkSpeed;
-      walkSpeed = clamp(parseFloat(v) || 1, 0.25, 3);
-
-      if (speedBtnLabel) speedBtnLabel.textContent = normalizeRateLabel(walkSpeed);
-      speedPop?.querySelectorAll(".speed-opt").forEach(btn => {
-        const rate = parseFloat(btn.dataset.speed || "1");
-        btn.classList.toggle("active", rate === walkSpeed);
-      });
-
-      if (!video.paused && currentDir === 1) video.playbackRate = walkSpeed;
-      updateEngineSound();
-
-      if (Math.abs(walkSpeed - prev) >= 0.25){
+    function setGear(gear){
+      const prevGear = currentGear;
+      const g = clamp(parseInt(gear || currentGear,10) || 2, 1, 4);
+      currentGear = g;
+      updateWalkSpeedFromGear();
+      applyGearVisual();
+      if (currentGear !== prevGear){
         playGearTick();
+        lastSpeedForGear = walkSpeed;
+        if (currentIndex !== -1){
+          saveCurrentRouteSnapshot();
+        }
       }
-      lastSpeedForGear = walkSpeed;
+    }
 
-      if (currentIndex !== -1){
-        saveCurrentRouteSnapshot();
+    function setSpeedFromValue(v){
+      const num = parseFloat(v);
+      if (!Number.isFinite(num)){
+        setGear(currentGear);
+        return;
       }
+      const g = nearestGearForSpeed(num);
+      setGear(g);
     }
 
     speedPop?.querySelectorAll(".speed-opt").forEach(btn => {
       btn.addEventListener("click", () => {
-        setSpeed(btn.dataset.speed);
+        setGear(btn.dataset.gear);
         closeSpeed();
       });
     });
 
-    /* ===== VIDEO SOURCE (HLS aware) ===== */
+    function applyDriveMood(){
+      if (!driveMood) return;
+      const mood = driveMood.value;
+      if (mood === "chill"){
+        setGear(1);
+        cinematicMode.value = "warm";
+        setNightMode.checked = false;
+      } else if (mood === "fast"){
+        setGear(4);
+        cinematicMode.value = "neo";
+        setNightMode.checked = false;
+      } else if (mood === "explore"){
+        setGear(2);
+        cinematicMode.value = "off";
+      } else {
+        return;
+      }
+      applySettings();
+    }
+    driveMood?.addEventListener("change", applyDriveMood);
+
+    /* VIDEO SOURCE (HLS) */
     function destroyHls(){
       if (hlsInstance){
         try{ hlsInstance.destroy(); }catch(_){}
@@ -2153,20 +2872,44 @@
       return vids;
     }
 
-    /* ===== AUDIO ENGINE ===== */
+    /* AUDIO ENGINE */
     function updateEngineSound(){
       if (!audioUnlocked) return;
-      const sp = walkSpeed * Math.abs(currentDir);
+      const baseVol = parseFloat(setEngineVol.value || "0.55") || 0.55;
 
       if (currentDir === 1){
+        const sp = walkSpeed * 1;
         engineAudio.playbackRate = 1 + sp * 0.35;
+        engineAudio.volume = baseVol;
       } else if (currentDir === -1){
+        const sp = walkSpeed * 1;
         engineAudio.playbackRate = 0.9 - sp * 0.25;
+        engineAudio.volume = baseVol * 0.85;
       } else {
         engineAudio.playbackRate = 1;
       }
+    }
 
-      engineAudio.volume = currentDir ? (parseFloat(setEngineVol.value || "0.55") || 0.55) : 0.18;
+    function fadeEngineToIdle(){
+      if (!audioUnlocked) return;
+      const startVol = engineAudio.volume || 0;
+      const endVol = engineIdleVolume;
+      if (startVol <= endVol + 0.01) return;
+      const duration = 1800;
+      const start = performance.now();
+
+      if (engineFadeTimer) cancelAnimationFrame(engineFadeTimer);
+
+      const step = (now) => {
+        const t = clamp((now - start)/duration, 0, 1);
+        engineAudio.volume = startVol + (endVol - startVol)*t;
+        if (t < 1){
+          engineFadeTimer = requestAnimationFrame(step);
+        } else {
+          engineFadeTimer = null;
+        }
+      };
+      engineFadeTimer = requestAnimationFrame(step);
     }
 
     function cancelReverseLoop(){
@@ -2217,9 +2960,15 @@
       const prevDir = currentDir;
       currentDir = nextDir;
 
-      if (currentDir === 1) playForward();
-      else if (currentDir === -1) playReverse();
-      else { cancelReverseLoop(); video.pause(); }
+      if (currentDir === 1){
+        playForward();
+      } else if (currentDir === -1){
+        playReverse();
+      } else {
+        cancelReverseLoop();
+        video.pause();
+        fadeEngineToIdle();
+      }
 
       if (prevDir !== currentDir && currentDir !== 0){
         playGearTick();
@@ -2229,9 +2978,15 @@
       applySettings();
 
       if (currentDir !== 0) hideStartHint();
+
+      if (prevDir !== 0 && currentDir === 0){
+        scheduleSessionSummary();
+      } else if (currentDir !== 0 && sessionIdleTimer){
+        clearTimeout(sessionIdleTimer);
+      }
     }
 
-    /* ===== NEXT DRIVE PREVIEW ===== */
+    /* NEXT DRIVE PREVIEW */
     function getNextIndex(){
       if (!STREETS.length) return -1;
       let next = currentIndex + 1;
@@ -2258,13 +3013,28 @@
       nextPreviewLoc.textContent =
         ((st.city || "") + (st.country ? ", " + st.country : "")) || "Unknown location";
 
-      // Countdown matches remaining time (max 10s)
       const dur = Number.isFinite(video.duration) ? video.duration : 0;
       const ct  = Number.isFinite(video.currentTime) ? video.currentTime : 0;
       const remaining = Math.max(0, Math.ceil(dur - ct));
-      nextPreviewSeconds = Math.min(10, remaining || 10);
 
-      nextPreviewCountdown.textContent = String(nextPreviewSeconds);
+      const base = remaining > 0 && remaining < 6 ? remaining : 3;
+      nextPreviewSeconds = base || 3;
+
+      if (nextPreviewTitleEl){
+        nextPreviewTitleEl.innerHTML = `Next drive in <span id="nextPreviewCountdown">${nextPreviewSeconds}</span>s`;
+      }
+      if (nextPreviewCountdown){
+        nextPreviewCountdown.textContent = String(nextPreviewSeconds);
+      }
+
+      if (nextPreviewCountdownText){
+        if (dur && dur < 25){
+          nextPreviewCountdownText.textContent = "That was short. Just one more street?";
+        } else {
+          nextPreviewCountdownText.textContent = "Coming up next:";
+        }
+      }
+
       nextPreview.style.display = "block";
       nextPreviewActive = true;
 
@@ -2277,7 +3047,6 @@
         if (nextPreviewSeconds <= 0){
           hideNextPreview();
 
-          // ✅ Only teleport if we are STILL near the end
           const d = Number.isFinite(video.duration) ? video.duration : 0;
           const c = Number.isFinite(video.currentTime) ? video.currentTime : 0;
           if (d > 0 && (d - c) <= 1.0){
@@ -2286,7 +3055,9 @@
           return;
         }
 
-        nextPreviewCountdown.textContent = String(nextPreviewSeconds);
+        if (nextPreviewCountdown){
+          nextPreviewCountdown.textContent = String(nextPreviewSeconds);
+        }
       }, 1000);
     }
 
@@ -2299,7 +3070,7 @@
       teleportNext();
     });
 
-    /* ===== STREET LOAD ===== */
+    /* STREET LOAD */
     async function loadStreet(street){
       if (!street || !street.name){
         await teleportNext();
@@ -2310,6 +3081,19 @@
       streetLocationEl.textContent =
         (street.city || "") + (street.city && street.country ? ", " : "") + (street.country || "");
 
+      if (streetTagsEl){
+        const tags = Array.isArray(street.tags) ? street.tags : [];
+        if (tags.length){
+          streetTagsEl.innerHTML = tags.slice(0,3).map(tag =>
+            `<span class="street-tag-pill">${escapeHtml(String(tag))}</span>`
+          ).join("");
+          streetTagsEl.style.display = "flex";
+        } else {
+          streetTagsEl.innerHTML = "";
+          streetTagsEl.style.display = "none";
+        }
+      }
+
       currentVideos = buildVideoList(street);
       currentVideoIndex = 0;
 
@@ -2317,16 +3101,14 @@
       previewArmedForVideo = false;
       pendingSeekTime = null;
 
-      // Apply route memory or shared link time
       const mem = getRouteForStreet(street) || {};
-      const hasMem = !!mem;
+      const hasMem = mem && Object.keys(mem).length > 0;
 
-      if (typeof mem.speed === "number") setSpeed(mem.speed);
+      if (typeof mem.speed === "number") setSpeedFromValue(mem.speed);
       if (typeof mem.dashOpacity === "number") setDashOpacity.value = String(mem.dashOpacity);
       if (typeof mem.hideDash === "boolean") setHideDash.checked = !!mem.hideDash;
       if (typeof mem.night === "boolean") setNightMode.checked = !!mem.night;
 
-      // If shared link matches this street, override time once
       if (!sharedJumpApplied && sharedIndexFromUrl !== -1 && STREETS[currentIndex] === street && sharedTimeSeconds != null){
         pendingSeekTime = sharedTimeSeconds;
         sharedJumpApplied = true;
@@ -2336,6 +3118,7 @@
 
       applySettings();
       showStreetStoryFor(street);
+      if (hasMem) showStreetMemory(mem);
 
       if (!currentVideos.length){
         await teleportNext();
@@ -2358,7 +3141,6 @@
         isVideoLoading = false;
         video.style.opacity = "1";
 
-        // mark when this video actually became ready
         streetLoadedAt = Date.now();
         previewArmedForVideo = false;
         hideNextPreview();
@@ -2394,19 +3176,43 @@
 
     function loadStreetByIndex(i, userInitiated=false){
       if (!Number.isFinite(i) || i < 0 || i >= STREETS.length) return;
+
+      const prevIndex = currentIndex;
+      const prevStreet = (prevIndex >=0 && prevIndex < STREETS.length) ? STREETS[prevIndex] : null;
+
       currentIndex = i;
+      const street = STREETS[i];
+
+      if (!journeyActive && street){
+        startJourneyForStreet(street);
+      } else if (journeyActive && prevStreet && street && prevStreet !== street){
+        const distKm = haversineKm(
+          parseFloat(prevStreet.lat), parseFloat(prevStreet.lng),
+          parseFloat(street.lat), parseFloat(street.lng)
+        );
+        if (Number.isFinite(distKm)) journeyDistanceKm += distKm;
+        journeyLastLabel = deriveJourneyLabel(street);
+        sessionStreetCount += 1;
+        updateJourneyUi();
+        updateSoftObjective();
+      }
+
+      if (street){
+        sessionLastCity = street.city || sessionLastCity;
+        sessionLastCountry = street.country || sessionLastCountry;
+      }
 
       if (userInitiated){
         cancelReverseLoop();
       }
 
-      loadStreet(STREETS[i]);
+      loadStreet(street);
       updateMapMarkerHighlight();
       renderStreetsList(streetsSearch.value || "");
       updateRouteLines();
 
-      if (fullMap && STREETS[i]){
-        const s = STREETS[i];
+      if (fullMap && street){
+        const s = street;
         const lng = parseFloat(s.lng), lat = parseFloat(s.lat);
         if (Number.isFinite(lng) && Number.isFinite(lat)){
           fullMap.flyTo({ center:[lng, lat], zoom:12, speed:0.9 });
@@ -2425,7 +3231,7 @@
       fadeLayer.style.opacity = "0";
     }
 
-    /* ===== VIDEO END ===== */
+    /* VIDEO END */
     video.addEventListener("ended", async () => {
       if (currentVideos.length > 1 && currentVideoIndex < currentVideos.length - 1){
         currentVideoIndex++;
@@ -2437,7 +3243,6 @@
       }
 
       if (nextPreviewActive){
-        // Countdown will trigger teleportNext (with end-check)
         return;
       }
 
@@ -2446,7 +3251,7 @@
       await teleportNext();
     });
 
-    /* ===== DRIVE ANIMATION TICK (premium micro shake) ===== */
+    /* DRIVE ANIMATION TICK */
     let lastFrameTime = 0;
     let headBob = 0;
     let bobDir = 1;
@@ -2454,11 +3259,20 @@
     const STRAFE_MAX = 90;
 
     function tick(t=0){
-      if (t - lastFrameTime < 16){
+      if (!lastFrameTime) lastFrameTime = t;
+      const dtMs = t - lastFrameTime;
+      if (dtMs < 16){
         requestAnimationFrame(tick);
         return;
       }
       lastFrameTime = t;
+      const dtSec = dtMs / 1000;
+
+      if (journeyActive && currentDir !== 0){
+        journeyTimeSec += dtSec;
+        sessionDriveSeconds += dtSec;
+        updateJourneyUi();
+      }
 
       if (document.body.classList.contains("is-portrait")){
         requestAnimationFrame(tick);
@@ -2466,8 +3280,8 @@
       }
 
       if (document.hidden){
-        video.pause();
-        engineAudio.pause();
+        if (!video.paused) video.pause();
+        fadeEngineToIdle();
         requestAnimationFrame(tick);
         return;
       }
@@ -2489,14 +3303,28 @@
         strafeOffset *= 0.88;
       }
 
-      const time = Date.now();
-      const swayX = Math.sin(time * 0.002) * 2;
-      const swayY = Math.cos(time * 0.0015) * 1.2;
+      const timeNow = Date.now();
+      const swayX = Math.sin(timeNow * 0.002) * 2;
+      const swayY = Math.cos(timeNow * 0.0015) * 1.2;
 
-      // Premium feel: scale intensity with motion and speed
+      if (currentDir !== 0 && !overlayOpen() && !document.hidden && !liveEventCurrent){
+        if (Math.random() < 0.002){
+          const kinds = ["traffic","golden","rain","police"];
+          const kind = kinds[Math.floor(Math.random()*kinds.length)];
+          triggerLiveEvent(kind);
+        }
+      }
+
+      if (liveEventIntensity > 0){
+        liveEventIntensity *= 0.96;
+        if (liveEventIntensity < 0.05) liveEventIntensity = 0;
+      }
+
       let intensity = (Math.abs(currentDir) > 0)
         ? clamp(motionMomentum * 0.7 + (walkSpeed - 1) * 0.35, 0.12, 1.15)
         : 0.12;
+
+      intensity = clamp(intensity * (1 + (liveEventIntensity || 0)), 0.12, 1.6);
 
       const scale = 1 + 0.015 * intensity;
 
@@ -2508,11 +3336,21 @@
 
       driveVignette.style.opacity = intensity > 0.1 ? intensity * 0.75 : 0;
 
+      /* HUD auto-hide logic */
+      const idle = Date.now() - lastUserInteraction;
+      if (!hudHidden && idle > HUD_IDLE_MS && !overlayOpen() && !document.body.classList.contains("is-portrait")){
+        hudHidden = true;
+        document.body.classList.add("hud-hidden");
+      } else if (hudHidden && (idle <= HUD_IDLE_MS || overlayOpen() || document.body.classList.contains("is-portrait"))){
+        hudHidden = false;
+        document.body.classList.remove("hud-hidden");
+      }
+
       requestAnimationFrame(tick);
     }
     requestAnimationFrame(tick);
 
-    /* ===== AUTO DRIVE ===== */
+    /* AUTO DRIVE */
     function setAutoDrive(on){
       autoDriveEnabled = on;
       if (autoDriveEnabled){
@@ -2543,7 +3381,7 @@
       setAutoDrive(!autoDriveEnabled);
     });
 
-    /* ===== JOYSTICK ===== */
+    /* JOYSTICK */
     const JOY_RADIUS = 34;
 
     function setMoveFromJoystick(nx, ny){
@@ -2631,7 +3469,7 @@
     joystickBase?.addEventListener("pointercancel", endJoy);
     joystickBase?.addEventListener("pointerleave", endJoy);
 
-    /* ===== KEYBOARD ===== */
+    /* KEYBOARD */
     const keys = new Set();
 
     function overlayOpen(){
@@ -2721,7 +3559,7 @@
       }
     });
 
-    /* ===== POPUP ===== */
+    /* POPUP */
     streetHud?.addEventListener("click", () => {
       applyPortraitLock();
       if (document.body.classList.contains("is-portrait")) return;
@@ -2758,7 +3596,7 @@
       }
     });
 
-    /* ===== MAP & ROUTE LINES ===== */
+    /* MAP & ROUTE LINES */
     function updateRouteLines(){
       if (!fullMap || !fullMapReady || currentIndex < 0 || currentIndex >= STREETS.length) return;
       const base = STREETS[currentIndex];
@@ -2910,7 +3748,7 @@
       }
     });
 
-    /* ===== DEVICE TOAST ===== */
+    /* DEVICE TOAST */
     function showDeviceToastOnce(){
       const isSmall = window.innerWidth < 980;
       const already = localStorage.getItem("abto_drive_device_toast_dismissed") === "1";
@@ -2924,7 +3762,7 @@
       localStorage.setItem("abto_drive_device_toast_dismissed", "1");
     });
 
-    /* ===== SHARE CLIP ===== */
+    /* SHARE CLIP */
     function showShareToast(){
       if (!shareToast) return;
       shareToast.style.display = "block";
@@ -2963,17 +3801,39 @@
       }catch(_){}
     });
 
-    /* ===== VIDEO TIMEUPDATE: ROUTE MEMORY + PREVIEW ARM (FIXED) ===== */
+    /* POSTCARD */
+    postcardBtn?.addEventListener("click", async () => {
+      applyPortraitLock();
+      if (document.body.classList.contains("is-portrait")) return;
+      if (!window.html2canvas) return;
+
+      try{
+        const canvas = await html2canvas(viewerCanvas, {
+          useCORS:true,
+          backgroundColor:"#020617",
+          scale: window.devicePixelRatio > 1 ? 2 : 1.5
+        });
+        const dataUrl = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        const st = STREETS[currentIndex];
+        const base = st ? (st.city || st.name || "drive") : "drive";
+        link.download = `ABTO_${String(base).replace(/\s+/g,"_")}.png`;
+        link.href = dataUrl;
+        link.click();
+      }catch(err){
+        if (DEBUG) console.log("postcard error", err);
+      }
+    });
+
+    /* VIDEO TIMEUPDATE */
     video.addEventListener("timeupdate", () => {
       const dur = video.duration;
       const ct = video.currentTime;
 
-      // safety checks
       if (!Number.isFinite(dur) || !Number.isFinite(ct) || dur <= 0) return;
 
       const now = Date.now();
 
-      /* ---- ROUTE MEMORY (throttled) ---- */
       if (
         currentIndex !== -1 &&
         !video.paused &&
@@ -2983,22 +3843,40 @@
         lastRouteSaveTime = now;
       }
 
-      /* ---- NEXT DRIVE PREVIEW (Netflix-style) ---- */
       if (
         !previewArmedForVideo &&
         !video.paused &&
-        currentDir === 1 &&                 // forward only
+        currentDir === 1 &&
         dur > 12 &&
         (dur - ct) <= 10 &&
-        (Date.now() - streetLoadedAt) > previewCooldownMs &&  // cooldown after load
-        ct > 5                                // user actually watched a bit
+        (Date.now() - streetLoadedAt) > previewCooldownMs &&
+        ct > 5
       ){
         previewArmedForVideo = true;
         showNextPreview();
       }
     });
 
-    /* ===== INIT ===== */
+    /* VISIBILITY */
+    document.addEventListener("visibilitychange", () => {
+      if (!audioUnlocked) return;
+      if (!document.hidden){
+        try{ engineAudio.play().catch(()=>{}); }catch(_){}
+        updateEngineSound();
+        if (currentDir !== 0){
+          video.style.opacity = "0.4";
+          setTimeout(() => {
+            try{
+              if (currentDir === 1) playForward();
+              else if (currentDir === -1) playReverse();
+              video.style.opacity = "1";
+            }catch(_){}
+          }, 120);
+        }
+      }
+    });
+
+    /* INIT */
     applySettings();
     renderStreetsList("");
 
@@ -3029,7 +3907,8 @@
       startHint.style.display = "none";
     }
 
-    setSpeed(1);
+    // Start in Gear 2 (cruise)
+    setGear(2);
 
     document.addEventListener("pointerdown", () => {
       if (!audioUnlocked) return;
@@ -3056,6 +3935,16 @@
     });
 
     applyPortraitLock();
+
+    /* EXIT-INTENT */
+    window.addEventListener("beforeunload", (e) => {
+      if (journeyActive && journeyTimeSec > 60 && !sessionSummaryShown){
+        const msg = "You’re halfway through a journey. Continue?";
+        e.preventDefault();
+        e.returnValue = msg;
+        return msg;
+      }
+    });
   </script>
 </body>
 </html>
