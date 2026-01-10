@@ -383,16 +383,15 @@
       animation: dotPulse 1.2s infinite ease-in-out;
     }
     @keyframes dotPulse {
-  0%, 100% { 
-    transform: scale(1.0); 
-    opacity: 1; 
-  }
-  50% { 
-    transform: scale(1.35); 
-    opacity: .75; 
-  }
-}
-
+      0%, 100% {
+        transform: scale(1.0);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.35);
+        opacity: .75;
+      }
+    }
 
     /* ===== COCKPIT / DASH ===== */
     #dashOverlay{
@@ -1393,7 +1392,7 @@
     <div id="streetsDrawer" role="dialog" aria-label="All drives list">
       <div class="drawer-head">
         <div class="drawer-title">All Drives</div>
-        <button id="streetsDrawerClose" class="drawer-close" aria-label="Close">✕</button>
+        <button id="streetsDrawerClose" class="drawer-close" aria-label="Close" type="button">✕</button>
       </div>
 
       <input id="streetsSearch"
@@ -1414,7 +1413,7 @@
 
       <!-- Mini map -->
       <div id="miniMap" class="mini-map" title="Open map">
-        <img src="{{ url_for('static', filename='img/minimap_placeholder.png') }}" alt="">
+        <img src="{{ url_for('static', filename='img/minimap_placeholder.png') }}" alt="Mini map preview">
       </div>
 
       <!-- Top center HUD -->
